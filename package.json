@@ -1,0 +1,28 @@
+{
+  "name": "tbd",
+  "version": "0.0.1",
+  "description": "TBD",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YouG-o/YouTube-Extension.git"
+  },
+  "keywords": [
+    "youtube",
+    "extension",
+    "firefox",
+    "translation"
+  ],
+  "author": "YouGo",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/YouG-o/YouTube-Extension/issues"
+  },
+  "homepage": "https://github.com/YouG-o/YouTube-Extension#readme",
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
