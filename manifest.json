@@ -1,19 +1,33 @@
 {
-    "manifest_version": 2,
-    "name": "TBD",
-    "version": "0.0.1",
-  
-    "description": "TBD",
-  
-    "icons": {
-      "48": "icons/icon.svg",
-      "96": "icons/icon.svg"
+  "manifest_version": 2,
+  "name": "TBD",
+  "version": "0.0.1",
+  "description": "TBD",
+
+  "icons": {
+    "48": "assets/icons/icon.svg",
+    "96": "assets/icons/icon.svg"
+  },
+
+  "browser_action": {
+    "default_icon": {
+      "48": "assets/icons/icon.svg",
+      "96": "assets/icons/icon.svg"
     },
-  
-    "content_scripts": [
-      {
-        "matches": ["*://*.youtube.com/*"]
-      }
-    ]
-  }
-  
+    "default_popup": "dist/popup/popup.html",
+    "default_title": "TBD"
+  },
+
+  "permissions": [
+    "storage",
+    "tabs",
+    "*://*.youtube.com/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["dist/content.js"]
+    }
+  ]
+}

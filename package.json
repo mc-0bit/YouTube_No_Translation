@@ -2,9 +2,15 @@
   "name": "tbd",
   "version": "0.0.1",
   "description": "TBD",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "rimraf dist/*",
+    "build": "npm run clean && npm run build:ts && npm run build:css && npm run build:html",
+    "build:ts": "tsc",
+    "build:css": "tailwindcss -i ./src/styles/main.css -o ./dist/styles/main.css",
+    "build:html": "cp src/popup/popup.html dist/popup/",
+    "watch": "concurrently \"npm run watch:ts\" \"npm run watch:css\"",
+    "watch:ts": "tsc --watch",
+    "watch:css": "tailwindcss -i ./src/styles/main.css -o ./dist/styles/main.css --watch"
   },
   "repository": {
     "type": "git",
@@ -23,6 +29,11 @@
   },
   "homepage": "https://github.com/YouG-o/YouTube-Extension#readme",
   "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.2",
+    "postcss": "^8.4.49",
+    "rimraf": "^6.0.1",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2"
   }
 }
