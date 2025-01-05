@@ -1,0 +1,19 @@
+{
+    "manifest_version": 2,
+    "name": "TBD",
+    "version": "0.0.1",
+  
+    "description": "TBD",
+  
+    "icons": {
+      "48": "icons/icon.svg",
+      "96": "icons/icon.svg"
+    },
+  
+    "content_scripts": [
+      {
+        "matches": ["*://*.youtube.com/*"]
+      }
+    ]
+  }
+  
