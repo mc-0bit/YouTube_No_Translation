@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "TBD",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "TBD",
 
   "icons": {
@@ -27,7 +27,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
-      "js": ["dist/content.js"]
+      "js": ["dist/browser-polyfill.js", "dist/content/content.js"]
     }
   ]
 }

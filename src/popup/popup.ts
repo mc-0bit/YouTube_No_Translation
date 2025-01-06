@@ -1,42 +1,35 @@
-declare const browser: typeof import('webextension-polyfill');
+const STORAGE_KEY = 'settings';
 
-// Define storage data type
 interface StorageData {
     isEnabled: boolean;
 }
 
-// Storage key for settings
-const STORAGE_KEY = 'settings';
-
-// Initial state
+const toggleSwitch = document.getElementById('titleTranslation') as HTMLInputElement;
 let isEnabled = false;
 
-// Get toggle switch element
-const toggleSwitch = document.getElementById('titleTranslation') as HTMLInputElement;
+// Handle toggle changes
+toggleSwitch.addEventListener('change', async () => {
+    isEnabled = toggleSwitch.checked;
+    console.log('Toggle state changed:', isEnabled);
 
-// Listen for toggle switch changes
-toggleSwitch.addEventListener('change', async (event) => {
-    const isChecked = (event.target as HTMLInputElement).checked;
-    console.log(
-        'Toggle state changed: %c%s',
-        isChecked ? 'color: green; font-weight: bold' : 'color: red; font-weight: bold',
-        isChecked ? 'true' : 'false'
-    );
-    
-    // Save state to storage
+    // Save state
     try {
-        await browser.storage.local.set({
-            [STORAGE_KEY]: { isEnabled: isChecked } as StorageData
-        });
+        await browser.storage.local.set({ [STORAGE_KEY]: { isEnabled } });
         console.log('State saved');
     } catch (error) {
         console.error('Save error:', error);
     }
-    
-    // Send message to content script (to be implemented)
+
+    // Update state
     try {
-        await browser.tabs.query({ active: true, currentWindow: true });
-        console.log('State updated');
+        const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+        if (tabs[0]?.id) {
+            await browser.tabs.sendMessage(tabs[0].id, {
+                action: 'toggleTranslation',
+                isEnabled
+            });
+            console.log('State updated');
+        }
     } catch (error) {
         console.error('Update error:', error);
     }
