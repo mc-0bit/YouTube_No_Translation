@@ -1,4 +1,10 @@
 <div align="center">
+  <a href="https://addons.mozilla.org/fr/firefox/addon/no-more-translation-on-youtube/">
+    <img src="./assets/images/firefox.png" height="40" alt="Available on Firefox" title="Available on Firefox"/>
+  </a>
+</div>
+
+<div align="center">
   <img src="./assets/icons/icon.svg" alt="Project description"/>
 </div>
 
