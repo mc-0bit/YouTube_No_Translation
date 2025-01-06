@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "commonjs",
+    "module": "none",
     "moduleResolution": "node",
     "strict": true,
-    "outDir": "./dist",
+    "outFile": "./dist/content/content.js",
     "rootDir": "./src",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -16,6 +16,10 @@
       "./src/types"
     ]
   },
+  "files": [
+    "src/content/titleTranslation.ts",
+    "src/content/index.ts"
+  ],
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",

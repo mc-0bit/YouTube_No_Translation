@@ -1,6 +1,4 @@
-console.log('[Extension-Debug] Content script starting to load...');
-
-// Custom types for our extension
+// Types
 interface Message {
     action: 'toggleTranslation';
     feature: 'titles' | 'descriptions';
@@ -45,7 +43,7 @@ class TitleCache {
 
 const titleCache = new TitleCache();
 
-// Main title handler
+// Main functions
 async function handleTitleTranslation(isEnabled: boolean): Promise<void> {
     console.log('[Extension-Debug] handleTitleTranslation called with isEnabled:', isEnabled);
     if (!isEnabled) {
@@ -111,61 +109,6 @@ function updatePageTitle(mainTitle: string): void {
     document.title = `${mainTitle} - ${channelName} - YouTube`;
 }
 
-// Mutation optimization with debounce and counter
-let processingMutation = false;
-let mutationCount = 0;
-const MUTATION_THRESHOLD = 10; // Limit the number of processed mutations
-
-const observer = new MutationObserver((mutations) => {
-    if (processingMutation) {
-        console.log('[Extension-Debug] Already processing mutation, skipping');
-        return;
-    }
-
-    mutationCount++;
-    if (mutationCount > MUTATION_THRESHOLD) {
-        console.log('[Extension-Debug] Mutation threshold reached, resetting counter');
-        mutationCount = 0;
-        return;
-    }
-
-    console.log('[Extension-Debug] Processing mutation', mutationCount);
-    processingMutation = true;
-
-    // Check if mutations concern our elements of interest
-    const relevantMutation = mutations.some(mutation => {
-        const target = mutation.target as HTMLElement;
-        return target.matches?.('yt-formatted-string, h1.ytd-watch-metadata');
-    });
-
-    if (!relevantMutation) {
-        console.log('[Extension-Debug] No relevant mutations detected');
-        processingMutation = false;
-        return;
-    }
-
-    browser.storage.local.get('settings').then((data: Record<string, any>) => {
-        const isEnabled = data.settings?.titleTranslation ?? false;
-        handleTitleTranslation(isEnabled).finally(() => {
-            processingMutation = false;
-        });
-    });
-});
-
-// Initial setup
-browser.storage.local.get('settings').then((data: Record<string, any>) => {
-    const isEnabled = data.settings?.titleTranslation ?? false;
-    handleTitleTranslation(isEnabled);
-});
-
-// Message handler
-browser.runtime.onMessage.addListener((message: unknown) => {
-    if (isToggleMessage(message)) {
-        handleTitleTranslation(message.isEnabled);
-    }
-    return true;
-});
-
 function isToggleMessage(message: unknown): message is Message {
     return (
         typeof message === 'object' &&
@@ -179,11 +122,68 @@ function isToggleMessage(message: unknown): message is Message {
     );
 }
 
-// Start the observer
-observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    characterData: true,
-    attributes: true,
-    attributeFilter: ['textContent', 'innerText']
-});
+function initializeTitleTranslation() {
+    console.log('[Extension-Debug] Initializing title translation prevention');
+    
+    // Initial setup
+    browser.storage.local.get('settings').then((data: Record<string, any>) => {
+        const isEnabled = data.settings?.titleTranslation ?? false;
+        handleTitleTranslation(isEnabled);
+    });
+
+    // Message handler
+    browser.runtime.onMessage.addListener((message: unknown) => {
+        if (isToggleMessage(message)) {
+            handleTitleTranslation(message.isEnabled);
+        }
+        return true;
+    });
+
+    // Start the observer
+    const observer = new MutationObserver((mutations) => {
+        if (processingMutation) {
+            console.log('[Extension-Debug] Already processing mutation, skipping');
+            return;
+        }
+
+        mutationCount++;
+        if (mutationCount > MUTATION_THRESHOLD) {
+            console.log('[Extension-Debug] Mutation threshold reached, resetting counter');
+            mutationCount = 0;
+            return;
+        }
+
+        console.log('[Extension-Debug] Processing mutation', mutationCount);
+        processingMutation = true;
+
+        const relevantMutation = mutations.some(mutation => {
+            const target = mutation.target as HTMLElement;
+            return target.matches?.('yt-formatted-string, h1.ytd-watch-metadata');
+        });
+
+        if (!relevantMutation) {
+            console.log('[Extension-Debug] No relevant mutations detected');
+            processingMutation = false;
+            return;
+        }
+
+        browser.storage.local.get('settings').then((data: Record<string, any>) => {
+            const isEnabled = data.settings?.titleTranslation ?? false;
+            handleTitleTranslation(isEnabled).finally(() => {
+                processingMutation = false;
+            });
+        });
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ['textContent', 'innerText']
+    });
+}
+
+let processingMutation = false;
+let mutationCount = 0;
+const MUTATION_THRESHOLD = 10;

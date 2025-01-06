@@ -1,10 +1,11 @@
 {
   "name": "nmt",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A firefox extension that prevents YouTube from translating automatically videos titles.",
   "scripts": {
     "clean": "rimraf dist/*",
-    "build": "npm run clean && npm run build:ts && npm run build:css && npm run build:html && npm run build:polyfill",
+    "create-dirs": "mkdir -p dist/popup dist/content dist/styles",
+    "build": "npm run clean && npm run create-dirs && npm run build:ts && npm run build:css && npm run build:html && npm run build:polyfill",
     "build:ts": "tsc",
     "build:css": "tailwindcss -i ./src/styles/main.css -o ./dist/styles/main.css",
     "build:html": "cp src/popup/popup.html dist/popup/",
