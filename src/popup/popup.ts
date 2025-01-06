@@ -1,20 +1,16 @@
-const STORAGE_KEY = 'settings';
-
-interface StorageData {
-    isEnabled: boolean;
-}
-
 const toggleSwitch = document.getElementById('titleTranslation') as HTMLInputElement;
-let isEnabled = false;
 
 // Handle toggle changes
 toggleSwitch.addEventListener('change', async () => {
-    isEnabled = toggleSwitch.checked;
-    console.log('Toggle state changed:', isEnabled);
-
+    const isEnabled = toggleSwitch.checked;
+    
     // Save state
     try {
-        await browser.storage.local.set({ [STORAGE_KEY]: { isEnabled } });
+        await browser.storage.local.set({
+            settings: {
+                titleTranslation: isEnabled
+            }
+        });
         console.log('State saved');
     } catch (error) {
         console.error('Save error:', error);
@@ -26,6 +22,7 @@ toggleSwitch.addEventListener('change', async () => {
         if (tabs[0]?.id) {
             await browser.tabs.sendMessage(tabs[0].id, {
                 action: 'toggleTranslation',
+                feature: 'titles',
                 isEnabled
             });
             console.log('State updated');
@@ -38,9 +35,9 @@ toggleSwitch.addEventListener('change', async () => {
 // Initialize toggle state from storage
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const data = await browser.storage.local.get(STORAGE_KEY);
-        const settings = data[STORAGE_KEY] as StorageData;
-        isEnabled = settings?.isEnabled ?? false;
+        const data = await browser.storage.local.get('settings');
+        const settings = data.settings as ExtensionSettings;
+        const isEnabled = settings?.titleTranslation ?? false;
         toggleSwitch.checked = isEnabled;
         console.log(
             'Settings loaded - Translation prevention is: %c%s',

@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "TBD",
-  "version": "0.1.2",
-  "description": "TBD",
+  "name": "No More Translations",
+  "version": "1.0.0",
+  "description": "A firefox extension that prevents YouTube from translating automatically videos titles.",
 
   "icons": {
     "48": "assets/icons/icon.svg",
@@ -15,7 +15,7 @@
       "96": "assets/icons/icon.svg"
     },
     "default_popup": "dist/popup/popup.html",
-    "default_title": "TBD"
+    "default_title": "NMT"
   },
 
   "permissions": [

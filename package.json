@@ -1,7 +1,7 @@
 {
-  "name": "tbd",
-  "version": "0.1.2",
-  "description": "TBD",
+  "name": "nmt",
+  "version": "1.0.0",
+  "description": "A firefox extension that prevents YouTube from translating automatically videos titles.",
   "scripts": {
     "clean": "rimraf dist/*",
     "build": "npm run clean && npm run build:ts && npm run build:css && npm run build:html && npm run build:polyfill",
