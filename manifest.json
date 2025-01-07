@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "No More Translations",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A firefox extension that prevents YouTube from translating automatically videos titles.",
 
   "icons": {

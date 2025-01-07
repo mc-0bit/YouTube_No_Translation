@@ -14,19 +14,12 @@
     "typeRoots": [
       "./node_modules/@types",
       "./src/types"
-    ]
+    ],
+    "types": ["webextension-polyfill"]
   },
   "files": [
+    "src/types/global.d.ts",
     "src/content/titleTranslation.ts",
     "src/content/index.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/types/**/*.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
   ]
 }
