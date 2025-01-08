@@ -4,7 +4,7 @@
     "module": "none",
     "moduleResolution": "node",
     "strict": true,
-    "outFile": "./dist/content/content.js",
+    "outFile": "./dist/background/background.js",
     "rootDir": "./src",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -18,12 +18,9 @@
     "types": ["webextension-polyfill"]
   },
   "files": [
-    "src/types/types.ts",
     "src/types/global.d.ts",
+    "src/types/types.ts",
     "src/config/constants.ts",
-    "src/content/utils.ts",
-    "src/content/titleTranslation.ts",
-    "src/content/audioTranslation.ts",
-    "src/content/index.ts"
+    "src/background/background.ts"
   ]
 }

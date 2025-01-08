@@ -18,7 +18,9 @@
     "types": ["webextension-polyfill"]
   },
   "files": [
-    "src/types/global.d.ts"
+    "src/types/global.d.ts",
+    "src/types/types.ts",
+    "src/config/constants.ts"
   ],
   "include": [
     "src/popup/**/*.ts"

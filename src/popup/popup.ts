@@ -1,6 +1,46 @@
 const titleToggle = document.getElementById('titleTranslation') as HTMLInputElement;
 const audioToggle = document.getElementById('audioTranslation') as HTMLInputElement;
 
+// Initialize settings if they don't exist
+async function initializeSettings() {
+    const data = await browser.storage.local.get('settings');
+    if (!data.settings) {
+        await browser.storage.local.set({
+            settings: DEFAULT_SETTINGS
+        });
+        console.log('[NTM-Debug] Settings initialized with default values');
+    }
+}
+
+// Initialize toggle states from storage
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Ensure settings exist
+        await initializeSettings();
+        
+        // Get settings
+        const data = await browser.storage.local.get('settings');
+        const settings = data.settings as ExtensionSettings;
+        
+        // Set toggle states
+        titleToggle.checked = settings.titleTranslation;
+        audioToggle.checked = settings.audioTranslation;
+        
+        console.log(
+            '[NTM-Debug] Settings loaded - Title translation prevention is: %c%s',
+            settings.titleTranslation ? 'color: green; font-weight: bold' : 'color: red; font-weight: bold',
+            settings.titleTranslation ? 'ON' : 'OFF'
+        );
+        console.log(
+            '[NTM-Debug] Settings loaded - Audio translation prevention is: %c%s',
+            settings.audioTranslation ? 'color: green; font-weight: bold' : 'color: red; font-weight: bold',
+            settings.audioTranslation ? 'ON' : 'OFF'
+        );
+    } catch (error) {
+        console.error('Load error:', error);
+    }
+});
+
 // Handle title toggle changes
 titleToggle.addEventListener('change', async () => {
     const isEnabled = titleToggle.checked;
@@ -64,34 +104,5 @@ audioToggle.addEventListener('change', async () => {
         }
     } catch (error) {
         console.error('Audio update error:', error);
-    }
-});
-
-// Initialize toggle states from storage
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const data = await browser.storage.local.get('settings');
-        const settings = data.settings as ExtensionSettings;
-        
-        // Set title toggle state
-        const isTitleEnabled = settings?.titleTranslation ?? false;
-        titleToggle.checked = isTitleEnabled;
-        
-        // Set audio toggle state
-        const isAudioEnabled = settings?.audioTranslation ?? false;
-        audioToggle.checked = isAudioEnabled;
-        
-        console.log(
-            '[NTM-Debug] Settings loaded - Title translation prevention is: %c%s',
-            isTitleEnabled ? 'color: green; font-weight: bold' : 'color: red; font-weight: bold',
-            isTitleEnabled ? 'ON' : 'OFF'
-        );
-        console.log(
-            '[NTM-Debug] Settings loaded - Audio translation prevention is: %c%s',
-            isAudioEnabled ? 'color: green; font-weight: bold' : 'color: red; font-weight: bold',
-            isAudioEnabled ? 'ON' : 'OFF'
-        );
-    } catch (error) {
-        console.error('Load error:', error);
     }
 });

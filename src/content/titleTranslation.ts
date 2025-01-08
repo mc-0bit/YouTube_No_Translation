@@ -114,8 +114,8 @@ function initializeTitleTranslation() {
     
     // Initial setup
     browser.storage.local.get('settings').then((data: Record<string, any>) => {
-        const isEnabled = data.settings?.titleTranslation ?? false;
-        handleTitleTranslation(isEnabled);
+        const settings = data.settings as ExtensionSettings;
+        handleTitleTranslation(settings?.titleTranslation || false);
     });
 
     // Message handler
@@ -166,8 +166,8 @@ function initializeTitleTranslation() {
         }
 
         browser.storage.local.get('settings').then((data: Record<string, any>) => {
-            const isEnabled = data.settings?.titleTranslation ?? false;
-            handleTitleTranslation(isEnabled).finally(() => {
+            const settings = data.settings as ExtensionSettings;
+            handleTitleTranslation(settings?.titleTranslation || false).finally(() => {
                 processingTitleMutation = false;
             });
         });

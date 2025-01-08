@@ -23,3 +23,8 @@ interface YouTubePlayer extends HTMLElement {
     getInternalApiInterface: () => string[];
     [key: string]: any;
 }
+
+interface ExtensionSettings {
+    titleTranslation: boolean;
+    audioTranslation: boolean;
+}

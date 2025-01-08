@@ -91,8 +91,8 @@ function initializeAudioTranslation() {
 
     // Initial setup
     browser.storage.local.get('settings').then((data: Record<string, any>) => {
-        const isEnabled = data.settings?.audioTranslation ?? false;
-        handleAudioTranslation(isEnabled);
+        const settings = data.settings as ExtensionSettings;
+        handleAudioTranslation(settings?.audioTranslation || false);
     });
 
     // Message handler
