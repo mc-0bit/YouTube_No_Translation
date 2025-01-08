@@ -1,10 +1,3 @@
-// Types
-interface Message {
-    action: 'toggleTranslation';
-    feature: 'titles' | 'descriptions';
-    isEnabled: boolean;
-}
-
 // Optimized cache manager
 class TitleCache {
     private processedElements = new WeakMap<HTMLElement, string>();
@@ -45,7 +38,11 @@ const titleCache = new TitleCache();
 
 // Main functions
 async function handleTitleTranslation(isEnabled: boolean): Promise<void> {
-    console.log('[Extension-Debug] handleTitleTranslation called with isEnabled:', isEnabled);
+    console.log(
+        '%c[Extension-Debug][Title] handleTitleTranslation called with isEnabled:', 
+        'color: #67e8f9;', 
+        isEnabled
+    );
     if (!isEnabled) {
         console.log('[Extension-Debug] Translation prevention disabled, exiting');
         return;
@@ -109,21 +106,11 @@ function updatePageTitle(mainTitle: string): void {
     document.title = `${mainTitle} - ${channelName} - YouTube`;
 }
 
-function isToggleMessage(message: unknown): message is Message {
-    return (
-        typeof message === 'object' &&
-        message !== null &&
-        'action' in message &&
-        message.action === 'toggleTranslation' &&
-        'feature' in message &&
-        message.feature === 'titles' &&
-        'isEnabled' in message &&
-        typeof message.isEnabled === 'boolean'
-    );
-}
-
 function initializeTitleTranslation() {
-    console.log('[Extension-Debug] Initializing title translation prevention');
+    console.log(
+        '%c[Extension-Debug][Title] Initializing title translation prevention',
+        'color: #67e8f9; font-weight: bold;'
+    );
     
     // Initial setup
     browser.storage.local.get('settings').then((data: Record<string, any>) => {
@@ -133,7 +120,7 @@ function initializeTitleTranslation() {
 
     // Message handler
     browser.runtime.onMessage.addListener((message: unknown) => {
-        if (isToggleMessage(message)) {
+        if (isToggleMessage(message) && message.feature === 'titles') {
             handleTitleTranslation(message.isEnabled);
         }
         return true;
