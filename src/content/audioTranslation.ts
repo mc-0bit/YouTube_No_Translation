@@ -1,81 +1,94 @@
-// Main function to handle audio translation
-async function handleAudioTranslation(isEnabled: boolean) {
-    console.log(
-        '%c[Extension-Debug][Audio] handleAudioTranslation called with isEnabled:', 
-        'color: #86efac;', 
-        isEnabled
-    );
-    
-    if (!isEnabled) {
-        console.log(
-            '%c[Extension-Debug][Audio] Audio translation prevention disabled, exiting',
-            'color: #86efac;'
-        );
-        return;
-    }
+/**
+ * Handles YouTube's audio track selection to force original language
+ * 
+ * YouTube stores audio tracks in a specific format:
+ * - Each track has an ID in the format: "251;BASE64_ENCODED_DATA"
+ * - The BASE64_ENCODED_DATA contains track information including language code
+ * - Track data is encoded as: "acont" (audio content) + "original"/"dubbed-auto" + "lang=XX-XX"
+ * - Original track can be identified by "original" in its decoded data
+ * 
+ * Example of track ID:
+ * "251;ChEKBWFjb250EghvcmlnaW5hbAoNCgRsYW5nEgVlbi1VUw"
+ * When decoded: Contains "original" for original audio and "lang=en-US" for language
 
-    // Get the YouTube player
-    const player = document.getElementById('movie_player');
-    if (!player) {
-        console.log(
-            '%c[Extension-Debug][Audio] Player not found',
-            'color: #86efac;'
-        );
-        return;
-    }
+ * NOTE ON SCRIPT INJECTION :
+ * We use script injection to access YouTube's player API directly from the page context.
+ * This is necessary because the player API is not accessible from the content script context.
+ * As you can see down below, the injected code only uses YouTube's official player API methods.
+ */
 
-    try {
-        // Click settings button
-        const settingsButton = document.querySelector('button.ytp-button.ytp-settings-button');
-        if (!settingsButton) {
-            throw new Error('Settings button not found');
-        }
-        (settingsButton as HTMLElement).click();
 
-        // Wait for menu to appear and click audio track option
-        await new Promise(resolve => setTimeout(resolve, 100));
-        const audioTrackButton = document.querySelector('.ytp-audio-menu-item');
-        if (!audioTrackButton) {
-            (settingsButton as HTMLElement).click(); // Close settings if no audio option
-            throw new Error('Audio track button not found');
-        }
-        (audioTrackButton as HTMLElement).click();
-
-        // Wait for submenu and select original audio
-        await new Promise(resolve => setTimeout(resolve, 100));
-        const audioOptions = document.querySelectorAll('.ytp-menuitem-label');
-        let found = false;
-        for (const option of audioOptions) {
-            if (option.textContent?.toLowerCase().includes('original')) {
-                (option as HTMLElement).click();
-                found = true;
-                break;
-            }
-        }
-
-        // Close settings menu
-        (settingsButton as HTMLElement).click();
-
-        console.log(
-            `%c[Extension-Debug][Audio] ${found ? 'Successfully set original audio' : 'Original audio option not found'}`,
-            'color: #86efac;'
-        );
-    } catch (error) {
-        console.error(
-            '%c[Extension-Debug][Audio] Error setting audio track:',
-            'color: #86efac;',
-            error
-        );
-    }
+function injectScript(code: string) {
+    const script = document.createElement('script');
+    script.textContent = `(${code})();`;
+    (document.head || document.documentElement).appendChild(script);
+    script.remove();
 }
 
-// Initialize function
+async function handleAudioTranslation(isEnabled: boolean) {
+    if (!isEnabled) return;
+    
+    console.log('%c[Extension-Debug][Audio] Initializing audio translation prevention', 'color: #86efac;');
+    
+    injectScript(`
+        function() {
+            // Language mapping for common codes
+            const languageNames = {
+                'en': 'English',
+                'es': 'Spanish',
+                'fr': 'French',
+                'de': 'German',
+                'it': 'Italian',
+                'pt': 'Portuguese',
+                'ru': 'Russian',
+                'ja': 'Japanese',
+                'ko': 'Korean',
+                'zh': 'Chinese'
+            };
+
+            const player = document.getElementById('movie_player');
+            if (!player) return;
+            
+            try {
+                // 1. Get available audio tracks
+                const tracks = player.getAvailableAudioTracks();
+                
+                // 2. Find original track by checking decoded content
+                const originalTrack = tracks.find(track => {
+                    const base64Part = track.id.split(';')[1];
+                    const decoded = atob(base64Part);
+                    return decoded.includes('original');
+                });
+                
+                if (originalTrack) {
+                    // Extract language code from base64 encoded track ID
+                    const base64Part = originalTrack.id.split(';')[1];
+                    const decoded = atob(base64Part);
+                    const langMatch = decoded.match(/lang..([-a-zA-Z]+)/);
+                    
+                    // Get base language code (e.g., 'es' from 'es-US')
+                    const langCode = langMatch ? langMatch[1].split('-')[0] : 'unknown';
+                    
+                    // Use the language name if available, otherwise use the language code
+                    const languageName = languageNames[langCode] || langCode.toUpperCase();
+                    
+                    // 3. Set the audio track
+                    console.log('%c[Extension-Debug][Audio] Setting audio to original language: ' + languageName, 'color: #86efac;');
+                    player.setAudioTrack(originalTrack);
+                }
+            } catch (error) {
+                console.error('[YT-DEBUG] Error:', error);
+            }
+        }
+    `);
+}
+
 function initializeAudioTranslation() {
     console.log(
         '%c[Extension-Debug][Audio] Initializing audio translation prevention',
         'color: #86efac; font-weight: bold;'
     );
-    
+
     // Initial setup
     browser.storage.local.get('settings').then((data: Record<string, any>) => {
         const isEnabled = data.settings?.audioTranslation ?? false;
@@ -89,46 +102,4 @@ function initializeAudioTranslation() {
         }
         return true;
     });
-
-    // Watch for URL changes instead of DOM mutations
-    let lastUrl = location.href;
-    const urlObserver = new MutationObserver(() => {
-        if (location.href !== lastUrl) {
-            lastUrl = location.href;
-            if (window.location.pathname === '/watch') {
-                console.log(
-                    '%c[Extension-Debug][Audio] URL changed, checking settings',
-                    'color: #86efac;'
-                );
-                browser.storage.local.get('settings').then((data: Record<string, any>) => {
-                    const isEnabled = data.settings?.audioTranslation ?? false;
-                    if (isEnabled) {
-                        // Add a small delay to ensure the player is loaded
-                        setTimeout(() => handleAudioTranslation(isEnabled), 1000);
-                    }
-                });
-            }
-        }
-    });
-
-    // Observe the document title or body if title is not available
-    const titleElement = document.querySelector('title');
-    if (titleElement) {
-        urlObserver.observe(titleElement, {
-            subtree: true,
-            childList: true,
-        });
-    } else {
-        console.log(
-            '%c[Extension-Debug][Audio] Title element not found, observing body',
-            'color: #86efac;'
-        );
-        urlObserver.observe(document.body, {
-            subtree: true,
-            childList: true,
-        });
-    }
 }
-
-let processingAudioMutation = false;
-let audioMutationCount = 0;
