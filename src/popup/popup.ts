@@ -82,12 +82,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         audioToggle.checked = isAudioEnabled;
         
         console.log(
-            'Settings loaded - Title translation prevention is: %c%s',
+            '[NTM-Debug] Settings loaded - Title translation prevention is: %c%s',
             isTitleEnabled ? 'color: green; font-weight: bold' : 'color: red; font-weight: bold',
             isTitleEnabled ? 'ON' : 'OFF'
         );
         console.log(
-            'Settings loaded - Audio translation prevention is: %c%s',
+            '[NTM-Debug] Settings loaded - Audio translation prevention is: %c%s',
             isAudioEnabled ? 'color: green; font-weight: bold' : 'color: red; font-weight: bold',
             isAudioEnabled ? 'ON' : 'OFF'
         );

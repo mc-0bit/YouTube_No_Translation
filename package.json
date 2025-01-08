@@ -1,7 +1,7 @@
 {
   "name": "nmt",
-  "version": "1.0.2",
-  "description": "A firefox extension that prevents YouTube from translating automatically videos titles.",
+  "version": "1.1.0",
+  "description": "A firefox extension that prevents auto-translation on YouTube (titles, dubbing)",
   "scripts": {
     "clean": "rimraf dist/*",
     "create-dirs": "mkdir -p dist/popup dist/content dist/styles",
