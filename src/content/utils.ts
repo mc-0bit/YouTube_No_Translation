@@ -1,3 +1,5 @@
+const MUTATION_THRESHOLD = 10;
+
 function isToggleMessage(message: unknown): message is Message {
     return (
         typeof message === 'object' &&

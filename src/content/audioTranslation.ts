@@ -89,4 +89,46 @@ function initializeAudioTranslation() {
         }
         return true;
     });
+
+    // Watch for URL changes instead of DOM mutations
+    let lastUrl = location.href;
+    const urlObserver = new MutationObserver(() => {
+        if (location.href !== lastUrl) {
+            lastUrl = location.href;
+            if (window.location.pathname === '/watch') {
+                console.log(
+                    '%c[Extension-Debug][Audio] URL changed, checking settings',
+                    'color: #86efac;'
+                );
+                browser.storage.local.get('settings').then((data: Record<string, any>) => {
+                    const isEnabled = data.settings?.audioTranslation ?? false;
+                    if (isEnabled) {
+                        // Add a small delay to ensure the player is loaded
+                        setTimeout(() => handleAudioTranslation(isEnabled), 1000);
+                    }
+                });
+            }
+        }
+    });
+
+    // Observe the document title or body if title is not available
+    const titleElement = document.querySelector('title');
+    if (titleElement) {
+        urlObserver.observe(titleElement, {
+            subtree: true,
+            childList: true,
+        });
+    } else {
+        console.log(
+            '%c[Extension-Debug][Audio] Title element not found, observing body',
+            'color: #86efac;'
+        );
+        urlObserver.observe(document.body, {
+            subtree: true,
+            childList: true,
+        });
+    }
 }
+
+let processingAudioMutation = false;
+let audioMutationCount = 0;

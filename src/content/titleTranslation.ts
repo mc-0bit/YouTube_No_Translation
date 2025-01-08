@@ -128,20 +128,31 @@ function initializeTitleTranslation() {
 
     // Start the observer
     const observer = new MutationObserver((mutations) => {
-        if (processingMutation) {
-            console.log('[Extension-Debug] Already processing mutation, skipping');
+        if (processingTitleMutation) {
+            console.log(
+                '%c[Extension-Debug][Title] Already processing mutation, skipping',
+                'color: #67e8f9;'
+            );
             return;
         }
 
-        mutationCount++;
-        if (mutationCount > MUTATION_THRESHOLD) {
-            console.log('[Extension-Debug] Mutation threshold reached, resetting counter');
-            mutationCount = 0;
+        titleMutationCount++;
+        if (titleMutationCount > MUTATION_THRESHOLD) {
+            console.log(
+                '%c[Extension-Debug][Title] Mutation threshold reached, resetting counter',
+                'color: #67e8f9;'
+            );
+            titleMutationCount = 0;
             return;
         }
 
-        console.log('[Extension-Debug] Processing mutation', mutationCount);
-        processingMutation = true;
+        console.log(
+            '%c[Extension-Debug][Title] Processing mutation',
+            'color: #67e8f9;',
+            titleMutationCount
+        );
+
+        processingTitleMutation = true;
 
         const relevantMutation = mutations.some(mutation => {
             const target = mutation.target as HTMLElement;
@@ -150,14 +161,14 @@ function initializeTitleTranslation() {
 
         if (!relevantMutation) {
             console.log('[Extension-Debug] No relevant mutations detected');
-            processingMutation = false;
+            processingTitleMutation = false;
             return;
         }
 
         browser.storage.local.get('settings').then((data: Record<string, any>) => {
             const isEnabled = data.settings?.titleTranslation ?? false;
             handleTitleTranslation(isEnabled).finally(() => {
-                processingMutation = false;
+                processingTitleMutation = false;
             });
         });
     });
@@ -171,6 +182,5 @@ function initializeTitleTranslation() {
     });
 }
 
-let processingMutation = false;
-let mutationCount = 0;
-const MUTATION_THRESHOLD = 10;
+let processingTitleMutation = false;
+let titleMutationCount = 0;
