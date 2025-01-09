@@ -250,3 +250,87 @@ async function handleSearchResults(): Promise<void> {
         }
     }
 }
+
+function setupUrlObserver() {
+    console.log('[Extension-Debug] Setting up URL observer');
+    
+    // Listen for URL changes using History API
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    // Override pushState
+    history.pushState = function(...args) {
+        console.log('[Extension-Debug] pushState called with:', args);
+        originalPushState.apply(this, args);
+        handleUrlChange();
+    };
+
+    // Override replaceState
+    history.replaceState = function(...args) {
+        console.log('[Extension-Debug] replaceState called with:', args);
+        originalReplaceState.apply(this, args);
+        handleUrlChange();
+    };
+
+    // Listen for popstate event (back/forward browser buttons)
+    window.addEventListener('popstate', () => {
+        console.log('[Extension-Debug] popstate event triggered');
+        handleUrlChange();
+    });
+
+    // Create an observer for the URL search params
+    let lastSearch = window.location.search;
+    const observer = new MutationObserver(() => {
+        if (window.location.search !== lastSearch) {
+            console.log('[Extension-Debug] Search params changed:', window.location.search);
+            lastSearch = window.location.search;
+            handleUrlChange();
+        }
+    });
+
+    // Observe changes in the document title (YouTube updates it when search changes)
+    const titleElement = document.querySelector('title');
+    if (titleElement) {
+        observer.observe(titleElement, {
+            subtree: true,
+            characterData: true,
+            childList: true
+        });
+    }
+}
+
+function handleUrlChange() {
+    console.log('[Extension-Debug][URL] Current pathname:', window.location.pathname);
+    console.log('[Extension-Debug][URL] Full URL:', window.location.href);
+    
+    browser.storage.local.get('settings').then((data: Record<string, any>) => {
+        const settings = data.settings as ExtensionSettings;
+        if (settings?.titleTranslation) {
+            console.log('[Extension-Debug][URL] Title translation is enabled');
+            titleCache.clear();
+            
+            switch(window.location.pathname) {
+                case '/results':
+                    console.log('[Extension-Debug][URL] Detected search page');
+                    waitForElement('#contents.ytd-section-list-renderer').then(() => {
+                        console.log('[Extension-Debug][URL] Search results container found');
+                        handleSearchResults();
+                    });
+                    break;
+                case '/':  // Home page
+                case '/feed/subscriptions':  // Subscriptions page
+                case '/feed/trending':  // Trending page
+                case '/playlist':  // Playlist page
+                case '/channel':  // Channel page
+                case '/@':  // Channel page (new format)
+                    refreshTitleTranslation();
+                    break;
+                case '/watch':  // Video page
+                    handleTitleTranslation(true);
+                    break;
+            }
+        } else {
+            console.log('[Extension-Debug][URL] Title translation is disabled');
+        }
+    });
+}

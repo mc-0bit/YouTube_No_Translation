@@ -36,6 +36,7 @@ browser.storage.local.get('settings').then((data: Record<string, any>) => {
     if (settings?.titleTranslation) {
         initializeTitleTranslation();
         setupTitleObserver();
+        setupUrlObserver();
     }
     if (settings?.audioTranslation) {
         initializeAudioTranslation();
