@@ -99,7 +99,15 @@ async function handleTitleTranslation(isEnabled: boolean): Promise<void> {
 // Utility functions
 function updateTitleElement(element: HTMLElement, title: string): void {
     console.log('[Extension-Debug] Updating element with title:', title);
-    element.textContent = title;
+    
+    // Check if the element already contains the original title
+    if (element.textContent?.includes(title)) {
+        console.log('[Extension-Debug] Title already present, cleaning up');
+        element.textContent = title;  // Clean up any duplicate
+    } else {
+        element.textContent = title;
+    }
+    
     element.setAttribute('translate', 'no');
     element.style.setProperty('translate', 'no', 'important');
     titleCache.setElement(element, title);
