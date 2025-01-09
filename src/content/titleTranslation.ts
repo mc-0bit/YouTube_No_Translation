@@ -3,6 +3,11 @@ class TitleCache {
     private processedElements = new WeakMap<HTMLElement, string>();
     private apiCache = new Map<string, string>();
 
+    clear(): void {
+        this.processedElements = new WeakMap<HTMLElement, string>();
+        // We can keep the API cache as it's based on URLs
+    }
+
     hasElement(element: HTMLElement): boolean {
         const hasElem = this.processedElements.has(element);
         console.log('[Extension-Debug] Checking if element is processed:', hasElem);
@@ -115,7 +120,7 @@ function initializeTitleTranslation() {
     // Initial setup
     browser.storage.local.get('settings').then((data: Record<string, any>) => {
         const settings = data.settings as ExtensionSettings;
-        handleTitleTranslation(settings?.titleTranslation || false);
+        refreshTitleTranslation();
     });
 
     // Message handler
@@ -125,61 +130,17 @@ function initializeTitleTranslation() {
         }
         return true;
     });
+}
 
-    // Start the observer
-    const observer = new MutationObserver((mutations) => {
-        if (processingTitleMutation) {
-            console.log(
-                '%c[Extension-Debug][Title] Already processing mutation, skipping',
-                'color: #67e8f9;'
-            );
-            return;
-        }
-
-        titleMutationCount++;
-        if (titleMutationCount > MUTATION_THRESHOLD) {
-            console.log(
-                '%c[Extension-Debug][Title] Mutation threshold reached, resetting counter',
-                'color: #67e8f9;'
-            );
-            titleMutationCount = 0;
-            return;
-        }
-
-        console.log(
-            '%c[Extension-Debug][Title] Processing mutation',
-            'color: #67e8f9;',
-            titleMutationCount
-        );
-
-        processingTitleMutation = true;
-
-        const relevantMutation = mutations.some(mutation => {
-            const target = mutation.target as HTMLElement;
-            return target.matches?.('yt-formatted-string, h1.ytd-watch-metadata');
-        });
-
-        if (!relevantMutation) {
-            console.log('[Extension-Debug] No relevant mutations detected');
-            processingTitleMutation = false;
-            return;
-        }
-
-        browser.storage.local.get('settings').then((data: Record<string, any>) => {
-            const settings = data.settings as ExtensionSettings;
-            handleTitleTranslation(settings?.titleTranslation || false).finally(() => {
-                processingTitleMutation = false;
-            });
-        });
-    });
-
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-        attributes: true,
-        attributeFilter: ['textContent', 'innerText']
-    });
+// New function to refresh translation based on current state
+async function refreshTitleTranslation() {
+    const data = await browser.storage.local.get('settings');
+    const settings = data.settings as ExtensionSettings;
+    
+    // Clear cache before refreshing
+    titleCache.clear();
+    
+    await handleTitleTranslation(settings?.titleTranslation || false);
 }
 
 let processingTitleMutation = false;
