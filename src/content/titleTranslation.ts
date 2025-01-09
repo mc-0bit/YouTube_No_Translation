@@ -120,7 +120,9 @@ function initializeTitleTranslation() {
     // Initial setup
     browser.storage.local.get('settings').then((data: Record<string, any>) => {
         const settings = data.settings as ExtensionSettings;
-        refreshTitleTranslation();
+        if (settings?.titleTranslation) {
+            refreshTitleTranslation();
+        }
     });
 
     // Message handler
@@ -149,6 +151,39 @@ let titleMutationCount = 0;
 let titleObserver: MutationObserver | null = null;
 
 function setupTitleObserver() {
+    // Search page observer
+    waitForElement('#contents.ytd-section-list-renderer').then((contents) => {
+        // Process titles immediately after finding the element
+        browser.storage.local.get('settings').then((data: Record<string, any>) => {
+            const settings = data.settings as ExtensionSettings;
+            if (settings?.titleTranslation) {
+                handleSearchResults();
+            }
+        });
+
+        // Setup observer for future mutations
+        let debounceTimer: number;
+        const searchObserver = new MutationObserver((mutations) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = window.setTimeout(() => {
+                console.log('[Extension-Debug] Search results mutation detected');
+                browser.storage.local.get('settings').then((data: Record<string, any>) => {
+                    const settings = data.settings as ExtensionSettings;
+                    if (settings?.titleTranslation) {
+                        handleSearchResults();
+                    }
+                });
+            }, 100);
+        });
+
+        // Observe only direct children additions
+        searchObserver.observe(contents, {
+            childList: true,
+            subtree: false
+        });
+    });
+
+    // Observer pour la page watch
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
         titleObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
@@ -168,4 +203,50 @@ function setupTitleObserver() {
             attributeFilter: ['video-id']
         });
     });
+
+    // Observer pour la page d'accueil
+    waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
+        const gridObserver = new MutationObserver(() => {
+            browser.storage.local.get('settings').then((data: Record<string, any>) => {
+                const settings = data.settings as ExtensionSettings;
+                if (settings?.titleTranslation) {
+                    refreshTitleTranslation();
+                }
+            });
+        });
+
+        gridObserver.observe(contents, {
+            childList: true  // On observe juste l'ajout de nouvelles rows
+        });
+    });
+}
+
+// Nouvelle fonction pour gérer les résultats de recherche
+async function handleSearchResults(): Promise<void> {
+    console.log('[Extension-Debug] Processing search results');
+    
+    // Sélectionner tous les titres de vidéos non traités
+    const videoTitles = document.querySelectorAll('ytd-video-renderer #video-title:not([translate="no"])') as NodeListOf<HTMLAnchorElement>;
+    
+    console.log('[Extension-Debug] Found video titles:', videoTitles.length);
+
+    for (const titleElement of videoTitles) {
+        if (!titleCache.hasElement(titleElement)) {
+            console.log('[Extension-Debug] Processing search result title:', titleElement.textContent);
+            const videoUrl = titleElement.href;
+            if (videoUrl) {
+                const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
+                if (videoId) {
+                    try {
+                        const originalTitle = await titleCache.getOriginalTitle(
+                            `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
+                        );
+                        updateTitleElement(titleElement, originalTitle);
+                    } catch (error) {
+                        console.error('[Extension-Debug] Failed to update search result title:', error);
+                    }
+                }
+            }
+        }
+    }
 }
