@@ -4,7 +4,7 @@
 
 ###
 
-<h1 align="center">NMT : No More Translation on YouTube</h1>
+<h1 align="center">No More Translation on YouTube</h1>
 
 ###
 
@@ -22,7 +22,7 @@
 ###
 
 <div align="center">
-  <a href="https://addons.mozilla.org/firefox/addon/no-more-translation-on-youtube/">
+  <a href="https://addons.mozilla.org/firefox/addon/youtube-no-more-translation/">
     <img src="./assets/images/firefox.png" height="40" alt="Available on Firefox" title="Available on Firefox"/>
   </a>
 </div>
