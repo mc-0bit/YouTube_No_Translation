@@ -145,3 +145,27 @@ async function refreshTitleTranslation() {
 
 let processingTitleMutation = false;
 let titleMutationCount = 0;
+
+let titleObserver: MutationObserver | null = null;
+
+function setupTitleObserver() {
+    waitForElement('ytd-watch-flexy').then((watchFlexy) => {
+        titleObserver = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
+                    browser.storage.local.get('settings').then((data: Record<string, any>) => {
+                        const settings = data.settings as ExtensionSettings;
+                        if (settings?.titleTranslation) {
+                            refreshTitleTranslation();
+                        }
+                    });
+                }
+            }
+        });
+
+        titleObserver.observe(watchFlexy, {
+            attributes: true,
+            attributeFilter: ['video-id']
+        });
+    });
+}

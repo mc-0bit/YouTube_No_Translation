@@ -103,3 +103,27 @@ function initializeAudioTranslation() {
         return true;
     });
 }
+
+let audioObserver: MutationObserver | null = null;
+
+function setupAudioObserver() {
+    waitForElement('ytd-watch-flexy').then((watchFlexy) => {
+        audioObserver = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
+                    browser.storage.local.get('settings').then((data: Record<string, any>) => {
+                        const settings = data.settings as ExtensionSettings;
+                        if (settings?.audioTranslation) {
+                            initializeAudioTranslation();
+                        }
+                    });
+                }
+            }
+        });
+
+        audioObserver.observe(watchFlexy, {
+            attributes: true,
+            attributeFilter: ['video-id']
+        });
+    });
+}
