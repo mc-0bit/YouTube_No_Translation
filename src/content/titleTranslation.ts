@@ -166,6 +166,18 @@ function setupTitleObserver() {
             childList: true
         });
     });
+
+    // Observer pour les vidéos recommandées
+    waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then((contents) => {
+        console.log('[Extension-Debug] Setting up recommended videos observer');
+        const recommendedObserver = new MutationObserver(() => {
+            refreshOtherTitles();
+        });
+
+        recommendedObserver.observe(contents, {
+            childList: true
+        });
+    });
 }
 
 // Nouvelle fonction pour gérer les résultats de recherche
