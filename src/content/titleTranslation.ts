@@ -140,7 +140,7 @@ function initializeTitleTranslation() {
 
 // Observers Setup
 function setupTitleObserver() {
-    // Observer pour la page watch
+    // Observer for watch page
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
         titleObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
@@ -156,7 +156,7 @@ function setupTitleObserver() {
         });
     });
 
-    // Observer pour la page d'accueil
+    // Observer for home page
     waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
         const gridObserver = new MutationObserver(() => {
             refreshOtherTitles();
@@ -167,7 +167,7 @@ function setupTitleObserver() {
         });
     });
 
-    // Observer pour les vidéos recommandées
+    // Observer for recommended videos
     waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then((contents) => {
         console.log('[Extension-Debug] Setting up recommended videos observer');
         const recommendedObserver = new MutationObserver(() => {
@@ -178,13 +178,36 @@ function setupTitleObserver() {
             childList: true
         });
     });
+
+    // Observer for search results
+    waitForElement('ytd-section-list-renderer #contents').then((contents) => {
+        console.log('[Extension-Debug] Setting up search results observer');
+        const searchObserver = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'childList' && 
+                    mutation.addedNodes.length > 0 && 
+                    mutation.target instanceof HTMLElement) {
+                    const titles = mutation.target.querySelectorAll('#video-title');
+                    if (titles.length > 0) {
+                        refreshOtherTitles();
+                        break;
+                    }
+                }
+            }
+        });
+
+        searchObserver.observe(contents, {
+            childList: true,
+            subtree: true
+        });
+    });
 }
 
-// Nouvelle fonction pour gérer les résultats de recherche
+// New function to handle search results
 async function handleSearchResults(): Promise<void> {
     console.log('[Extension-Debug] Processing search results');
     
-    // Sélectionner tous les titres de vidéos non traités
+    // Select all untreated video titles
     const videoTitles = document.querySelectorAll('ytd-video-renderer #video-title:not([translate="no"])') as NodeListOf<HTMLAnchorElement>;
     
     console.log('[Extension-Debug] Found video titles:', videoTitles.length);
