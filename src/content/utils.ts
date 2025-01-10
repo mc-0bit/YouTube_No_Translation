@@ -1,5 +1,7 @@
 const MUTATION_THRESHOLD = 10;
 
+const LOG_PREFIX = '[NMT]';
+
 function isToggleMessage(message: unknown): message is Message {
     return (
         typeof message === 'object' &&

@@ -25,13 +25,30 @@ function injectScript(code: string) {
     script.remove();
 }
 
+const AUDIO_LOG_STYLE = 'color: #86efac;';
+const AUDIO_LOG_CONTEXT = '[Audio]';
+
+function audioLog(message: string, ...args: any[]) {
+    const formattedMessage = `${LOG_PREFIX}${AUDIO_LOG_CONTEXT} ${message}`;
+    console.log(`%c${formattedMessage}`, AUDIO_LOG_STYLE, ...args);
+}
+
 async function handleAudioTranslation(isEnabled: boolean) {
     if (!isEnabled) return;
     
-    console.log('%c[Extension-Debug][Audio] Initializing audio translation prevention', 'color: #86efac;');
+    audioLog('Initializing audio translation prevention');
     
     injectScript(`
         function() {
+            const AUDIO_LOG_STYLE = '${AUDIO_LOG_STYLE}';
+            const LOG_PREFIX = '${LOG_PREFIX}';
+            const AUDIO_LOG_CONTEXT = '${AUDIO_LOG_CONTEXT}';
+
+            function audioLog(message, ...args) {
+                const formattedMessage = \`\${LOG_PREFIX}\${AUDIO_LOG_CONTEXT} \${message}\`;
+                console.log('%c' + formattedMessage, AUDIO_LOG_STYLE, ...args);
+            }
+
             // Language mapping for common codes
             const languageNames = {
                 'en': 'English',
@@ -49,45 +66,50 @@ async function handleAudioTranslation(isEnabled: boolean) {
             const player = document.getElementById('movie_player');
             if (!player) return;
             
-            try {
-                // 1. Get available audio tracks
-                const tracks = player.getAvailableAudioTracks();
-                
-                // 2. Find original track by checking decoded content
-                const originalTrack = tracks.find(track => {
-                    const base64Part = track.id.split(';')[1];
-                    const decoded = atob(base64Part);
-                    return decoded.includes('original');
-                });
-                
-                if (originalTrack) {
-                    // Extract language code from base64 encoded track ID
-                    const base64Part = originalTrack.id.split(';')[1];
-                    const decoded = atob(base64Part);
-                    const langMatch = decoded.match(/lang..([-a-zA-Z]+)/);
+            function setOriginalTrack() {
+                try {
+                    const tracks = player.getAvailableAudioTracks();
+                    audioLog('Available tracks:', tracks);
                     
-                    // Get base language code (e.g., 'es' from 'es-US')
-                    const langCode = langMatch ? langMatch[1].split('-')[0] : 'unknown';
+                    // 2. Find original track by checking decoded content
+                    const originalTrack = tracks.find(track => {
+                        const base64Part = track.id.split(';')[1];
+                        const decoded = atob(base64Part);
+                        return decoded.includes('original');
+                    });
                     
-                    // Use the language name if available, otherwise use the language code
-                    const languageName = languageNames[langCode] || langCode.toUpperCase();
-                    
-                    // 3. Set the audio track
-                    console.log('%c[Extension-Debug][Audio] Setting audio to original language: ' + languageName, 'color: #86efac;');
-                    player.setAudioTrack(originalTrack);
+                    if (originalTrack) {
+                        // Extract language code from base64 encoded track ID
+                        const base64Part = originalTrack.id.split(';')[1];
+                        const decoded = atob(base64Part);
+                        const langMatch = decoded.match(/lang..([-a-zA-Z]+)/);
+                        
+                        // Get base language code (e.g., 'es' from 'es-US')
+                        const langCode = langMatch ? langMatch[1].split('-')[0] : 'unknown';
+                        
+                        // Use the language name if available, otherwise use the language code
+                        const languageName = languageNames[langCode] || langCode.toUpperCase();
+                        
+                        // 3. Set the audio track
+                        audioLog('Setting audio to original language: ' + languageName);
+                        player.setAudioTrack(originalTrack);
+                    }
+                } catch (error) {
+                    console.error('[YT-DEBUG] Error:', error);
                 }
-            } catch (error) {
-                console.error('[YT-DEBUG] Error:', error);
             }
+
+            // Listen for video data change
+            player.addEventListener('onVideoDataChange', (data) => {
+                audioLog('Video data changed, checking audio tracks...');
+                setOriginalTrack();
+            });
         }
     `);
 }
 
 function initializeAudioTranslation() {
-    console.log(
-        '%c[Extension-Debug][Audio] Initializing audio translation prevention',
-        'color: #86efac; font-weight: bold;'
-    );
+    audioLog('Initializing audio translation prevention');
 
     // Initial setup
     browser.storage.local.get('settings').then((data: Record<string, any>) => {
