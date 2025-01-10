@@ -1,3 +1,8 @@
+// Global variables
+let processingTitleMutation = false;
+let titleMutationCount = 0;
+let titleObserver: MutationObserver | null = null;
+
 // Optimized cache manager
 class TitleCache {
     private processedElements = new WeakMap<HTMLElement, string>();
@@ -41,19 +46,12 @@ class TitleCache {
 
 const titleCache = new TitleCache();
 
-// Main functions
-async function handleTitleTranslation(isEnabled: boolean): Promise<void> {
-    console.log(
-        '%c[Extension-Debug][Title] handleTitleTranslation called with isEnabled:', 
-        'color: #67e8f9;', 
-        isEnabled
-    );
-    if (!isEnabled) {
-        console.log('[Extension-Debug] Translation prevention disabled, exiting');
-        return;
-    }
+// Main Title Function
+async function refreshMainTitle(): Promise<void> {
+    const data = await browser.storage.local.get('settings');
+    const settings = data.settings as ExtensionSettings;
+    if (!settings?.titleTranslation) return;
 
-    // Handle main video title
     const mainTitle = document.querySelector('h1.ytd-watch-metadata > yt-formatted-string') as HTMLElement;
     if (mainTitle && window.location.pathname === '/watch' && !titleCache.hasElement(mainTitle)) {
         console.log('[Extension-Debug] Processing main title element');
@@ -70,6 +68,13 @@ async function handleTitleTranslation(isEnabled: boolean): Promise<void> {
             }
         }
     }
+}
+
+// Other Titles Function
+async function refreshOtherTitles(): Promise<void> {
+    const data = await browser.storage.local.get('settings');
+    const settings = data.settings as ExtensionSettings;
+    if (!settings?.titleTranslation) return;
 
     // Handle recommended video titles
     const recommendedTitles = document.querySelectorAll('#video-title') as NodeListOf<HTMLElement>;
@@ -94,9 +99,12 @@ async function handleTitleTranslation(isEnabled: boolean): Promise<void> {
             }
         }
     }
+
+    // Handle search results
+    await handleSearchResults();
 }
 
-// Utility functions
+// Utility Functions
 function updateTitleElement(element: HTMLElement, title: string): void {
     console.log('[Extension-Debug] Updating element with title:', title);
     
@@ -119,89 +127,25 @@ function updatePageTitle(mainTitle: string): void {
     document.title = `${mainTitle} - ${channelName} - YouTube`;
 }
 
+// Initialization
 function initializeTitleTranslation() {
-    console.log(
-        '%c[Extension-Debug][Title] Initializing title translation prevention',
-        'color: #67e8f9; font-weight: bold;'
-    );
-    
-    // Initial setup
     browser.storage.local.get('settings').then((data: Record<string, any>) => {
         const settings = data.settings as ExtensionSettings;
         if (settings?.titleTranslation) {
-            refreshTitleTranslation();
+            refreshMainTitle();
+            refreshOtherTitles();
         }
-    });
-
-    // Message handler
-    browser.runtime.onMessage.addListener((message: unknown) => {
-        if (isToggleMessage(message) && message.feature === 'titles') {
-            handleTitleTranslation(message.isEnabled);
-        }
-        return true;
     });
 }
 
-// New function to refresh translation based on current state
-async function refreshTitleTranslation() {
-    const data = await browser.storage.local.get('settings');
-    const settings = data.settings as ExtensionSettings;
-    
-    // Clear cache before refreshing
-    titleCache.clear();
-    
-    await handleTitleTranslation(settings?.titleTranslation || false);
-}
-
-let processingTitleMutation = false;
-let titleMutationCount = 0;
-
-let titleObserver: MutationObserver | null = null;
-
+// Observers Setup
 function setupTitleObserver() {
-    // Search page observer
-    waitForElement('#contents.ytd-section-list-renderer').then((contents) => {
-        // Process titles immediately after finding the element
-        browser.storage.local.get('settings').then((data: Record<string, any>) => {
-            const settings = data.settings as ExtensionSettings;
-            if (settings?.titleTranslation) {
-                handleSearchResults();
-            }
-        });
-
-        // Setup observer for future mutations
-        let debounceTimer: number;
-        const searchObserver = new MutationObserver((mutations) => {
-            clearTimeout(debounceTimer);
-            debounceTimer = window.setTimeout(() => {
-                console.log('[Extension-Debug] Search results mutation detected');
-                browser.storage.local.get('settings').then((data: Record<string, any>) => {
-                    const settings = data.settings as ExtensionSettings;
-                    if (settings?.titleTranslation) {
-                        handleSearchResults();
-                    }
-                });
-            }, 100);
-        });
-
-        // Observe only direct children additions
-        searchObserver.observe(contents, {
-            childList: true,
-            subtree: false
-        });
-    });
-
     // Observer pour la page watch
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
         titleObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    browser.storage.local.get('settings').then((data: Record<string, any>) => {
-                        const settings = data.settings as ExtensionSettings;
-                        if (settings?.titleTranslation) {
-                            refreshTitleTranslation();
-                        }
-                    });
+                    refreshMainTitle();
                 }
             }
         });
@@ -215,16 +159,11 @@ function setupTitleObserver() {
     // Observer pour la page d'accueil
     waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
         const gridObserver = new MutationObserver(() => {
-            browser.storage.local.get('settings').then((data: Record<string, any>) => {
-                const settings = data.settings as ExtensionSettings;
-                if (settings?.titleTranslation) {
-                    refreshTitleTranslation();
-                }
-            });
+            refreshOtherTitles();
         });
 
         gridObserver.observe(contents, {
-            childList: true  // On observe juste l'ajout de nouvelles rows
+            childList: true
         });
     });
 }
@@ -311,34 +250,30 @@ function handleUrlChange() {
     console.log('[Extension-Debug][URL] Current pathname:', window.location.pathname);
     console.log('[Extension-Debug][URL] Full URL:', window.location.href);
     
-    browser.storage.local.get('settings').then((data: Record<string, any>) => {
-        const settings = data.settings as ExtensionSettings;
-        if (settings?.titleTranslation) {
-            console.log('[Extension-Debug][URL] Title translation is enabled');
-            titleCache.clear();
-            
-            switch(window.location.pathname) {
-                case '/results':
-                    console.log('[Extension-Debug][URL] Detected search page');
-                    waitForElement('#contents.ytd-section-list-renderer').then(() => {
-                        console.log('[Extension-Debug][URL] Search results container found');
-                        handleSearchResults();
-                    });
-                    break;
-                case '/':  // Home page
-                case '/feed/subscriptions':  // Subscriptions page
-                case '/feed/trending':  // Trending page
-                case '/playlist':  // Playlist page
-                case '/channel':  // Channel page
-                case '/@':  // Channel page (new format)
-                    refreshTitleTranslation();
-                    break;
-                case '/watch':  // Video page
-                    handleTitleTranslation(true);
-                    break;
-            }
-        } else {
-            console.log('[Extension-Debug][URL] Title translation is disabled');
-        }
-    });
+    // Check if URL contains @username pattern
+    const isChannelPage = window.location.pathname.includes('/@');
+    
+    if (isChannelPage) {
+        // Handle all new channel page types (videos, featured, shorts, etc.)
+        refreshOtherTitles();
+        return;
+    }
+    
+    switch(window.location.pathname) {
+        case '/results':
+            console.log('[Extension-Debug][URL] Detected search page');
+            waitForElement('#contents.ytd-section-list-renderer').then(() => {
+                console.log('[Extension-Debug][URL] Search results container found');
+                handleSearchResults();
+            });
+            break;
+        case '/':  // Home page
+        case '/feed/subscriptions':  // Subscriptions page
+        case '/feed/trending':  // Trending page
+        case '/playlist':  // Playlist page
+        case '/channel':  // Channel page (old format)
+        case '/watch':  // Video page
+            refreshOtherTitles();
+            break;
+    }
 }
