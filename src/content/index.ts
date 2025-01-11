@@ -17,6 +17,10 @@ browser.storage.local.get('settings').then((data: Record<string, any>) => {
         initializeAudioTranslation();
         setupAudioObserver();
     }
+    if (settings?.descriptionTranslation) {
+        initializeDescriptionTranslation();
+        setupDescriptionObserver();
+    }
 });
 
 // Listen for toggle changes

@@ -24,6 +24,7 @@
     "src/content/utils.ts",
     "src/content/titleTranslation.ts",
     "src/content/audioTranslation.ts",
+    "src/content/descriptionTranslation.ts",
     "src/content/index.ts"
   ]
 }

@@ -1,4 +1,3 @@
-
 interface Message {
     action: 'toggleTranslation';
     feature: 'titles' | 'audio' | 'description';
@@ -27,4 +26,17 @@ interface YouTubePlayer extends HTMLElement {
 interface ExtensionSettings {
     titleTranslation: boolean;
     audioTranslation: boolean;
+    descriptionTranslation: boolean;
+}
+
+interface YouTubePlayerResponse {
+    videoDetails: {
+        shortDescription: string;
+        [key: string]: any;
+    };
+    [key: string]: any;
+}
+
+interface Window {
+    ytInitialPlayerResponse?: YouTubePlayerResponse;
 }
