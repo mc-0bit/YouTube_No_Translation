@@ -20,13 +20,46 @@ const DESCRIPTION_SCRIPT = `
     
     console.log('%c' + prefix + ' Injected script starting', style);
     
-    // Get description immediately
-    const description = window.ytInitialPlayerResponse?.videoDetails?.shortDescription;
+    // Get current video ID from URL
+    const currentVideoId = new URLSearchParams(window.location.search).get('v');
+    console.log('%c' + prefix + ' Current video ID:', style, currentVideoId);
     
-    // Send it back to content script
-    window.dispatchEvent(new CustomEvent('nmt-description-data', {
-        detail: { description }
-    }));
+    // Try to get description from the player API endpoint
+    fetch('/youtubei/v1/player?key=' + window.ytcfg.data_.INNERTUBE_API_KEY, {
+        method: 'POST',
+        body: JSON.stringify({
+            videoId: currentVideoId,
+            context: {
+                client: {
+                    clientName: 'WEB',
+                    clientVersion: window.ytcfg.data_.INNERTUBE_CLIENT_VERSION
+                }
+            }
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Get description directly from videoDetails
+        const description = data?.videoDetails?.shortDescription;
+        
+        if (description) {
+            console.log('%c' + prefix + ' Found description from API for video:', style, currentVideoId);
+            window.dispatchEvent(new CustomEvent('nmt-description-data', {
+                detail: { description }
+            }));
+        } else {
+            console.log('%c' + prefix + ' No description found in API response');
+            window.dispatchEvent(new CustomEvent('nmt-description-data', {
+                detail: { description: null }
+            }));
+        }
+    })
+    .catch(error => {
+        console.log('%c' + prefix + ' Error fetching description:', style, error);
+        window.dispatchEvent(new CustomEvent('nmt-description-data', {
+            detail: { description: null }
+        }));
+    });
 })();
 `;
 
@@ -36,20 +69,35 @@ async function injectDescriptionScript(): Promise<string | null> {
         await waitForElement('#description-inline-expander');
         descriptionLog('Description element found, injecting script');
         
-        return new Promise((resolve) => {
-            const handleDescription = (event: CustomEvent) => {
-                window.removeEventListener('nmt-description-data', handleDescription as EventListener);
-                resolve(event.detail?.description || null);
-            };
+        // Try up to 3 times to get the description
+        for (let i = 0; i < 3; i++) {
+            const description = await new Promise<string | null>((resolve) => {
+                const handleDescription = (event: CustomEvent) => {
+                    window.removeEventListener('nmt-description-data', handleDescription as EventListener);
+                    resolve(event.detail?.description || null);
+                };
 
-            window.addEventListener('nmt-description-data', handleDescription as EventListener);
-            
-            const script = document.createElement('script');
-            script.textContent = DESCRIPTION_SCRIPT;
-            const target = document.head || document.documentElement;
-            target?.appendChild(script);
-            script.remove();
-        });
+                window.addEventListener('nmt-description-data', handleDescription as EventListener);
+                
+                const script = document.createElement('script');
+                script.textContent = DESCRIPTION_SCRIPT;
+                const target = document.head || document.documentElement;
+                target?.appendChild(script);
+                script.remove();
+            });
+
+            if (description) {
+                return description;
+            }
+
+            // Wait a bit before retrying
+            if (i < 2) {
+                descriptionLog('Retrying to get description...');
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        return null;
     } catch (error) {
         console.error(`${LOG_PREFIX}${DESCRIPTION_LOG_CONTEXT} ${error}`);
         return null;
@@ -76,15 +124,29 @@ class DescriptionCache {
 const descriptionCache = new DescriptionCache();
 
 function setupDescriptionObserver() {
-    // Observer for video changes
+    // Observer for video changes via URL
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        const observer = new MutationObserver((mutations) => {
+        descriptionLog('Setting up video-id observer');
+        const observer = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    browser.storage.local.get('settings').then((data: Record<string, any>) => {
+                    descriptionLog('Video ID changed!');
+                    // Wait a bit for YouTube to update its data
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    // Then wait for description element
+                    await waitForElement('#description-inline-expander');
+                    browser.storage.local.get('settings').then(async (data: Record<string, any>) => {
                         const settings = data.settings as ExtensionSettings;
                         if (settings?.descriptionTranslation) {
-                            refreshDescription();
+                            descriptionLog('Fetching new description');
+                            const description = await injectDescriptionScript();
+                            if (description) {
+                                descriptionLog('Got new description:', description);
+                                const descriptionElement = document.querySelector('#description-inline-expander') as HTMLElement;
+                                updateDescriptionElement(descriptionElement, description);
+                            } else {
+                                descriptionLog('Failed to get new description');
+                            }
                         }
                     });
                 }
@@ -99,13 +161,15 @@ function setupDescriptionObserver() {
 
     // Observer for description expansion/collapse
     waitForElement('#description-inline-expander').then((descriptionElement) => {
+        descriptionLog('Setting up expand/collapse observer');
         const observer = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'is-expanded') {
+                    descriptionLog('Description expanded/collapsed');
                     browser.storage.local.get('settings').then(async (data: Record<string, any>) => {
                         const settings = data.settings as ExtensionSettings;
                         if (settings?.descriptionTranslation) {
-                            const description = await descriptionCache.getOriginalDescription();
+                            const description = await injectDescriptionScript();
                             if (description) {
                                 updateDescriptionElement(descriptionElement as HTMLElement, description);
                             }
