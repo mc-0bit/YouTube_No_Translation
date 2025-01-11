@@ -115,17 +115,9 @@ async function refreshOtherTitles(): Promise<void> {
 // Utility Functions
 function updateTitleElement(element: HTMLElement, title: string): void {
     titleLog('Updating element with title:', title);
-    
-    // Check if the element already contains the original title
-    if (element.textContent?.includes(title)) {
-        titleLog('Title already present, cleaning up');
-        element.textContent = title;  // Clean up any duplicate
-    } else {
-        element.textContent = title;
-    }
-    
+    element.textContent = title;
     element.setAttribute('translate', 'no');
-    element.style.setProperty('translate', 'no', 'important');
+    element.removeAttribute('is-empty');
     titleCache.setElement(element, title);
 }
 
@@ -148,12 +140,46 @@ function initializeTitleTranslation() {
 
 // Observers Setup
 function setupTitleObserver() {
-    // Observer for watch page
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        titleObserver = new MutationObserver((mutations) => {
+        titleLog('[Main] Setting up video-id observer');
+        titleObserver = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    refreshMainTitle();
+                    titleLog('[Main] Video ID changed!');
+                    titleCache.clear();
+                    titleLog('[Main] Cache cleared');
+                    
+                    const newVideoId = (mutation.target as HTMLElement).getAttribute('video-id');
+                    titleLog('[Main] New video ID:', newVideoId);
+                    
+                    // Get the current page URL to check against
+                    const currentUrl = window.location.href;
+                    titleLog('[Main] Current URL:', currentUrl);
+                    
+                    // Wait for title element and monitor its changes
+                    const titleElement = await waitForElement('ytd-watch-metadata yt-formatted-string.style-scope.ytd-watch-metadata');
+                    let attempts = 0;
+                    const maxAttempts = 20;
+                    
+                    while (attempts < maxAttempts) {
+                        const pageUrl = window.location.href;
+                        
+                        if (pageUrl === currentUrl && titleElement.textContent && !titleElement.textContent.includes('Fight For')) {
+                            titleLog('[Main] Valid title found:', titleElement.textContent);
+                            
+                            browser.storage.local.get('settings').then(async (data: Record<string, any>) => {
+                                const settings = data.settings as ExtensionSettings;
+                                if (settings?.titleTranslation) {
+                                    await refreshMainTitle();
+                                    titleLog('[Main] Title updated, new element:', titleElement.outerHTML);
+                                }
+                            });
+                            break;
+                        }
+                        
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
                 }
             }
         });
