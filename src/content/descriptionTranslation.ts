@@ -76,6 +76,7 @@ class DescriptionCache {
 const descriptionCache = new DescriptionCache();
 
 function setupDescriptionObserver() {
+    // Observer for video changes
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
         const observer = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
@@ -95,6 +96,30 @@ function setupDescriptionObserver() {
             attributeFilter: ['video-id']
         });
     });
+
+    // Observer for description expansion/collapse
+    waitForElement('#description-inline-expander').then((descriptionElement) => {
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'is-expanded') {
+                    browser.storage.local.get('settings').then(async (data: Record<string, any>) => {
+                        const settings = data.settings as ExtensionSettings;
+                        if (settings?.descriptionTranslation) {
+                            const description = await descriptionCache.getOriginalDescription();
+                            if (description) {
+                                updateDescriptionElement(descriptionElement as HTMLElement, description);
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        observer.observe(descriptionElement, {
+            attributes: true,
+            attributeFilter: ['is-expanded']
+        });
+    });
 }
 
 async function refreshDescription(): Promise<void> {
@@ -109,24 +134,87 @@ async function refreshDescription(): Promise<void> {
         
         if (originalDescription) {
             descriptionLog('Found original description:', originalDescription);
-            // updateDescriptionElement(descriptionElement, originalDescription);
+            updateDescriptionElement(descriptionElement, originalDescription);
         } else {
             console.error(`${LOG_PREFIX}${DESCRIPTION_LOG_CONTEXT} No original description found`);
         }
     }
 }
 
-/*
-Function to update the description element, not working as expected for now. Coming next.
 
 function updateDescriptionElement(element: HTMLElement, description: string): void {
-    descriptionLog('Updating element with description:', description);
-    element.textContent = description;
-    element.setAttribute('translate', 'no');
-    element.style.setProperty('translate', 'no', 'important');
+    descriptionLog('Updating element with description');
+    
+    // Find the text containers
+    const attributedString = element.querySelector('yt-attributed-string');
+    const snippetAttributedString = element.querySelector('#attributed-snippet-text');
+    
+    if (!attributedString && !snippetAttributedString) {
+        console.error(`${LOG_PREFIX}${DESCRIPTION_LOG_CONTEXT} No description text container found`);
+        return;
+    }
+
+    // Create the text content
+    const span = document.createElement('span');
+    span.className = 'yt-core-attributed-string yt-core-attributed-string--white-space-pre-wrap';
+    span.dir = 'auto';
+    
+    // URL regex pattern
+    const urlPattern = /(https?:\/\/[^\s]+)/g;
+    
+    const lines = description.split('\n');
+    lines.forEach((line, index) => {
+        // Split the line by URLs and create elements accordingly
+        const parts = line.split(urlPattern);
+        parts.forEach((part, partIndex) => {
+            if (part.match(urlPattern)) {
+                // This is a URL, create a link
+                const link = document.createElement('a');
+                link.href = part;
+                link.textContent = part;
+                link.className = 'yt-core-attributed-string__link yt-core-attributed-string__link--call-to-action-color';
+                link.setAttribute('target', '_blank');
+                link.style.color = 'rgb(62, 166, 255)';
+                span.appendChild(link);
+            } else if (part) {
+                // This is regular text
+                span.appendChild(document.createTextNode(part));
+            }
+        });
+
+        if (index < lines.length - 1) {
+            span.appendChild(document.createElement('br'));
+        }
+    });
+
+    // Update both containers if they exist
+    if (attributedString) {
+        while (attributedString.firstChild) {
+            attributedString.removeChild(attributedString.firstChild);
+        }
+        attributedString.appendChild(span.cloneNode(true));
+    }
+    
+    if (snippetAttributedString) {
+        while (snippetAttributedString.firstChild) {
+            snippetAttributedString.removeChild(snippetAttributedString.firstChild);
+        }
+        snippetAttributedString.appendChild(span.cloneNode(true));
+    }
+
+    // Prevent translation on all levels
+    [element, attributedString, snippetAttributedString].forEach(el => {
+        if (el) {
+            el.setAttribute('translate', 'no');
+            if (el instanceof HTMLElement) {
+                el.style.setProperty('translate', 'no', 'important');
+            }
+        }
+    });
+    
     descriptionCache.setElement(element, description);
 }
-*/
+
 
 function initializeDescriptionTranslation() {
     descriptionLog('Initializing description translation prevention');
