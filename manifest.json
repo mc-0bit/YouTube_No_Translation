@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "No More Translations",
-  "version": "1.1.5",
-  "description": "A firefox extension that prevents auto-translation on YouTube (titles, dubbing)",
+  "version": "1.2.0",
+  "description": "An addon that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
 
   "icons": {
     "48": "assets/icons/icon.svg",
