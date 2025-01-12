@@ -32,3 +32,7 @@
     <img src="./assets/images/buymeacoffee.png" height="100" style="border-radius: 10px;" alt="Buy me a coffee" title="Buy me a coffee"/>
   </a>
 </div>
+
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
