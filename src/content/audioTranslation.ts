@@ -25,14 +25,6 @@ function injectScript(code: string) {
     script.remove();
 }
 
-const AUDIO_LOG_STYLE = 'color: #86efac;';
-const AUDIO_LOG_CONTEXT = '[Audio]';
-
-function audioLog(message: string, ...args: any[]) {
-    const formattedMessage = `${LOG_PREFIX}${AUDIO_LOG_CONTEXT} ${message}`;
-    console.log(`%c${formattedMessage}`, AUDIO_LOG_STYLE, ...args);
-}
-
 async function handleAudioTranslation(isEnabled: boolean) {
     if (!isEnabled) return;
     
@@ -40,14 +32,20 @@ async function handleAudioTranslation(isEnabled: boolean) {
     
     injectScript(`
         function() {
-            const AUDIO_LOG_STYLE = '${AUDIO_LOG_STYLE}';
             const LOG_PREFIX = '${LOG_PREFIX}';
-            const AUDIO_LOG_CONTEXT = '${AUDIO_LOG_CONTEXT}';
+            const LOG_STYLES = ${JSON.stringify(LOG_STYLES)};
 
-            function audioLog(message, ...args) {
-                const formattedMessage = \`\${LOG_PREFIX}\${AUDIO_LOG_CONTEXT} \${message}\`;
-                console.log('%c' + formattedMessage, AUDIO_LOG_STYLE, ...args);
+            function createLogger(category) {
+                return (message, ...args) => {
+                    console.log(
+                        \`%c\${LOG_PREFIX}\${category.context} \${message}\`,
+                        \`color: \${category.color}\`,
+                        ...args
+                    );
+                };
             }
+
+            const audioLog = createLogger(LOG_STYLES.AUDIO);
 
             // Language mapping for common codes
             const languageNames = {

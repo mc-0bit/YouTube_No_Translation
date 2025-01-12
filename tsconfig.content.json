@@ -21,6 +21,7 @@
     "src/types/types.ts",
     "src/types/global.d.ts",
     "src/config/constants.ts",
+    "src/content/logging.ts",
     "src/content/utils.ts",
     "src/content/titleTranslation.ts",
     "src/content/audioTranslation.ts",

@@ -1,8 +1,5 @@
 
-console.log(
-    '%c[NTM-Debug][Core] Content script starting to load...',
-    'color: #f9a8d4; font-weight: bold;'
-);
+coreLog('Content script starting to load...');
 
 // Initialize features
 browser.storage.local.get('settings').then((data: Record<string, any>) => {

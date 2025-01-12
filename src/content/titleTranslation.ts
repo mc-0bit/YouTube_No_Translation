@@ -1,15 +1,8 @@
+
 // Global variables
 let processingTitleMutation = false;
 let titleMutationCount = 0;
 let titleObserver: MutationObserver | null = null;
-
-const TITLE_LOG_STYLE = 'color: #93c5fd;';
-const TITLE_LOG_CONTEXT = '[Title]';
-
-function titleLog(message: string, ...args: any[]) {
-    const formattedMessage = `${LOG_PREFIX}${TITLE_LOG_CONTEXT} ${message}`;
-    console.log(`%c${formattedMessage}`, TITLE_LOG_STYLE, ...args);
-}
 
 // Optimized cache manager
 class TitleCache {
@@ -23,30 +16,30 @@ class TitleCache {
 
     hasElement(element: HTMLElement): boolean {
         const hasElem = this.processedElements.has(element);
-        titleLog('Checking if element is processed:', hasElem);
+        otherTitlesLog('Checking if element is processed:', hasElem);
         return hasElem;
     }
 
     setElement(element: HTMLElement, title: string): void {
-        titleLog('Caching element with title:', title);
+        otherTitlesLog('Caching element with title:', title);
         this.processedElements.set(element, title);
     }
 
     async getOriginalTitle(url: string): Promise<string> {
         if (this.apiCache.has(url)) {
-            titleLog('Using cached API response for:', url);
+            otherTitlesLog('Using cached API response for:', url);
             return this.apiCache.get(url)!;
         }
 
-        titleLog('Fetching new title from API:', url);
+        otherTitlesLog('Fetching new title from API:', url);
         try {
             const response = await fetch(url);
             const data = await response.json();
             this.apiCache.set(url, data.title);
-            titleLog('Received title from API:', data.title);
+            otherTitlesLog('Received title from API:', data.title);
             return data.title;
         } catch (error) {
-            console.error(`${LOG_PREFIX}${TITLE_LOG_CONTEXT} API request failed:`, error);
+            otherTitlesLog(`API request failed:`, error);
             throw error;
         }
     }
@@ -62,7 +55,7 @@ async function refreshMainTitle(): Promise<void> {
 
     const mainTitle = document.querySelector('h1.ytd-watch-metadata > yt-formatted-string') as HTMLElement;
     if (mainTitle && window.location.pathname === '/watch' && !titleCache.hasElement(mainTitle)) {
-        titleLog('Processing main title element');
+        mainTitleLog('Processing main title element');
         const videoId = new URLSearchParams(window.location.search).get('v');
         if (videoId) {
             try {
@@ -72,7 +65,7 @@ async function refreshMainTitle(): Promise<void> {
                 updateTitleElement(mainTitle, originalTitle);
                 updatePageTitle(originalTitle);
             } catch (error) {
-                console.error(`${LOG_PREFIX}${TITLE_LOG_CONTEXT} Failed to update main title:`, error);
+                mainTitleLog(`Failed to update main title:`, error);
             }
         }
     }
@@ -86,11 +79,11 @@ async function refreshOtherTitles(): Promise<void> {
 
     // Handle recommended video titles
     const recommendedTitles = document.querySelectorAll('#video-title') as NodeListOf<HTMLElement>;
-    titleLog('Found recommended titles:', recommendedTitles.length);
+    otherTitlesLog('Found recommended titles:', recommendedTitles.length);
 
     for (const titleElement of recommendedTitles) {
         if (!titleCache.hasElement(titleElement)) {
-            titleLog('Processing recommended title:', titleElement.textContent);
+            otherTitlesLog('Processing recommended title:', titleElement.textContent);
             const videoUrl = titleElement.closest('a')?.href;
             if (videoUrl) {
                 const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
@@ -101,7 +94,7 @@ async function refreshOtherTitles(): Promise<void> {
                         );
                         updateTitleElement(titleElement, originalTitle);
                     } catch (error) {
-                        console.error(`${LOG_PREFIX}${TITLE_LOG_CONTEXT} Failed to update recommended title:`, error);
+                        otherTitlesLog(`Failed to update recommended title:`, error);
                     }
                 }
             }
@@ -114,7 +107,7 @@ async function refreshOtherTitles(): Promise<void> {
 
 // Utility Functions
 function updateTitleElement(element: HTMLElement, title: string): void {
-    titleLog('Updating element with title:', title);
+    otherTitlesLog('Updating element with title:', title);
     element.textContent = title;
     element.setAttribute('translate', 'no');
     element.removeAttribute('is-empty');
@@ -122,7 +115,7 @@ function updateTitleElement(element: HTMLElement, title: string): void {
 }
 
 function updatePageTitle(mainTitle: string): void {
-    titleLog('Updating page title with:', mainTitle);
+        mainTitleLog('Updating page title with:', mainTitle);
     const channelName = document.querySelector('ytd-channel-name yt-formatted-string')?.textContent || '';
     document.title = `${mainTitle} - ${channelName} - YouTube`;
 }
@@ -141,20 +134,20 @@ function initializeTitleTranslation() {
 // Observers Setup
 function setupTitleObserver() {
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        titleLog('[Main] Setting up video-id observer');
+        mainTitleLog('Setting up video-id observer');
         titleObserver = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    titleLog('[Main] Video ID changed!');
+                        mainTitleLog('Video ID changed!');
                     titleCache.clear();
-                    titleLog('[Main] Cache cleared');
+                    mainTitleLog('Cache cleared');
                     
                     const newVideoId = (mutation.target as HTMLElement).getAttribute('video-id');
-                    titleLog('[Main] New video ID:', newVideoId);
+                    mainTitleLog('New video ID:', newVideoId);
                     
                     // Get the current page URL to check against
                     const currentUrl = window.location.href;
-                    titleLog('[Main] Current URL:', currentUrl);
+                    mainTitleLog('Current URL:', currentUrl);
                     
                     // Wait for title element and monitor its changes
                     const titleElement = await waitForElement('ytd-watch-metadata yt-formatted-string.style-scope.ytd-watch-metadata');
@@ -165,13 +158,13 @@ function setupTitleObserver() {
                         const pageUrl = window.location.href;
                         
                         if (pageUrl === currentUrl && titleElement.textContent && !titleElement.textContent.includes('Fight For')) {
-                            titleLog('[Main] Valid title found:', titleElement.textContent);
+                            mainTitleLog('Valid title found:', titleElement.textContent);
                             
                             browser.storage.local.get('settings').then(async (data: Record<string, any>) => {
                                 const settings = data.settings as ExtensionSettings;
                                 if (settings?.titleTranslation) {
                                     await refreshMainTitle();
-                                    titleLog('[Main] Title updated, new element:', titleElement.outerHTML);
+                                    mainTitleLog('Title updated, new element:', titleElement.outerHTML);
                                 }
                             });
                             break;
@@ -203,7 +196,7 @@ function setupTitleObserver() {
 
     // Observer for recommended videos
     waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then((contents) => {
-        titleLog('Setting up recommended videos observer');
+        otherTitlesLog('Setting up recommended videos observer');
         const recommendedObserver = new MutationObserver(() => {
             refreshOtherTitles();
         });
@@ -215,7 +208,7 @@ function setupTitleObserver() {
 
     // Observer for search results
     waitForElement('ytd-section-list-renderer #contents').then((contents) => {
-        titleLog('Setting up search results observer');
+        otherTitlesLog('Setting up search results observer');
         const searchObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'childList' && 
@@ -239,16 +232,16 @@ function setupTitleObserver() {
 
 // New function to handle search results
 async function handleSearchResults(): Promise<void> {
-    titleLog('Processing search results');
+    otherTitlesLog('Processing search results');
     
     // Select all untreated video titles
     const videoTitles = document.querySelectorAll('ytd-video-renderer #video-title:not([translate="no"])') as NodeListOf<HTMLAnchorElement>;
     
-    titleLog('Found video titles:', videoTitles.length);
+    otherTitlesLog('Found video titles:', videoTitles.length);
 
     for (const titleElement of videoTitles) {
         if (!titleCache.hasElement(titleElement)) {
-            titleLog('Processing search result title:', titleElement.textContent);
+            otherTitlesLog('Processing search result title:', titleElement.textContent);
             const videoUrl = titleElement.href;
             if (videoUrl) {
                 const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
@@ -259,7 +252,7 @@ async function handleSearchResults(): Promise<void> {
                         );
                         updateTitleElement(titleElement, originalTitle);
                     } catch (error) {
-                        console.error(`${LOG_PREFIX}${TITLE_LOG_CONTEXT} Failed to update search result title:`, error);
+                        otherTitlesLog(`Failed to update search result title:`, error);
                     }
                 }
             }
@@ -268,7 +261,7 @@ async function handleSearchResults(): Promise<void> {
 }
 
 function setupUrlObserver() {
-    titleLog('Setting up URL observer');
+    mainTitleLog('Setting up URL observer');
     
     // Listen for URL changes using History API
     const originalPushState = history.pushState;
@@ -276,21 +269,21 @@ function setupUrlObserver() {
 
     // Override pushState
     history.pushState = function(...args) {
-        titleLog('pushState called with:', args);
+        mainTitleLog('pushState called with:', args);
         originalPushState.apply(this, args);
         handleUrlChange();
     };
 
     // Override replaceState
     history.replaceState = function(...args) {
-        titleLog('replaceState called with:', args);
+        mainTitleLog('replaceState called with:', args);
         originalReplaceState.apply(this, args);
         handleUrlChange();
     };
 
     // Listen for popstate event (back/forward browser buttons)
     window.addEventListener('popstate', () => {
-        titleLog('popstate event triggered');
+        mainTitleLog('popstate event triggered');
         handleUrlChange();
     });
 
@@ -298,7 +291,7 @@ function setupUrlObserver() {
     let lastSearch = window.location.search;
     const observer = new MutationObserver(() => {
         if (window.location.search !== lastSearch) {
-            titleLog('Search params changed:', window.location.search);
+            mainTitleLog('Search params changed:', window.location.search);
             lastSearch = window.location.search;
             handleUrlChange();
         }
@@ -316,8 +309,8 @@ function setupUrlObserver() {
 }
 
 function handleUrlChange() {
-    titleLog('[URL] Current pathname:', window.location.pathname);
-    titleLog('[URL] Full URL:', window.location.href);
+    console.log(`${LOG_PREFIX}[URL] Current pathname:`, window.location.pathname);
+    console.log(`${LOG_PREFIX}[URL] Full URL:`, window.location.href);
     
     // Check if URL contains @username pattern
     const isChannelPage = window.location.pathname.includes('/@');
@@ -330,9 +323,9 @@ function handleUrlChange() {
     
     switch(window.location.pathname) {
         case '/results':
-            titleLog('[URL] Detected search page');
+            console.log(`${LOG_PREFIX}[URL] Detected search page`);
             waitForElement('#contents.ytd-section-list-renderer').then(() => {
-                titleLog('[URL] Search results container found');
+                coreLog('Search results container found');
                 handleSearchResults();
             });
             break;

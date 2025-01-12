@@ -5,24 +5,29 @@
  * As you can see down below, the injected code only reads YouTube's data without any modifications.
  */
 
-const DESCRIPTION_LOG_STYLE = 'color: #fca5a5;';
-const DESCRIPTION_LOG_CONTEXT = '[Description]';
-
-function descriptionLog(message: string, ...args: any[]) {
-    const formattedMessage = `${LOG_PREFIX}${DESCRIPTION_LOG_CONTEXT} ${message}`;
-    console.log(`%c${formattedMessage}`, DESCRIPTION_LOG_STYLE, ...args);
-}
 
 const DESCRIPTION_SCRIPT = `
 (function() {
-    const style = '${DESCRIPTION_LOG_STYLE};';
-    const prefix = '${LOG_PREFIX}${DESCRIPTION_LOG_CONTEXT}';
+    const LOG_PREFIX = '${LOG_PREFIX}';
+    const LOG_STYLES = ${JSON.stringify(LOG_STYLES)};
+
+    function createLogger(category) {
+        return (message, ...args) => {
+            console.log(
+                \`%c\${LOG_PREFIX}\${category.context} \${message}\`,
+                \`color: \${category.color}\`,
+                ...args
+            );
+        };
+    }
+
+    const descriptionLog = createLogger(LOG_STYLES.DESCRIPTION);
     
-    console.log('%c' + prefix + ' Injected script starting', style);
+    descriptionLog('Injected script starting');
     
     // Get current video ID from URL
     const currentVideoId = new URLSearchParams(window.location.search).get('v');
-    console.log('%c' + prefix + ' Current video ID:', style, currentVideoId);
+    descriptionLog('Current video ID:', currentVideoId);
     
     // Try to get description from the player API endpoint
     fetch('/youtubei/v1/player?key=' + window.ytcfg.data_.INNERTUBE_API_KEY, {
@@ -43,19 +48,19 @@ const DESCRIPTION_SCRIPT = `
         const description = data?.videoDetails?.shortDescription;
         
         if (description) {
-            console.log('%c' + prefix + ' Found description from API for video:', style, currentVideoId);
+            descriptionLog('Found description from API for video:', currentVideoId);
             window.dispatchEvent(new CustomEvent('nmt-description-data', {
                 detail: { description }
             }));
         } else {
-            console.log('%c' + prefix + ' No description found in API response');
+            descriptionLog('No description found in API response');
             window.dispatchEvent(new CustomEvent('nmt-description-data', {
                 detail: { description: null }
             }));
         }
     })
     .catch(error => {
-        console.log('%c' + prefix + ' Error fetching description:', style, error);
+        descriptionLog('Error fetching description:', error);
         window.dispatchEvent(new CustomEvent('nmt-description-data', {
             detail: { description: null }
         }));
@@ -99,7 +104,7 @@ async function injectDescriptionScript(): Promise<string | null> {
         
         return null;
     } catch (error) {
-        console.error(`${LOG_PREFIX}${DESCRIPTION_LOG_CONTEXT} ${error}`);
+        descriptionLog(`${error}`);
         return null;
     }
 }
@@ -200,7 +205,7 @@ async function refreshDescription(): Promise<void> {
             descriptionLog('Found original description:', originalDescription);
             updateDescriptionElement(descriptionElement, originalDescription);
         } else {
-            console.error(`${LOG_PREFIX}${DESCRIPTION_LOG_CONTEXT} No original description found`);
+            descriptionLog(`No original description found`);
         }
     }
 }
@@ -214,7 +219,7 @@ function updateDescriptionElement(element: HTMLElement, description: string): vo
     const snippetAttributedString = element.querySelector('#attributed-snippet-text');
     
     if (!attributedString && !snippetAttributedString) {
-        console.error(`${LOG_PREFIX}${DESCRIPTION_LOG_CONTEXT} No description text container found`);
+        descriptionLog(`No description text container found`);
         return;
     }
 

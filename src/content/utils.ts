@@ -1,6 +1,5 @@
-const MUTATION_THRESHOLD = 10;
 
-const LOG_PREFIX = '[NMT]';
+const MUTATION_THRESHOLD = 10;
 
 function isToggleMessage(message: unknown): message is Message {
     return (
