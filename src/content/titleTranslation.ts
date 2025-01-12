@@ -10,8 +10,6 @@
 
 
 // Global variables
-let processingTitleMutation = false;
-let titleMutationCount = 0;
 let titleObserver: MutationObserver | null = null;
 
 // Optimized cache manager
@@ -40,7 +38,7 @@ class TitleCache {
             otherTitlesLog('Using cached API response for:', url);
             return this.apiCache.get(url)!;
         }
-
+        
         otherTitlesLog('Fetching new title from API:', url);
         try {
             const response = await fetch(url);
@@ -49,13 +47,33 @@ class TitleCache {
             otherTitlesLog('Received title from API:', data.title);
             return data.title;
         } catch (error) {
-            otherTitlesLog(`API request failed:`, error);
-            throw error;
+            otherTitlesLog(`API request failed, using title attribute as fallback:`, error);
+            // Get the video element and use its title attribute
+            const videoElement = document.querySelector(`a[href*="${url.split('v=')[1]}"] #video-title`);
+            return videoElement?.getAttribute('title') || '';
         }
     }
 }
 
 const titleCache = new TitleCache();
+
+
+
+// Utility Functions
+function updateTitleElement(element: HTMLElement, title: string): void {
+    otherTitlesLog('Updating element with title:', title);
+    element.textContent = title;
+    element.setAttribute('translate', 'no');
+    element.removeAttribute('is-empty');
+    titleCache.setElement(element, title);
+}
+
+function updatePageTitle(mainTitle: string): void {
+        mainTitleLog('Updating page title with:', mainTitle);
+    const channelName = document.querySelector('ytd-channel-name yt-formatted-string')?.textContent || '';
+    document.title = `${mainTitle} - ${channelName} - YouTube`;
+}
+
 
 // Main Title Function
 async function refreshMainTitle(): Promise<void> {
@@ -80,6 +98,7 @@ async function refreshMainTitle(): Promise<void> {
         }
     }
 }
+
 
 // Other Titles Function
 async function refreshOtherTitles(): Promise<void> {
@@ -115,20 +134,7 @@ async function refreshOtherTitles(): Promise<void> {
     await handleSearchResults();
 }
 
-// Utility Functions
-function updateTitleElement(element: HTMLElement, title: string): void {
-    otherTitlesLog('Updating element with title:', title);
-    element.textContent = title;
-    element.setAttribute('translate', 'no');
-    element.removeAttribute('is-empty');
-    titleCache.setElement(element, title);
-}
 
-function updatePageTitle(mainTitle: string): void {
-        mainTitleLog('Updating page title with:', mainTitle);
-    const channelName = document.querySelector('ytd-channel-name yt-formatted-string')?.textContent || '';
-    document.title = `${mainTitle} - ${channelName} - YouTube`;
-}
 
 // Initialization
 function initializeTitleTranslation() {
@@ -140,6 +146,8 @@ function initializeTitleTranslation() {
         }
     });
 }
+
+
 
 // Observers Setup
 function setupTitleObserver() {
@@ -239,6 +247,7 @@ function setupTitleObserver() {
         });
     });
 }
+
 
 // New function to handle search results
 async function handleSearchResults(): Promise<void> {
@@ -345,7 +354,7 @@ function handleUrlChange() {
         case '/playlist':  // Playlist page
         case '/channel':  // Channel page (old format)
         case '/watch':  // Video page
-            refreshOtherTitles();
+            setTimeout(refreshOtherTitles, 1000);
             break;
     }
 }
