@@ -14,23 +14,17 @@ let titleObserver: MutationObserver | null = null;
 
 // Optimized cache manager
 class TitleCache {
-    private processedElements = new WeakMap<HTMLElement, string>();
     private apiCache = new Map<string, string>();
 
     clear(): void {
-        this.processedElements = new WeakMap<HTMLElement, string>();
-        // We can keep the API cache as it's based on URLs
     }
 
-    hasElement(element: HTMLElement): boolean {
-        const hasElem = this.processedElements.has(element);
-        otherTitlesLog('Checking if element is processed:', hasElem);
-        return hasElem;
+    hasElement(element: HTMLElement): boolean {        
+        return false;
     }
 
     setElement(element: HTMLElement, title: string): void {
-        otherTitlesLog('Caching element with title:', title);
-        this.processedElements.set(element, title);
+        otherTitlesLog('Element caching disabled');
     }
 
     async getOriginalTitle(url: string): Promise<string> {
@@ -48,7 +42,6 @@ class TitleCache {
             return data.title;
         } catch (error) {
             otherTitlesLog(`API request failed, using title attribute as fallback:`, error);
-            // Get the video element and use its title attribute
             const videoElement = document.querySelector(`a[href*="${url.split('v=')[1]}"] #video-title`);
             return videoElement?.getAttribute('title') || '';
         }
@@ -63,7 +56,7 @@ const titleCache = new TitleCache();
 function updateTitleElement(element: HTMLElement, title: string): void {
     otherTitlesLog('Updating element with title:', title);
     element.textContent = title;
-    element.setAttribute('translate', 'no');
+    //element.setAttribute('translate', 'no');
     element.removeAttribute('is-empty');
     titleCache.setElement(element, title);
 }
