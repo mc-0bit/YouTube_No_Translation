@@ -347,7 +347,9 @@ function handleUrlChange() {
         case '/playlist':  // Playlist page
         case '/channel':  // Channel page (old format)
         case '/watch':  // Video page
-            setTimeout(refreshOtherTitles, 1000);
-            break;
+        setTimeout(refreshOtherTitles, 500);
+        for (let i = 1; i <= 5; i++) {
+            setTimeout(refreshOtherTitles, i * 1000);
+        }
     }
 }
