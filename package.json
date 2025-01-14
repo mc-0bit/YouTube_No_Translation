@@ -1,6 +1,6 @@
 {
   "name": "nmt",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "An addon that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
   "scripts": {
     "clean": "rimraf dist/*",
