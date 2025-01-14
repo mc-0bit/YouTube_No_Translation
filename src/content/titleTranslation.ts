@@ -149,7 +149,7 @@ function setupTitleObserver() {
         titleObserver = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                        mainTitleLog('Video ID changed!');
+                    mainTitleLog('Video ID changed!');
                     titleCache.clear();
                     mainTitleLog('Cache cleared');
                     
@@ -194,7 +194,7 @@ function setupTitleObserver() {
         });
     });
 
-    // Observer for home page
+    // Observer for home page | Channel page
     waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
         const gridObserver = new MutationObserver(() => {
             refreshOtherTitles();
@@ -237,6 +237,30 @@ function setupTitleObserver() {
         searchObserver.observe(contents, {
             childList: true,
             subtree: true
+        });
+    });
+
+    // Observer for playlist videos
+    waitForElement('#playlist ytd-playlist-panel-renderer #items').then((contents) => {
+        otherTitlesLog('Setting up playlist videos observer');
+        const playlistObserver = new MutationObserver(() => {
+            refreshOtherTitles();
+        });
+
+        playlistObserver.observe(contents, {
+            childList: true
+        });
+    });
+
+    // Observer for queue videos
+    waitForElement('ytd-playlist-panel-renderer#playlist #items').then((contents) => {
+        otherTitlesLog('Setting up queue videos observer');
+        const queueObserver = new MutationObserver(() => {
+            refreshOtherTitles();
+        });
+
+        queueObserver.observe(contents, {
+            childList: true
         });
     });
 }
@@ -349,7 +373,7 @@ function handleUrlChange() {
         case '/watch':  // Video page
         setTimeout(refreshOtherTitles, 500);
         for (let i = 1; i <= 5; i++) {
-            setTimeout(refreshOtherTitles, i * 1000);
+            setTimeout(refreshOtherTitles, i * 2000);
         }
     }
 }
