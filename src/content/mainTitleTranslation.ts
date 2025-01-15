@@ -12,9 +12,10 @@
 let mainTitleObserver: MutationObserver | null = null;
 
 // Utility Functions
-function updateMainTitleElement(element: HTMLElement, title: string): void {
-    otherTitlesLog('Updating element with title:', title);
-    element.textContent = title;
+function updateMainTitleElement(element: HTMLElement, title: string, videoId: string): void {
+    mainTitleLog('Updating element with title:', title);
+    element.innerText = title;
+    element.setAttribute('NMT', videoId);
     element.removeAttribute('is-empty');
     titleCache.setElement(element, title);
 }
@@ -37,11 +38,18 @@ async function refreshMainTitle(): Promise<void> {
         mainTitleLog('Processing main title element');
         const videoId = new URLSearchParams(window.location.search).get('v');
         if (videoId) {
+            // Check if element has already been processed with this videoId
+            const currentNMT = mainTitle.getAttribute('NMT');
+            if (currentNMT === videoId) {
+                mainTitleLog('Title already processed for video:', videoId);
+                return;
+            }
+
             try {
                 const originalTitle = await titleCache.getOriginalTitle(
                     `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
                 );
-                updateMainTitleElement(mainTitle, originalTitle);
+                updateMainTitleElement(mainTitle, originalTitle, videoId);
                 updatePageTitle(originalTitle);
             } catch (error) {
                 mainTitleLog(`Failed to update main title:`, error);
@@ -57,16 +65,15 @@ function setupMainTitleObserver() {
         mainTitleObserver = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    mainTitleLog('Video ID changed!');
                     titleCache.clear();
-                    mainTitleLog('Cache cleared');
                     
                     const newVideoId = (mutation.target as HTMLElement).getAttribute('video-id');
-                    mainTitleLog('New video ID:', newVideoId);
+                    mainTitleLog('Video ID changed:', newVideoId);
+                    mainTitleLog('Cache cleared');
                     
                     // Get the current page URL to check against
                     const currentUrl = window.location.href;
-                    mainTitleLog('Current URL:', currentUrl);
+                    /*mainTitleLog('Current URL:', currentUrl);*/
                     
                     // Wait for title element and monitor its changes
                     const titleElement = await waitForElement('ytd-watch-metadata yt-formatted-string.style-scope.ytd-watch-metadata');
@@ -77,13 +84,11 @@ function setupMainTitleObserver() {
                         const pageUrl = window.location.href;
                         
                         if (pageUrl === currentUrl && titleElement.textContent) {
-                            mainTitleLog('Valid title found:', titleElement.textContent);
-                            
                             browser.storage.local.get('settings').then(async (data: Record<string, any>) => {
                                 const settings = data.settings as ExtensionSettings;
                                 if (settings?.titleTranslation) {
                                     await refreshMainTitle();
-                                    mainTitleLog('Title updated');
+                                    mainTitleLog('Title updated:', titleElement.textContent);
                                 }
                             });
                             break;

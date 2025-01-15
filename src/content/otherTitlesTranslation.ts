@@ -53,10 +53,10 @@ const titleCache = new TitleCache();
 
 
 // Utility Functions
-function updateOtherTitleElement(element: HTMLElement, title: string): void {
+function updateOtherTitleElement(element: HTMLElement, title: string, videoId: string): void {
     otherTitlesLog('Updating element with title:', title);
-    element.textContent = title;
-    //element.setAttribute('translate', 'no');
+    element.innerText = title;
+    element.setAttribute('nmt', videoId);
     titleCache.setElement(element, title);
 }
 
@@ -78,11 +78,18 @@ async function refreshOtherTitles(): Promise<void> {
             if (videoUrl) {
                 const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
                 if (videoId) {
+                    // Check if element has already been processed with this videoId
+                    const currentNMT = titleElement.getAttribute('NMT');
+                    if (currentNMT === videoId) {
+                        otherTitlesLog('Title already processed for video:', videoId);
+                        continue;
+                    }
+
                     try {
                         const originalTitle = await titleCache.getOriginalTitle(
                             `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
                         );
-                        updateOtherTitleElement(titleElement, originalTitle);
+                        updateOtherTitleElement(titleElement, originalTitle, videoId);
                     } catch (error) {
                         otherTitlesLog(`Failed to update recommended title:`, error);
                     }
@@ -186,11 +193,18 @@ async function handleSearchResults(): Promise<void> {
             if (videoUrl) {
                 const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
                 if (videoId) {
+                    // Check if element has already been processed with this videoId
+                    const currentNMT = titleElement.getAttribute('NMT');
+                    if (currentNMT === videoId) {
+                        otherTitlesLog('Title already processed for video:', videoId);
+                        continue;
+                    }
+
                     try {
                         const originalTitle = await titleCache.getOriginalTitle(
                             `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
                         );
-                        updateOtherTitleElement(titleElement, originalTitle);
+                        updateOtherTitleElement(titleElement, originalTitle, videoId);
                     } catch (error) {
                         otherTitlesLog(`Failed to update search result title:`, error);
                     }
@@ -201,7 +215,7 @@ async function handleSearchResults(): Promise<void> {
 }
 
 function setupUrlObserver() {
-    titleLog('Setting up URL observer');
+    otherTitlesLog('Setting up URL observer');
     
     // Listen for URL changes using History API
     const originalPushState = history.pushState;
@@ -209,21 +223,21 @@ function setupUrlObserver() {
 
     // Override pushState
     history.pushState = function(...args) {
-        titleLog('pushState called with:', args);
+        otherTitlesLog('pushState called with:', args);
         originalPushState.apply(this, args);
         handleUrlChange();
     };
 
     // Override replaceState
     history.replaceState = function(...args) {
-        titleLog('replaceState called with:', args);
+        otherTitlesLog('replaceState called with:', args);
         originalReplaceState.apply(this, args);
         handleUrlChange();
     };
 
     // Listen for popstate event (back/forward browser buttons)
     window.addEventListener('popstate', () => {
-        titleLog('popstate event triggered');
+        otherTitlesLog('popstate event triggered');
         handleUrlChange();
     });
 
@@ -231,7 +245,7 @@ function setupUrlObserver() {
     let lastSearch = window.location.search;
     const observer = new MutationObserver(() => {
         if (window.location.search !== lastSearch) {
-            titleLog('Search params changed:', window.location.search);
+            otherTitlesLog('Search params changed:', window.location.search);
             lastSearch = window.location.search;
             handleUrlChange();
         }
@@ -249,8 +263,8 @@ function setupUrlObserver() {
 }
 
 function handleUrlChange() {
-    console.log(`${LOG_PREFIX}[URL] Current pathname:`, window.location.pathname);
-    console.log(`${LOG_PREFIX}[URL] Full URL:`, window.location.href);
+    otherTitlesLog(`${LOG_PREFIX}[URL] Current pathname:`, window.location.pathname);
+    otherTitlesLog(`${LOG_PREFIX}[URL] Full URL:`, window.location.href);
     
     // Check if URL contains @username pattern
     const isChannelPage = window.location.pathname.includes('/@');
@@ -265,7 +279,7 @@ function handleUrlChange() {
         case '/results':
             console.log(`${LOG_PREFIX}[URL] Detected search page`);
             waitForElement('#contents.ytd-section-list-renderer').then(() => {
-                coreLog('Search results container found');
+                otherTitlesLog('Search results container found');
                 handleSearchResults();
             });
             break;
@@ -275,7 +289,7 @@ function handleUrlChange() {
         case '/playlist':  // Playlist page
         case '/channel':  // Channel page (old format)
         case '/watch':  // Video page
-        setTimeout(refreshOtherTitles, 500);
+        setTimeout(refreshOtherTitles, 200);
         for (let i = 1; i <= 5; i++) {
             setTimeout(refreshOtherTitles, i * 2000);
         }
