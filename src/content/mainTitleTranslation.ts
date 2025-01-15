@@ -17,6 +17,22 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
     element.innerText = title;
     element.setAttribute('NMT', videoId);
     element.removeAttribute('is-empty');
+
+    // Block YouTube from re-adding the is-empty attribute
+    const isEmptyObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'is-empty') {
+                mainTitleLog('Blocking is-empty attribute');
+                element.removeAttribute('is-empty');
+            }
+        });
+    });
+
+    isEmptyObserver.observe(element, {
+        attributes: true,
+        attributeFilter: ['is-empty']
+    });
+
     titleCache.setElement(element, title);
 }
 
