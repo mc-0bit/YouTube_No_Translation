@@ -67,7 +67,7 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
 
             #video-title[nmt]::after {
                 content: attr(title);
-                font-size: 1.4rem;  /* Rétablit la taille du texte pour notre titre */
+                font-size: 1.4rem;
             }
         `;
         document.head.appendChild(style);
@@ -75,7 +75,7 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
 
     // Wrap existing text in a span if not already done
     if (!element.querySelector('span')) {
-        element.innerHTML = `<span>${element.textContent}</span>`;
+        element.innerText = `<span>${element.textContent}</span>`;
     }
 
     element.setAttribute('title', title);
