@@ -55,7 +55,30 @@ const titleCache = new TitleCache();
 // Utility Functions
 function updateOtherTitleElement(element: HTMLElement, title: string, videoId: string): void {
     otherTitlesLog('Updating element with title:', title);
-    element.innerText = title;
+    
+    // Inject CSS if not already done
+    if (!document.querySelector('#nmt-style')) {
+        const style = document.createElement('style');
+        style.id = 'nmt-style';
+        style.textContent = `
+            #video-title[nmt] > span {
+                display: none;
+            }
+
+            #video-title[nmt]::after {
+                content: attr(title);
+                font-size: 1.4rem;  /* Rétablit la taille du texte pour notre titre */
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Wrap existing text in a span if not already done
+    if (!element.querySelector('span')) {
+        element.innerHTML = `<span>${element.textContent}</span>`;
+    }
+
+    element.setAttribute('title', title);
     element.setAttribute('nmt', videoId);
     titleCache.setElement(element, title);
 }
