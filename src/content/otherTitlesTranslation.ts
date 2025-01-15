@@ -75,7 +75,10 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
 
     // Wrap existing text in a span if not already done
     if (!element.querySelector('span')) {
-        element.innerText = `<span>${element.textContent}</span>`;
+        const span = document.createElement('span');
+        span.textContent = element.textContent;
+        element.textContent = '';
+        element.appendChild(span);
     }
 
     element.setAttribute('title', title);
