@@ -17,7 +17,8 @@ browser.storage.local.get('settings').then((data: Record<string, any>) => {
     
     if (settings?.titleTranslation) {
         initializeTitleTranslation();
-        setupTitleObserver();
+        setupMainTitleObserver();
+        setupOtherTitlesObserver();
         setupUrlObserver();
     }
     if (settings?.audioTranslation) {
@@ -29,6 +30,55 @@ browser.storage.local.get('settings').then((data: Record<string, any>) => {
         setupDescriptionObserver();
     }
 });
+
+// Initialization
+function initializeTitleTranslation() {
+    browser.storage.local.get('settings').then((data: Record<string, any>) => {
+        const settings = data.settings as ExtensionSettings;
+        if (settings?.titleTranslation) {
+            refreshMainTitle();
+            refreshOtherTitles();
+        }
+    });
+}
+
+function initializeAudioTranslation() {
+    audioLog('Initializing audio translation prevention');
+
+    // Initial setup
+    browser.storage.local.get('settings').then((data: Record<string, any>) => {
+        const settings = data.settings as ExtensionSettings;
+        handleAudioTranslation(settings?.audioTranslation || false);
+    });
+
+    // Message handler
+    browser.runtime.onMessage.addListener((message: unknown) => {
+        if (isToggleMessage(message) && message.feature === 'audio') {
+            handleAudioTranslation(message.isEnabled);
+        }
+        return true;
+    });
+}
+
+function initializeDescriptionTranslation() {
+    descriptionLog('Initializing description translation prevention');
+
+    browser.storage.local.get('settings').then((data: Record<string, any>) => {
+        const settings = data.settings as ExtensionSettings;
+        if (settings?.descriptionTranslation) {
+            refreshDescription();
+        }
+    });
+
+    browser.runtime.onMessage.addListener((message: unknown) => {
+        if (isToggleMessage(message) && message.feature === 'description') {
+            if (message.isEnabled) {
+                refreshDescription();
+            }
+        }
+        return true;
+    });
+}
 
 // Listen for toggle changes
 browser.runtime.onMessage.addListener((message: unknown) => {

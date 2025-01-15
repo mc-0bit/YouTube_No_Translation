@@ -20,9 +20,13 @@ const LOG_STYLES = {
         context: '[Other Titles]',
         color: '#fca5a5'  // light red
     },
+    TITLE: {
+        context: '[Title]',
+        color: '#86efac'  // light green
+    },
     DESCRIPTION: {
         context: '[Description]',
-        color: '#86efac'  // light green
+        color: '#fca5a5'  // light red
     },
     AUDIO: {
         context: '[Audio]',
@@ -49,3 +53,4 @@ const otherTitlesLog = createLogger(LOG_STYLES.OTHER_TITLES);
 const audioLog = createLogger(LOG_STYLES.AUDIO);
 const descriptionLog = createLogger(LOG_STYLES.DESCRIPTION);
 const coreLog = createLogger(LOG_STYLES.CORE);
+const titleLog = createLogger(LOG_STYLES.TITLE);

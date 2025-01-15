@@ -10,7 +10,7 @@
 
 
 // Global variables
-let titleObserver: MutationObserver | null = null;
+let otherTitlesObserver: MutationObserver | null = null;
 
 // Optimized cache manager
 class TitleCache {
@@ -53,43 +53,11 @@ const titleCache = new TitleCache();
 
 
 // Utility Functions
-function updateTitleElement(element: HTMLElement, title: string): void {
+function updateOtherTitleElement(element: HTMLElement, title: string): void {
     otherTitlesLog('Updating element with title:', title);
     element.textContent = title;
     //element.setAttribute('translate', 'no');
-    element.removeAttribute('is-empty');
     titleCache.setElement(element, title);
-}
-
-function updatePageTitle(mainTitle: string): void {
-        mainTitleLog('Updating page title with:', mainTitle);
-    const channelName = document.querySelector('ytd-channel-name yt-formatted-string')?.textContent || '';
-    document.title = `${mainTitle} - ${channelName} - YouTube`;
-}
-
-
-// Main Title Function
-async function refreshMainTitle(): Promise<void> {
-    const data = await browser.storage.local.get('settings');
-    const settings = data.settings as ExtensionSettings;
-    if (!settings?.titleTranslation) return;
-
-    const mainTitle = document.querySelector('h1.ytd-watch-metadata > yt-formatted-string') as HTMLElement;
-    if (mainTitle && window.location.pathname === '/watch' && !titleCache.hasElement(mainTitle)) {
-        mainTitleLog('Processing main title element');
-        const videoId = new URLSearchParams(window.location.search).get('v');
-        if (videoId) {
-            try {
-                const originalTitle = await titleCache.getOriginalTitle(
-                    `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
-                );
-                updateTitleElement(mainTitle, originalTitle);
-                updatePageTitle(originalTitle);
-            } catch (error) {
-                mainTitleLog(`Failed to update main title:`, error);
-            }
-        }
-    }
 }
 
 
@@ -114,7 +82,7 @@ async function refreshOtherTitles(): Promise<void> {
                         const originalTitle = await titleCache.getOriginalTitle(
                             `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
                         );
-                        updateTitleElement(titleElement, originalTitle);
+                        updateOtherTitleElement(titleElement, originalTitle);
                     } catch (error) {
                         otherTitlesLog(`Failed to update recommended title:`, error);
                     }
@@ -128,72 +96,8 @@ async function refreshOtherTitles(): Promise<void> {
 }
 
 
-
-// Initialization
-function initializeTitleTranslation() {
-    browser.storage.local.get('settings').then((data: Record<string, any>) => {
-        const settings = data.settings as ExtensionSettings;
-        if (settings?.titleTranslation) {
-            refreshMainTitle();
-            refreshOtherTitles();
-        }
-    });
-}
-
-
-
 // Observers Setup
-function setupTitleObserver() {
-    waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        mainTitleLog('Setting up video-id observer');
-        titleObserver = new MutationObserver(async (mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    mainTitleLog('Video ID changed!');
-                    titleCache.clear();
-                    mainTitleLog('Cache cleared');
-                    
-                    const newVideoId = (mutation.target as HTMLElement).getAttribute('video-id');
-                    mainTitleLog('New video ID:', newVideoId);
-                    
-                    // Get the current page URL to check against
-                    const currentUrl = window.location.href;
-                    mainTitleLog('Current URL:', currentUrl);
-                    
-                    // Wait for title element and monitor its changes
-                    const titleElement = await waitForElement('ytd-watch-metadata yt-formatted-string.style-scope.ytd-watch-metadata');
-                    let attempts = 0;
-                    const maxAttempts = 20;
-                    
-                    while (attempts < maxAttempts) {
-                        const pageUrl = window.location.href;
-                        
-                        if (pageUrl === currentUrl && titleElement.textContent && !titleElement.textContent.includes('Fight For')) {
-                            mainTitleLog('Valid title found:', titleElement.textContent);
-                            
-                            browser.storage.local.get('settings').then(async (data: Record<string, any>) => {
-                                const settings = data.settings as ExtensionSettings;
-                                if (settings?.titleTranslation) {
-                                    await refreshMainTitle();
-                                    mainTitleLog('Title updated, new element:', titleElement.outerHTML);
-                                }
-                            });
-                            break;
-                        }
-                        
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        attempts++;
-                    }
-                }
-            }
-        });
-
-        titleObserver.observe(watchFlexy, {
-            attributes: true,
-            attributeFilter: ['video-id']
-        });
-    });
-
+function setupOtherTitlesObserver() {
     // Observer for home page | Channel page
     waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
         const gridObserver = new MutationObserver(() => {
@@ -286,7 +190,7 @@ async function handleSearchResults(): Promise<void> {
                         const originalTitle = await titleCache.getOriginalTitle(
                             `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
                         );
-                        updateTitleElement(titleElement, originalTitle);
+                        updateOtherTitleElement(titleElement, originalTitle);
                     } catch (error) {
                         otherTitlesLog(`Failed to update search result title:`, error);
                     }
@@ -297,7 +201,7 @@ async function handleSearchResults(): Promise<void> {
 }
 
 function setupUrlObserver() {
-    mainTitleLog('Setting up URL observer');
+    titleLog('Setting up URL observer');
     
     // Listen for URL changes using History API
     const originalPushState = history.pushState;
@@ -305,21 +209,21 @@ function setupUrlObserver() {
 
     // Override pushState
     history.pushState = function(...args) {
-        mainTitleLog('pushState called with:', args);
+        titleLog('pushState called with:', args);
         originalPushState.apply(this, args);
         handleUrlChange();
     };
 
     // Override replaceState
     history.replaceState = function(...args) {
-        mainTitleLog('replaceState called with:', args);
+        titleLog('replaceState called with:', args);
         originalReplaceState.apply(this, args);
         handleUrlChange();
     };
 
     // Listen for popstate event (back/forward browser buttons)
     window.addEventListener('popstate', () => {
-        mainTitleLog('popstate event triggered');
+        titleLog('popstate event triggered');
         handleUrlChange();
     });
 
@@ -327,7 +231,7 @@ function setupUrlObserver() {
     let lastSearch = window.location.search;
     const observer = new MutationObserver(() => {
         if (window.location.search !== lastSearch) {
-            mainTitleLog('Search params changed:', window.location.search);
+            titleLog('Search params changed:', window.location.search);
             lastSearch = window.location.search;
             handleUrlChange();
         }

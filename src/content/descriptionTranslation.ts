@@ -295,23 +295,3 @@ function updateDescriptionElement(element: HTMLElement, description: string): vo
     descriptionCache.setElement(element, description);
 }
 
-
-function initializeDescriptionTranslation() {
-    descriptionLog('Initializing description translation prevention');
-
-    browser.storage.local.get('settings').then((data: Record<string, any>) => {
-        const settings = data.settings as ExtensionSettings;
-        if (settings?.descriptionTranslation) {
-            refreshDescription();
-        }
-    });
-
-    browser.runtime.onMessage.addListener((message: unknown) => {
-        if (isToggleMessage(message) && message.feature === 'description') {
-            if (message.isEnabled) {
-                refreshDescription();
-            }
-        }
-        return true;
-    });
-}

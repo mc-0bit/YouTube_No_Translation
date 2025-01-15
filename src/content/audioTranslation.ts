@@ -117,24 +117,6 @@ async function handleAudioTranslation(isEnabled: boolean) {
     `);
 }
 
-function initializeAudioTranslation() {
-    audioLog('Initializing audio translation prevention');
-
-    // Initial setup
-    browser.storage.local.get('settings').then((data: Record<string, any>) => {
-        const settings = data.settings as ExtensionSettings;
-        handleAudioTranslation(settings?.audioTranslation || false);
-    });
-
-    // Message handler
-    browser.runtime.onMessage.addListener((message: unknown) => {
-        if (isToggleMessage(message) && message.feature === 'audio') {
-            handleAudioTranslation(message.isEnabled);
-        }
-        return true;
-    });
-}
-
 let audioObserver: MutationObserver | null = null;
 
 function setupAudioObserver() {
