@@ -1,6 +1,6 @@
 {
   "name": "nmt",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "An addon that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
   "scripts": {
     "clean": "rimraf dist/*",
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YouG-o/YouTube-Extension.git"
+    "url": "git+https://github.com/YouG-o/NMT_Addon-for-YouTube.git"
   },
   "keywords": [
     "youtube",
@@ -29,9 +29,9 @@
   "author": "YouGo",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/YouG-o/YouTube-Extension/issues"
+    "url": "https://github.com/YouG-o/NMT_Addon-for-YouTube/issues"
   },
-  "homepage": "https://github.com/YouG-o/YouTube-Extension#readme",
+  "homepage": "https://github.com/YouG-o/NMT_Addon-for-YouTube#readme",
   "devDependencies": {
     "@types/webextension-polyfill": "^0.12.1",
     "autoprefixer": "^10.4.20",
