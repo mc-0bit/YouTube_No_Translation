@@ -67,7 +67,9 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
 
             #video-title[nmt]::after {
                 content: attr(title);
-                font-size: 1.4rem;
+                font-size: var(--ytd-tab-system-font-size-body);
+                line-height: var(--ytd-tab-system-line-height-body);
+                font-family: var(--ytd-tab-system-font-family);
             }
         `;
         document.head.appendChild(style);
