@@ -10,7 +10,7 @@
 
 
 /**
- * NOTE ON SCRIPT INJECTION :
+ * NOTE ON SCRIPT INJECTION:
  * We use script injection to access YouTube's description data directly from the page context.
  * This is necessary because ytInitialPlayerResponse is not accessible from the content script context.
  * As you can see down below, the injected code only reads YouTube's data without any modifications.
@@ -18,7 +18,7 @@
 
 
 const DESCRIPTION_SCRIPT = `
-(function() {
+(async function() {
     const LOG_PREFIX = '${LOG_PREFIX}';
     const LOG_STYLES = ${JSON.stringify(LOG_STYLES)};
 
@@ -34,6 +34,89 @@ const DESCRIPTION_SCRIPT = `
 
     const descriptionLog = createLogger(LOG_STYLES.DESCRIPTION);
     
+    // Definition of waitForYtcfg inside injected script
+    const waitForYtcfg = (timeout = 5000) => {
+        return new Promise((resolve, reject) => {
+            // If already available
+            if (window.ytcfg?.data_) {
+                descriptionLog('window.ytcfg.data_ already available');
+                resolve();
+                return;
+            }
+
+            // Timer to avoid infinite waiting
+            const timeoutId = setTimeout(() => {
+                observer.disconnect();
+                reject(new Error('Timeout waiting for window.ytcfg.data_'));
+            }, timeout);
+
+            // Observer to detect changes in scripts
+            const observer = new MutationObserver((mutations) => {
+                // First check if ytcfg became available naturally
+                if (window.ytcfg?.data_) {
+                    clearTimeout(timeoutId);
+                    observer.disconnect();
+                    resolve();
+                    return;
+                }
+
+                for (const mutation of mutations) {
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeName === 'SCRIPT') {
+                            const scriptContent = node.textContent || '';
+                            if (scriptContent.includes('INNERTUBE_API_KEY')) {
+                                const match = scriptContent.match(/"INNERTUBE_API_KEY":"([^"]+)"/);
+                                const versionMatch = scriptContent.match(/"INNERTUBE_CLIENT_VERSION":"([^"]+)"/);
+                                
+                                if (match && versionMatch && !window.ytcfg?.data_) {
+                                    // Create ytcfg object only if not already available
+                                    window.ytcfg = window.ytcfg || {};
+                                    window.ytcfg.data_ = {
+                                        INNERTUBE_API_KEY: match[1],
+                                        INNERTUBE_CLIENT_VERSION: versionMatch[1]
+                                    };
+                                    clearTimeout(timeoutId);
+                                    observer.disconnect();
+                                    resolve();
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Observe head for new scripts
+            observer.observe(document.head, {
+                childList: true,
+                subtree: true
+            });
+
+            // Also check existing scripts
+            const scripts = document.getElementsByTagName('script');
+            for (const script of scripts) {
+                const scriptContent = script.textContent || '';
+                if (scriptContent.includes('INNERTUBE_API_KEY')) {
+                    const match = scriptContent.match(/"INNERTUBE_API_KEY":"([^"]+)"/);
+                    const versionMatch = scriptContent.match(/"INNERTUBE_CLIENT_VERSION":"([^"]+)"/);
+                    
+                    if (match && versionMatch && !window.ytcfg?.data_) {
+                        // Create ytcfg object only if not already available
+                        window.ytcfg = window.ytcfg || {};
+                        window.ytcfg.data_ = {
+                            INNERTUBE_API_KEY: match[1],
+                            INNERTUBE_CLIENT_VERSION: versionMatch[1]
+                        };
+                        clearTimeout(timeoutId);
+                        observer.disconnect();
+                        resolve();
+                        return;
+                    }
+                }
+            }
+        });
+    };
+    
     descriptionLog('Injected script starting');
     
     // Get current video ID from URL
@@ -41,41 +124,97 @@ const DESCRIPTION_SCRIPT = `
     descriptionLog('Current video ID:', currentVideoId);
     
     // Try to get description from the player API endpoint
-    fetch('/youtubei/v1/player?key=' + window.ytcfg.data_.INNERTUBE_API_KEY, {
-        method: 'POST',
-        body: JSON.stringify({
-            videoId: currentVideoId,
-            context: {
-                client: {
-                    clientName: 'WEB',
-                    clientVersion: window.ytcfg.data_.INNERTUBE_CLIENT_VERSION
+    if (window.ytcfg && window.ytcfg.data_) {
+        descriptionLog('Attempting to fetch with API key:', window.ytcfg.data_.INNERTUBE_API_KEY);
+        fetch('/youtubei/v1/player?key=' + window.ytcfg.data_.INNERTUBE_API_KEY, {
+            method: 'POST',
+            body: JSON.stringify({
+                videoId: currentVideoId,
+                context: {
+                    client: {
+                        clientName: 'WEB',
+                        clientVersion: window.ytcfg.data_.INNERTUBE_CLIENT_VERSION
+                    }
                 }
+            })
+        })
+        .then(response => {
+            descriptionLog('Got response:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            descriptionLog('Got data:', data);
+            const description = data?.videoDetails?.shortDescription;
+            
+            if (description) {
+                descriptionLog('Found description from API for video:', currentVideoId);
+                window.dispatchEvent(new CustomEvent('nmt-description-data', {
+                    detail: { description }
+                }));
+            } else {
+                descriptionLog('No description found in API response');
+                window.dispatchEvent(new CustomEvent('nmt-description-data', {
+                    detail: { description: null }
+                }));
             }
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Get description directly from videoDetails
-        const description = data?.videoDetails?.shortDescription;
-        
-        if (description) {
-            descriptionLog('Found description from API for video:', currentVideoId);
+        .catch(error => {
+            descriptionLog('Error fetching description:', error);
             window.dispatchEvent(new CustomEvent('nmt-description-data', {
-                detail: { description }
+                detail: { description: null }
             }));
-        } else {
-            descriptionLog('No description found in API response');
+        });
+    } else {
+        descriptionLog('window.ytcfg.data_ is not available, waiting for it...');
+        try {
+            await waitForYtcfg();
+            // Once available, retry the original API request
+            descriptionLog('Retrying API request with ytcfg');
+            fetch('/youtubei/v1/player?key=' + window.ytcfg.data_.INNERTUBE_API_KEY, {
+                method: 'POST',
+                body: JSON.stringify({
+                    videoId: currentVideoId,
+                    context: {
+                        client: {
+                            clientName: 'WEB',
+                            clientVersion: window.ytcfg.data_.INNERTUBE_CLIENT_VERSION
+                        }
+                    }
+                })
+            })
+            .then(response => {
+                descriptionLog('Got response:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                descriptionLog('Got data:', data);
+                const description = data?.videoDetails?.shortDescription;
+                
+                if (description) {
+                    descriptionLog('Found description from API for video:', currentVideoId);
+                    window.dispatchEvent(new CustomEvent('nmt-description-data', {
+                        detail: { description }
+                    }));
+                } else {
+                    descriptionLog('No description found in API response');
+                    window.dispatchEvent(new CustomEvent('nmt-description-data', {
+                        detail: { description: null }
+                    }));
+                }
+            })
+            .catch(error => {
+                descriptionLog('Error fetching description:', error);
+                window.dispatchEvent(new CustomEvent('nmt-description-data', {
+                    detail: { description: null }
+                }));
+            });
+        } catch (error) {
+            descriptionLog('Failed to get window.ytcfg.data_:', error);
             window.dispatchEvent(new CustomEvent('nmt-description-data', {
                 detail: { description: null }
             }));
         }
-    })
-    .catch(error => {
-        descriptionLog('Error fetching description:', error);
-        window.dispatchEvent(new CustomEvent('nmt-description-data', {
-            detail: { description: null }
-        }));
-    });
+    }
 })();
 `;
 
@@ -293,5 +432,16 @@ function updateDescriptionElement(element: HTMLElement, description: string): vo
     });
     
     descriptionCache.setElement(element, description);
+}
+
+// Interface for window.ytcfg
+interface YtcfgWindow extends Window {
+    ytcfg?: {
+        data_?: {
+            INNERTUBE_API_KEY: string;
+            INNERTUBE_CLIENT_VERSION: string;
+            [key: string]: any;
+        };
+    }
 }
 
