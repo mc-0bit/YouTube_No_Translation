@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "No More Translations",
   "version": "1.2.8",
   "description": "An addon that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
@@ -9,7 +9,7 @@
     "96": "assets/icons/icon.svg"
   },
 
-  "browser_action": {
+  "action": {
     "default_icon": {
       "48": "assets/icons/icon.svg",
       "96": "assets/icons/icon.svg"
@@ -20,7 +20,10 @@
 
   "permissions": [
     "storage",
-    "tabs",
+    "tabs"
+  ],
+
+  "host_permissions": [
     "*://*.youtube.com/*"
   ],
 
@@ -32,6 +35,14 @@
   ],
 
   "background": {
-    "scripts": ["dist/background/background.js"]
+    "scripts": ["dist/browser-polyfill.js", "dist/background/background.js"],
+    "type": "module"
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{9a3104a2-02c2-464c-b069-82344e5ed4ec}",
+      "strict_min_version": "109.0"
+    }
   }
 }
