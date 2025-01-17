@@ -10,7 +10,10 @@
 
 
 // Global variables
-let otherTitlesObserver: MutationObserver | null = null;
+let homeObserver: MutationObserver | null = null;
+let recommendedObserver: MutationObserver | null = null;
+let searchObserver: MutationObserver | null = null;
+let playlistObserver: MutationObserver | null = null;
 
 // Optimized cache manager
 class TitleCache {
@@ -109,8 +112,17 @@ async function refreshOtherTitles(): Promise<void> {
                     // Check if element has already been processed with this videoId
                     const currentNMT = titleElement.getAttribute('NMT');
                     if (currentNMT === videoId) {
-                        otherTitlesLog('Title already processed for video:', videoId);
-                        continue;
+                        const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
+                        try {
+                            const originalTitle = await titleCache.getOriginalTitle(apiUrl);
+                            if (titleElement.getAttribute('title') === originalTitle) {
+                                otherTitlesLog('Title already processed and correct for video:', videoId);
+                                continue;
+                            }
+                            otherTitlesLog('Title needs update despite having NMT attribute:', videoId);
+                        } catch (error) {
+                            otherTitlesLog('Failed to get original title for comparison:', error);
+                        }
                     }
 
                     try {
@@ -135,37 +147,42 @@ async function refreshOtherTitles(): Promise<void> {
 function setupOtherTitlesObserver() {
     // Observer for home page | Channel page
     waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
-        const gridObserver = new MutationObserver(() => {
+        homeObserver = new MutationObserver(() => {
+            otherTitlesLog('Home/Channel page mutation detected');
             refreshOtherTitles();
         });
 
-        gridObserver.observe(contents, {
+        homeObserver.observe(contents, {
             childList: true
         });
+        otherTitlesLog('Home/Channel page observer setup completed');
     });
 
     // Observer for recommended videos
     waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then((contents) => {
         otherTitlesLog('Setting up recommended videos observer');
-        const recommendedObserver = new MutationObserver(() => {
+        recommendedObserver = new MutationObserver(() => {
+            otherTitlesLog('Recommended videos mutation detected');
             refreshOtherTitles();
         });
 
         recommendedObserver.observe(contents, {
             childList: true
         });
+        otherTitlesLog('Recommended videos observer setup completed');
     });
 
     // Observer for search results
     waitForElement('ytd-section-list-renderer #contents').then((contents) => {
         otherTitlesLog('Setting up search results observer');
-        const searchObserver = new MutationObserver((mutations) => {
+        searchObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'childList' && 
                     mutation.addedNodes.length > 0 && 
                     mutation.target instanceof HTMLElement) {
                     const titles = mutation.target.querySelectorAll('#video-title');
                     if (titles.length > 0) {
+                        otherTitlesLog('Search results mutation detected');
                         refreshOtherTitles();
                         break;
                     }
@@ -177,30 +194,21 @@ function setupOtherTitlesObserver() {
             childList: true,
             subtree: true
         });
+        otherTitlesLog('Search results observer setup completed');
     });
 
-    // Observer for playlist videos
+    // Observer for playlist/queue videos
     waitForElement('#playlist ytd-playlist-panel-renderer #items').then((contents) => {
-        otherTitlesLog('Setting up playlist videos observer');
-        const playlistObserver = new MutationObserver(() => {
+        otherTitlesLog('Setting up playlist/queue videos observer');
+        playlistObserver = new MutationObserver(() => {
+            otherTitlesLog('Playlist/Queue mutation detected');
             refreshOtherTitles();
         });
 
         playlistObserver.observe(contents, {
             childList: true
         });
-    });
-
-    // Observer for queue videos
-    waitForElement('ytd-playlist-panel-renderer#playlist #items').then((contents) => {
-        otherTitlesLog('Setting up queue videos observer');
-        const queueObserver = new MutationObserver(() => {
-            refreshOtherTitles();
-        });
-
-        queueObserver.observe(contents, {
-            childList: true
-        });
+        otherTitlesLog('Playlist/Queue observer setup completed');
     });
 }
 
@@ -294,6 +302,25 @@ function handleUrlChange() {
     otherTitlesLog(`${LOG_PREFIX}[URL] Current pathname:`, window.location.pathname);
     otherTitlesLog(`${LOG_PREFIX}[URL] Full URL:`, window.location.href);
     
+    // Clean up existing observers and set up new ones
+    homeObserver?.disconnect();
+    recommendedObserver?.disconnect();
+    searchObserver?.disconnect();
+    playlistObserver?.disconnect();
+    
+    homeObserver = null;
+    recommendedObserver = null;
+    searchObserver = null;
+    playlistObserver = null;
+    
+    otherTitlesLog('Observers cleaned up');
+    setupOtherTitlesObserver();
+    
+    // Refresh titles every 2s during 10s after URL change (as long as our observers are not all set up and fully working)
+    for (let i = 1; i <= 5; i++) {
+        setTimeout(refreshOtherTitles, i * 2000);
+    }
+    
     // Check if URL contains @username pattern
     const isChannelPage = window.location.pathname.includes('/@');
     
@@ -317,9 +344,5 @@ function handleUrlChange() {
         case '/playlist':  // Playlist page
         case '/channel':  // Channel page (old format)
         case '/watch':  // Video page
-        setTimeout(refreshOtherTitles, 200);
-        for (let i = 1; i <= 5; i++) {
-            setTimeout(refreshOtherTitles, i * 2000);
-        }
     }
 }
