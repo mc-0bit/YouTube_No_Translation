@@ -1,0 +1,40 @@
+{
+    "manifest_version": 3,
+    "name": "No More Translations",
+    "version": "1.2.9",
+    "description": "An browser extension that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
+  
+    "icons": {
+      "48": "assets/icons/icon.svg",
+      "96": "assets/icons/icon.svg"
+    },
+  
+    "action": {
+      "default_icon": {
+        "48": "assets/icons/icon.svg",
+        "96": "assets/icons/icon.svg"
+      },
+      "default_popup": "dist/popup/popup.html",
+      "default_title": "NMT"
+    },
+  
+    "permissions": [
+      "storage",
+      "tabs"
+    ],
+  
+    "host_permissions": [
+      "*://*.youtube.com/*"
+    ],
+  
+    "content_scripts": [
+      {
+        "matches": ["*://*.youtube.com/*"],
+        "js": ["dist/browser-polyfill.js", "dist/content/content.js"]
+      }
+    ],
+  
+    "background": {
+      "service_worker": "dist/background/background.js"
+    }
+}
