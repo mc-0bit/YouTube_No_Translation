@@ -5,14 +5,14 @@
     "description": "An browser extension that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
   
     "icons": {
-      "48": "assets/icons/icon.svg",
-      "96": "assets/icons/icon.svg"
+      "48": "assets/icons/icon.png",
+      "96": "assets/icons/icon.png"
     },
   
     "action": {
       "default_icon": {
-        "48": "assets/icons/icon.svg",
-        "96": "assets/icons/icon.svg"
+        "48": "assets/icons/icon.png",
+        "96": "assets/icons/icon.png"
       },
       "default_popup": "dist/popup/popup.html",
       "default_title": "NMT"
@@ -20,7 +20,8 @@
   
     "permissions": [
       "storage",
-      "tabs"
+      "tabs",
+      "scripting"
     ],
   
     "host_permissions": [
@@ -36,5 +37,13 @@
   
     "background": {
       "service_worker": "dist/background/background.js"
-    }
+    },
+  
+    "web_accessible_resources": [{
+        "resources": [
+            "dist/content/audioTranslation/audioScript.js",
+            "dist/content/descriptionTranslation/descriptionScript.js"
+        ],
+        "matches": ["*://*.youtube.com/*"]
+    }]
 }

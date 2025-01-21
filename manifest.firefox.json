@@ -44,5 +44,13 @@
       "id": "{9a3104a2-02c2-464c-b069-82344e5ed4ec}",
       "strict_min_version": "109.0"
     }
-  }
+  },
+  
+  "web_accessible_resources": [{
+      "resources": [
+          "dist/content/audioTranslation/audioScript.js",
+          "dist/content/descriptionTranslation/descriptionScript.js"
+      ],
+      "matches": ["*://*.youtube.com/*"]
+  }]
 }
