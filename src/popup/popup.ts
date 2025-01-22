@@ -7,31 +7,32 @@
  * This program is distributed without any warranty; see the license for details.
  */
 
-
-
 const titleToggle = document.getElementById('titleTranslation') as HTMLInputElement;
 const audioToggle = document.getElementById('audioTranslation') as HTMLInputElement;
 const descriptionToggle = document.getElementById('descriptionTranslation') as HTMLInputElement;
 
-// Initialize settings if they don't exist
-async function initializeSettings() {
-    const data = await browser.storage.local.get('settings');
-    if (!data.settings) {
-        await browser.storage.local.set({
-            settings: DEFAULT_SETTINGS
-        });
-        console.log('[NTM-Debug] Settings initialized with default values');
-    }
-}
-
 // Initialize toggle states from storage
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Ensure settings exist
-        await initializeSettings();
-        
         // Get settings
         const data = await browser.storage.local.get('settings');
+        
+        // If settings don't exist, initialize them
+        if (!data.settings) {
+            await browser.storage.local.set({
+                settings: {
+                    titleTranslation: true,
+                    audioTranslation: true,
+                    descriptionTranslation: true
+                }
+            });
+            titleToggle.checked = true;
+            audioToggle.checked = true;
+            descriptionToggle.checked = true;
+            return;
+        }
+        
+        // Settings exist, use them
         const settings = data.settings as ExtensionSettings;
         
         // Set toggle states

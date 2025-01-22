@@ -34,3 +34,6 @@ Thumbs.db
 
 # Firefox debug files
 web-ext-artifacts/
+
+# Dev tests manifest
+/manifest.json

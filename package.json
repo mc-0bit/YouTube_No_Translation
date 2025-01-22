@@ -8,7 +8,7 @@
     "build": "npm run build:firefox && npm run build:chrome",
     "build:firefox": "npm run clean && npm run create-dirs && npm run pre:web-ext:firefox && npm run build:common && npm run copy:assets",
     "build:chrome": "npm run clean && npm run create-dirs && npm run pre:web-ext:chrome && npm run build:common && npm run copy:assets",
-    "build:common": "npm run build:content && npm run build:popup && npm run build:background && npm run build:css && npm run build:html && npm run build:polyfill && npm run copy:scripts",
+    "build:common": "npm run build:polyfill && npm run build:content && npm run build:popup && npm run build:background && npm run build:css && npm run build:html && npm run copy:scripts",
     "build:content": "tsc -p tsconfig.content.json",
     "build:popup": "tsc -p tsconfig.popup.json",
     "build:background": "tsc -p tsconfig.background.json",
