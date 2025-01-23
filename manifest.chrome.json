@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "No More Translations",
+    "name": "YouTube - No More Translations",
     "version": "2.0.0",
     "description": "An browser extension that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
   
@@ -20,8 +20,7 @@
   
     "permissions": [
       "storage",
-      "tabs",
-      "scripting"
+      "tabs"
     ],
   
     "host_permissions": [
