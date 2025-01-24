@@ -66,10 +66,13 @@ titleToggle.addEventListener('change', async () => {
     
     // Save state
     try {
+        const data = await browser.storage.local.get('settings');
+        const settings = data.settings as ExtensionSettings;
+        
         await browser.storage.local.set({
             settings: {
-                titleTranslation: isEnabled,
-                audioTranslation: audioToggle.checked
+                ...settings,
+                titleTranslation: isEnabled
             }
         });
         console.log('Title state saved');
@@ -99,9 +102,12 @@ audioToggle.addEventListener('change', async () => {
     
     // Save state
     try {
+        const data = await browser.storage.local.get('settings');
+        const settings = data.settings as ExtensionSettings;
+        
         await browser.storage.local.set({
             settings: {
-                titleTranslation: titleToggle.checked,
+                ...settings,
                 audioTranslation: isEnabled
             }
         });
