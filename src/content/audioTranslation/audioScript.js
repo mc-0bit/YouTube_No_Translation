@@ -104,7 +104,7 @@
                     } else {
                         audioLog('Already on original track, no change needed');
                     }
-                }, 2500);
+                }, 50);
             }
         });
     }
