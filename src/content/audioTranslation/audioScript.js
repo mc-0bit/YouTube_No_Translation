@@ -67,9 +67,12 @@
                 
                 audioLog('Setting audio to original language: ' + languageName);
                 player.setAudioTrack(originalTrack);
+                return true; // Track was set successfully
             }
+            return false; // No original track found
         } catch (error) {
             console.error('[YT-DEBUG] Error:', error);
+            return false;
         }
     }
 
@@ -77,7 +80,32 @@
     if (player) {
         player.addEventListener('onVideoDataChange', () => {
             audioLog('Video data changed, checking audio tracks...');
-            setOriginalTrack();
+            
+            // Initial check
+            const initialSuccess = setOriginalTrack();
+            audioLog('Initial check result:', initialSuccess);
+            
+            // Secondary check after delay
+            if (!initialSuccess) {
+                audioLog('Initial check failed, scheduling secondary check...');
+                setTimeout(() => {
+                    audioLog('Performing secondary audio track check...');
+                    const tracks = player.getAvailableAudioTracks();
+                    const currentTrack = tracks.find(track => {
+                        const base64Part = track.id.split(';')[1];
+                        const decoded = atob(base64Part);
+                        return decoded.includes('original');
+                    });
+                    
+                    // Only change if we're not already on original
+                    if (!currentTrack) {
+                        const secondarySuccess = setOriginalTrack();
+                        audioLog('Secondary check result:', secondarySuccess);
+                    } else {
+                        audioLog('Already on original track, no change needed');
+                    }
+                }, 2500);
+            }
         });
     }
 })();
