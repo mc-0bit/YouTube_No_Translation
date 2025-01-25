@@ -20,13 +20,11 @@
     "watch:css": "tailwindcss -i ./src/styles/main.css -o ./dist/styles/main.css --watch",
     "copy:assets": "cp -r assets/* dist/assets/",
     "copy:scripts": "mkdir -p dist/content/audioTranslation dist/content/descriptionTranslation && cp src/content/audioTranslation/audioScript.js dist/content/audioTranslation/ && cp src/content/descriptionTranslation/descriptionScript.js dist/content/descriptionTranslation/",
-    
     "pre:web-ext:firefox": "cp manifest.firefox.json manifest.json",
     "pre:web-ext:chrome": "cp manifest.chrome.json manifest.json",
     "web-ext:firefox": "web-ext build --overwrite-dest -a web-ext-artifacts/firefox",
     "web-ext:chrome": "web-ext build --overwrite-dest -a web-ext-artifacts/chrome",
     "post:web-ext": "rm manifest.json",
-
     "package": "npm run package:firefox && npm run package:chrome && npm run post:web-ext",
     "package:firefox": "npm run build:firefox && npm run web-ext:firefox",
     "package:chrome": "npm run build:chrome && npm run web-ext:chrome"
@@ -48,6 +46,7 @@
   },
   "homepage": "https://github.com/YouG-o/NMT_Addon-for-YouTube#readme",
   "devDependencies": {
+    "@types/chrome": "^0.0.299",
     "@types/webextension-polyfill": "^0.12.1",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.2",

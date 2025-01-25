@@ -9,10 +9,13 @@
 
 /// <reference types="webextension-polyfill" />
 
+declare const chrome: any;
+const api = typeof chrome !== 'undefined' ? chrome : browser;
+
 async function initializeSettings() {
-    const data = await browser.storage.local.get('settings');
+    const data = await api.storage.local.get('settings');
     if (!data.settings) {
-        await browser.storage.local.set({
+        await api.storage.local.set({
             settings: DEFAULT_SETTINGS
         });
         console.log('[NTM-Debug] Settings initialized with default values');
@@ -20,4 +23,4 @@ async function initializeSettings() {
 }
 
 // Initialize settings when extension is installed or updated
-browser.runtime.onInstalled.addListener(initializeSettings);
+api.runtime.onInstalled.addListener(initializeSettings);
