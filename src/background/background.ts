@@ -7,7 +7,7 @@
  * This program is distributed without any warranty; see the license for details.
  */
 
-import 'webextension-polyfill';
+/// <reference types="webextension-polyfill" />
 
 async function initializeSettings() {
     const data = await browser.storage.local.get('settings');
