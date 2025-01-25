@@ -1,6 +1,6 @@
 {
   "name": "nmt",
-  "version": "2.0.31",
+  "version": "2.0.4",
   "description": "An browser extension that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
   "scripts": {
     "clean": "rimraf dist/*",
