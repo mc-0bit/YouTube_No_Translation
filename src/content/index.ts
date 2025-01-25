@@ -48,7 +48,7 @@ function initializeAudioTranslation() {
     // Initial setup
     browser.storage.local.get('settings').then((data: Record<string, any>) => {
         const settings = data.settings as ExtensionSettings;
-        handleAudioTranslation(settings?.audioTranslation || false);
+        handleAudioTranslation(settings?.audioTranslation);
     });
 
     // Message handler

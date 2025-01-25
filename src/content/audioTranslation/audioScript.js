@@ -104,8 +104,11 @@
                     } else {
                         audioLog('Already on original track, no change needed');
                     }
-                }, 50);
+                }, 200);
             }
         });
+
+        // Initial check when script is first injected
+        setOriginalTrack();
     }
 })();

@@ -41,7 +41,7 @@ function setupAudioObserver() {
                     browser.storage.local.get('settings').then((data: Record<string, any>) => {
                         const settings = data.settings as ExtensionSettings;
                         if (settings?.audioTranslation) {
-                            initializeAudioTranslation();
+                            handleAudioTranslation(true);
                         }
                     });
                 }
