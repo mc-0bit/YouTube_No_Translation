@@ -78,37 +78,28 @@
 
     const player = document.getElementById('movie_player');
     if (player) {
+        let processingVideoId = null;
+        let secondaryCheckScheduled = false;
+
         player.addEventListener('onVideoDataChange', () => {
+            const videoId = new URLSearchParams(window.location.search).get('v');
+            if (videoId === processingVideoId) return;
+            
+            processingVideoId = videoId;
             audioLog('Video data changed, checking audio tracks...');
             
-            // Initial check
             const initialSuccess = setOriginalTrack();
-            audioLog('Initial check result:', initialSuccess);
             
-            // Secondary check after delay
-            if (!initialSuccess) {
-                audioLog('Initial check failed, scheduling secondary check...');
+            if (!initialSuccess && !secondaryCheckScheduled) {
+                secondaryCheckScheduled = true;
                 setTimeout(() => {
-                    audioLog('Performing secondary audio track check...');
-                    const tracks = player.getAvailableAudioTracks();
-                    const currentTrack = tracks.find(track => {
-                        const base64Part = track.id.split(';')[1];
-                        const decoded = atob(base64Part);
-                        return decoded.includes('original');
-                    });
-                    
-                    // Only change if we're not already on original
-                    if (!currentTrack) {
-                        const secondarySuccess = setOriginalTrack();
-                        audioLog('Secondary check result:', secondarySuccess);
-                    } else {
-                        audioLog('Already on original track, no change needed');
-                    }
+                    setOriginalTrack();
+                    secondaryCheckScheduled = false;
+                    processingVideoId = null;
                 }, 200);
             }
         });
 
-        // Initial check when script is first injected
         setOriginalTrack();
     }
 })();
