@@ -30,7 +30,7 @@ const LOG_STYLES = {
     },
     AUDIO: {
         context: '[Audio]',
-        color: '#93c5fd'  // light blue
+        color: '#4CAF50'  // green
     },
     CORE: {
         context: '[Core]',

@@ -13,7 +13,7 @@
 */
 
 (() => {
-    const LOG_PREFIX = '[NMT-Debug]';
+    const LOG_PREFIX = '[NMT]';
     const LOG_STYLES = {
         AUDIO: { context: '[AUDIO]', color: '#4CAF50' }
     };
