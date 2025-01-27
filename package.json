@@ -31,20 +31,22 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YouG-o/NMT_Addon-for-YouTube.git"
+    "url": "git+https://github.com/YouG-o/NMT_YouTube-Extension.git"
   },
   "keywords": [
     "youtube",
     "extension",
-    "firefox",
-    "translation"
+    "addon",
+    "translation",
+    "description",
+    "dubbing"
   ],
   "author": "YouGo",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/YouG-o/NMT_Addon-for-YouTube/issues"
+    "url": "https://github.com/YouG-o/NMT_YouTube-Extension/issues"
   },
-  "homepage": "https://github.com/YouG-o/NMT_Addon-for-YouTube#readme",
+  "homepage": "https://github.com/YouG-o/NMT_YouTube-Extension#readme",
   "devDependencies": {
     "@types/chrome": "^0.0.299",
     "@types/webextension-polyfill": "^0.12.1",
