@@ -100,17 +100,17 @@ async function refreshOtherTitles(): Promise<void> {
 
     // Handle recommended video titles
     const recommendedTitles = document.querySelectorAll('#video-title') as NodeListOf<HTMLElement>;
-    otherTitlesLog('Found recommended titles:', recommendedTitles.length);
+    otherTitlesLog('Found videos titles:', recommendedTitles.length);
 
     for (const titleElement of recommendedTitles) {
         if (!titleCache.hasElement(titleElement)) {
-            otherTitlesLog('Processing recommended title:', titleElement.textContent);
+            //otherTitlesLog('Processing video title:', titleElement.textContent);
             const videoUrl = titleElement.closest('a')?.href;
             if (videoUrl) {
                 const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
                 if (videoId) {
                     // Check if element has already been processed with this videoId
-                    const currentNMT = titleElement.getAttribute('NMT');
+                    const currentNMT = titleElement.getAttribute('nmt');
                     if (currentNMT === videoId) {
                         const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
                         try {
@@ -130,6 +130,7 @@ async function refreshOtherTitles(): Promise<void> {
                             `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
                         );
                         updateOtherTitleElement(titleElement, originalTitle, videoId);
+                        otherTitlesLog(`Updated title from : ${titleElement.getAttribute('title')} to : ${originalTitle}`);
                     } catch (error) {
                         otherTitlesLog(`Failed to update recommended title:`, error);
                     }
@@ -139,7 +140,7 @@ async function refreshOtherTitles(): Promise<void> {
     }
 
     // Handle search results
-    await handleSearchResults();
+    //await handleSearchResults();
 }
 
 
@@ -213,6 +214,7 @@ function setupOtherTitlesObserver() {
 }
 
 
+/*
 // New function to handle search results
 async function handleSearchResults(): Promise<void> {
     otherTitlesLog('Processing search results');
@@ -249,6 +251,8 @@ async function handleSearchResults(): Promise<void> {
         }
     }
 }
+*/
+
 
 function setupUrlObserver() {
     otherTitlesLog('Setting up URL observer');
@@ -316,14 +320,17 @@ function handleUrlChange() {
     otherTitlesLog('Observers cleaned up');
     setupOtherTitlesObserver();
     
-    // Refresh titles every 2s during 10s after URL change (as long as our observers are not all set up and fully working)
-    for (let i = 1; i <= 5; i++) {
-        setTimeout(refreshOtherTitles, i * 2000);
-    }
+    // refresh titles 2 seconds after URL change 
+    setTimeout(() => {
+        refreshOtherTitles();
+    }, 2000);
+    // refresh titles 10 seconds after URL change 
+    setTimeout(() => {
+        refreshOtherTitles();
+    }, 10000);
     
     // Check if URL contains @username pattern
     const isChannelPage = window.location.pathname.includes('/@');
-    
     if (isChannelPage) {
         // Handle all new channel page types (videos, featured, shorts, etc.)
         refreshOtherTitles();
@@ -331,18 +338,36 @@ function handleUrlChange() {
     }
     
     switch(window.location.pathname) {
-        case '/results':
+        case '/results': // Search page
             console.log(`${LOG_PREFIX}[URL] Detected search page`);
             waitForElement('#contents.ytd-section-list-renderer').then(() => {
                 otherTitlesLog('Search results container found');
-                handleSearchResults();
+                refreshOtherTitles();
             });
             break;
-        case '/':  // Home page
-        case '/feed/subscriptions':  // Subscriptions page
+        case '/': // Home page
+            console.log(`${LOG_PREFIX}[URL] Detected home page`);
+            waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
+                otherTitlesLog('Home page container found');
+                refreshOtherTitles();
+            });
+            break;        
+        case '/feed/subscriptions': // Subscriptions page
+            console.log(`${LOG_PREFIX}[URL] Detected subscriptions page`);
+            waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
+                otherTitlesLog('Subscriptions page container found');
+                refreshOtherTitles();
+            });
+            break;
         case '/feed/trending':  // Trending page
         case '/playlist':  // Playlist page
         case '/channel':  // Channel page (old format)
-        case '/watch':  // Video page
+        case '/watch': // Video page
+            console.log(`${LOG_PREFIX}[URL] Detected video page`);
+            waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then(() => {
+                otherTitlesLog('Recommended videos container found');
+                refreshOtherTitles();
+            });
+            break;
     }
 }
