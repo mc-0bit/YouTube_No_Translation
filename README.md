@@ -28,11 +28,30 @@
 ###
 
 <div align="center">
-  <a href="https://www.buymeacoffee.com/youg.o" target="_blank"><img src="./assets/images/buymeacoffee.webp" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+  <a href="https://www.buymeacoffee.com/youg.o" target="_blank"><img src="./assets/images/ko-fi.png" alt="Support me on Ko-fi" style="width:300px" ></a>
+</div>
+
+
+###
+
+<div align="center">
+  This project is not affiliated with YouTube or Google.
+
+###
+
+  Parts of this codebase were developed with the assistance of LLM.<br>
+  All LLM-generated code has been reviewed and validated by humans.
 </div>
 
 ###
 
+<div align="center">
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" height="20" alt="typescript logo" title="typescript logo" />
+  <img src="https://cdn.simpleicons.org/tailwindcss/06B6D4" height="20" alt="tailwindcss logo" title="tailwindcss logo" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" height="20" alt="html5 logo"  />
+</div>
+
+##
 
 <div align="center">
   <h1>License</h1>
@@ -40,21 +59,4 @@
   <br>
   Any reuse, modification or distribution of this code must credit the original author.
   <br>
-  This project is not affiliated with YouTube or Google.
-</div>
-
-###
-
-<div align="center">
-  <h3>Development & LLM Assistance</h3>
-  Parts of this codebase were developed with the assistance of GitHub Copilot LLM.<br>
-  All LLM-generated code has been reviewed and validated by humans.
-</div>
-
-##
-
-<div align="center">
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" height="20" alt="typescript logo" title="typescript logo" />
-  <img src="https://cdn.simpleicons.org/tailwindcss/06B6D4" height="20" alt="tailwindcss logo" title="tailwindcss logo" />
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" height="20" alt="html5 logo"  />
 </div>
