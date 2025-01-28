@@ -18,7 +18,7 @@
   <a href="https://addons.mozilla.org/firefox/addon/youtube-no-more-translation/" target="_blank">
     <img src="./assets/images/firefox.png" height="40" alt="Available on Mozilla Firefox" title="Available on Mozilla Firefox"/>
   </a>
-  <a href="" target="_blank">
+  <a href="https://chromewebstore.google.com/detail/youtube-no-more-translati/lmkeolibdeeglfglnncmfleojmakecjb" target="_blank">
     <img src="./assets/images/chrome.png" height="40" alt="Available on Chrome Web Store" title="Available on Chrome Web Store"/>
   </a>
 </div>
