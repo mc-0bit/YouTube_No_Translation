@@ -28,7 +28,7 @@
 ###
 
 <div align="center">
-  <a href="https://www.buymeacoffee.com/youg.o" target="_blank"><img src="./assets/images/ko-fi.png" alt="Support me on Ko-fi" style="width:300px" ></a>
+  <a href="https://ko-fi.com/yougo" target="_blank"><img src="./assets/images/ko-fi.png" alt="Support me on Ko-fi" style="width:300px" ></a>
 </div>
 
 
