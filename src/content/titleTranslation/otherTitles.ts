@@ -257,49 +257,40 @@ async function handleSearchResults(): Promise<void> {
 function setupUrlObserver() {
     otherTitlesLog('Setting up URL observer');
     
-    // Listen for URL changes using History API
+    // Standard History API monitoring
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
 
-    // Override pushState
     history.pushState = function(...args) {
         otherTitlesLog('pushState called with:', args);
         originalPushState.apply(this, args);
         handleUrlChange();
     };
 
-    // Override replaceState
     history.replaceState = function(...args) {
         otherTitlesLog('replaceState called with:', args);
         originalReplaceState.apply(this, args);
         handleUrlChange();
     };
 
-    // Listen for popstate event (back/forward browser buttons)
+    // Browser navigation (back/forward)
     window.addEventListener('popstate', () => {
         otherTitlesLog('popstate event triggered');
         handleUrlChange();
     });
 
-    // Create an observer for the URL search params
-    let lastSearch = window.location.search;
-    const observer = new MutationObserver(() => {
-        if (window.location.search !== lastSearch) {
-            otherTitlesLog('Search params changed:', window.location.search);
-            lastSearch = window.location.search;
-            handleUrlChange();
-        }
+    // YouTube's custom SPA navigation events
+    /*
+    window.addEventListener('yt-navigate-start', () => {
+        otherTitlesLog('YouTube SPA navigation started');
+        handleUrlChange();
     });
+    */
 
-    // Observe changes in the document title (YouTube updates it when search changes)
-    const titleElement = document.querySelector('title');
-    if (titleElement) {
-        observer.observe(titleElement, {
-            subtree: true,
-            characterData: true,
-            childList: true
-        });
-    }
+    window.addEventListener('yt-navigate-finish', () => {
+        otherTitlesLog('YouTube SPA navigation completed');
+        handleUrlChange();
+    });
 }
 
 function handleUrlChange() {

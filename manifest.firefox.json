@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "No More Translations",
+  "name": "No More Translation",
   "version": "2.0.52",
-  "description": "An browser extension that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
+  "description": "A web browser extension that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
 
   "icons": {
     "48": "assets/icons/icon.svg",
