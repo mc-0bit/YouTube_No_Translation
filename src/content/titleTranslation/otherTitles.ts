@@ -13,7 +13,7 @@
 let homeObserver: MutationObserver | null = null;
 let recommendedObserver: MutationObserver | null = null;
 let searchObserver: MutationObserver | null = null;
-let playlistObserver: MutationObserver | null = null;
+//let playlistObserver: MutationObserver | null = null;
 
 // Optimized cache manager
 class TitleCache {
@@ -57,19 +57,19 @@ class TitleCache {
     async getOriginalTitle(url: string): Promise<string> {
         this.cleanupCache();
         if (this.apiCache.has(url)) {
-            otherTitlesLog('Using cached API response for:', url);
+            //otherTitlesLog('Using cached API response for:', url);
             return this.apiCache.get(url)!;
         }
         
-        otherTitlesLog('Fetching new title from API:', url);
+        //otherTitlesLog('Fetching new title from API:', url);
         try {
             const response = await fetch(url);
             const data = await response.json();
             this.apiCache.set(url, data.title);
-            otherTitlesLog('Received title from API:', data.title);
+            //otherTitlesLog('Received title from API:', data.title);
             return data.title;
         } catch (error) {
-            otherTitlesLog(`API request failed, using title attribute as fallback:`, error);
+            //otherTitlesLog(`API request failed, using title attribute as fallback:`, error);
             const videoElement = document.querySelector(`a[href*="${url.split('v=')[1]}"] #video-title`);
             return videoElement?.getAttribute('title') || '';
         }
@@ -125,48 +125,32 @@ async function refreshOtherTitles(): Promise<void> {
 
     // Handle recommended video titles
     const recommendedTitles = document.querySelectorAll('#video-title') as NodeListOf<HTMLElement>;
-    otherTitlesLog('Found videos titles:', recommendedTitles.length);
+    //otherTitlesLog('Found videos titles:', recommendedTitles.length);
 
     for (const titleElement of recommendedTitles) {
         if (!titleCache.hasElement(titleElement)) {
+            //otherTitlesLog('Processing video title:', titleElement.textContent);
             const videoUrl = titleElement.closest('a')?.href;
             if (videoUrl) {
                 const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
                 if (videoId) {
-                    const currentNMT = titleElement.getAttribute('nmt');
-                    if (currentNMT === videoId) {
-                        const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
-                        try {
-                            const originalTitle = await titleCache.getOriginalTitle(apiUrl);
-                            const currentTitle = titleElement.textContent?.trim();
-                            
-                            if (currentTitle === originalTitle) {
-                                otherTitlesLog('Title already processed and correct for video:', videoId);
-                                continue;
-                            }
-                            
-                            updateOtherTitleElement(titleElement, originalTitle, videoId);
-                            otherTitlesLog(`Updated title from : ${currentTitle} to : ${originalTitle}`);
-                        } catch (error) {
-                            otherTitlesLog('Failed to process title:', error);
+                    // Check if title is not translated
+                    const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
+                    const originalTitle = await titleCache.getOriginalTitle(apiUrl);
+                    try {
+                        if (titleElement.getAttribute('title') === originalTitle) {
+                            //otherTitlesLog('Title is not translated:', videoId);
+                            continue;
                         }
-                    } else {
-                        const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
-                        try {
-                            const originalTitle = await titleCache.getOriginalTitle(apiUrl);
-                            const currentTitle = titleElement.textContent?.trim();
-                            
-                            if (currentTitle === originalTitle) {
-                                otherTitlesLog('Title matches original:', videoId);
-                                titleElement.setAttribute('nmt', videoId);
-                                continue;
-                            }
-                            
-                            updateOtherTitleElement(titleElement, originalTitle, videoId);
-                            otherTitlesLog(`Updated title from : ${currentTitle} to : ${originalTitle}`);
-                        } catch (error) {
-                            otherTitlesLog('Failed to update recommended title:', error);
-                        }
+                        otherTitlesLog('Title is translated:', videoId);
+                    } catch (error) {
+                        //otherTitlesLog('Failed to get original title for comparison:', error);
+                    }                 
+                    try {
+                        updateOtherTitleElement(titleElement, originalTitle, videoId);
+                        otherTitlesLog(`Updated title from : ${titleElement.getAttribute('title')} to : ${originalTitle}`);
+                    } catch (error) {
+                        otherTitlesLog(`Failed to update recommended title:`, error);
                     }
                 }
             }
@@ -337,12 +321,12 @@ function handleUrlChange() {
     homeObserver?.disconnect();
     recommendedObserver?.disconnect();
     searchObserver?.disconnect();
-    playlistObserver?.disconnect();
+    //playlistObserver?.disconnect();
     
     homeObserver = null;
     recommendedObserver = null;
     searchObserver = null;
-    playlistObserver = null;
+    //playlistObserver = null;
     
     otherTitlesLog('Observers cleaned up');
     setupOtherTitlesObserver();
