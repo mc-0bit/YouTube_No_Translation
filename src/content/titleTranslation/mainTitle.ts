@@ -15,7 +15,7 @@ let mainTitleObserver: MutationObserver | null = null;
 function updateMainTitleElement(element: HTMLElement, title: string, videoId: string): void {
     mainTitleLog('Updating element with title:', title);
     element.innerText = title;
-    element.setAttribute('NMT', videoId);
+    element.setAttribute('nmt', videoId);
     element.removeAttribute('is-empty');
 
     // Block YouTube from re-adding the is-empty attribute
@@ -55,16 +55,20 @@ async function refreshMainTitle(): Promise<void> {
         const videoId = new URLSearchParams(window.location.search).get('v');
         if (videoId) {
             // Check if element has already been processed with this videoId
-            const currentNMT = mainTitle.getAttribute('NMT');
-            if (currentNMT === videoId) {
-                mainTitleLog('Title already processed for video:', videoId);
-                return;
-            }
+            const originalTitle = await titleCache.getOriginalTitle(
+                `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
+            );
+            try {
+                if (mainTitle.innerText === originalTitle) {
+                    //mainTitleLog('Title is not translated:', videoId);
+                    return;
+                }
+                //mainTitleLog('Main Title is translated:', videoId);
+            } catch (error) {
+                //mainTitleLog('Failed to get original title for comparison:', error);
+            }        
 
             try {
-                const originalTitle = await titleCache.getOriginalTitle(
-                    `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
-                );
                 updateMainTitleElement(mainTitle, originalTitle, videoId);
                 updatePageTitle(originalTitle);
             } catch (error) {
