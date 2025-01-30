@@ -18,8 +18,32 @@ let playlistObserver: MutationObserver | null = null;
 // Optimized cache manager
 class TitleCache {
     private apiCache = new Map<string, string>();
+    private lastCleanupTime = Date.now();
+    private readonly MAX_ENTRIES = 500;
+    private readonly CLEANUP_INTERVAL = 30 * 60 * 1000; // 30 minutes in ms
+
+    private cleanupCache(): void {
+        const currentTime = Date.now();
+        
+        // Clear if older than interval
+        if (currentTime - this.lastCleanupTime > this.CLEANUP_INTERVAL) {
+            otherTitlesLog('Cache expired, clearing all entries');
+            this.clear();
+            this.lastCleanupTime = currentTime;
+            return;
+        }
+
+        // Keep only most recent entries if over size limit
+        if (this.apiCache.size > this.MAX_ENTRIES) {
+            const entries = Array.from(this.apiCache.entries());
+            this.apiCache = new Map(entries.slice(-this.MAX_ENTRIES));
+            otherTitlesLog('Cache size limit reached, keeping most recent entries');
+        }
+    }
 
     clear(): void {
+        this.apiCache.clear();
+        otherTitlesLog('Cache cleared');
     }
 
     hasElement(element: HTMLElement): boolean {        
@@ -31,6 +55,7 @@ class TitleCache {
     }
 
     async getOriginalTitle(url: string): Promise<string> {
+        this.cleanupCache();
         if (this.apiCache.has(url)) {
             otherTitlesLog('Using cached API response for:', url);
             return this.apiCache.get(url)!;
