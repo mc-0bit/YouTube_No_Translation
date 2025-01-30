@@ -104,35 +104,44 @@ async function refreshOtherTitles(): Promise<void> {
 
     for (const titleElement of recommendedTitles) {
         if (!titleCache.hasElement(titleElement)) {
-            //otherTitlesLog('Processing video title:', titleElement.textContent);
             const videoUrl = titleElement.closest('a')?.href;
             if (videoUrl) {
                 const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
                 if (videoId) {
-                    // Check if element has already been processed with this videoId
                     const currentNMT = titleElement.getAttribute('nmt');
                     if (currentNMT === videoId) {
                         const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
                         try {
                             const originalTitle = await titleCache.getOriginalTitle(apiUrl);
-                            if (titleElement.getAttribute('title') === originalTitle) {
+                            const currentTitle = titleElement.textContent?.trim();
+                            
+                            if (currentTitle === originalTitle) {
                                 otherTitlesLog('Title already processed and correct for video:', videoId);
                                 continue;
                             }
-                            otherTitlesLog('Title needs update despite having NMT attribute:', videoId);
+                            
+                            updateOtherTitleElement(titleElement, originalTitle, videoId);
+                            otherTitlesLog(`Updated title from : ${currentTitle} to : ${originalTitle}`);
                         } catch (error) {
-                            otherTitlesLog('Failed to get original title for comparison:', error);
+                            otherTitlesLog('Failed to process title:', error);
                         }
-                    }
-
-                    try {
-                        const originalTitle = await titleCache.getOriginalTitle(
-                            `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
-                        );
-                        updateOtherTitleElement(titleElement, originalTitle, videoId);
-                        otherTitlesLog(`Updated title from : ${titleElement.getAttribute('title')} to : ${originalTitle}`);
-                    } catch (error) {
-                        otherTitlesLog(`Failed to update recommended title:`, error);
+                    } else {
+                        const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
+                        try {
+                            const originalTitle = await titleCache.getOriginalTitle(apiUrl);
+                            const currentTitle = titleElement.textContent?.trim();
+                            
+                            if (currentTitle === originalTitle) {
+                                otherTitlesLog('Title matches original:', videoId);
+                                titleElement.setAttribute('nmt', videoId);
+                                continue;
+                            }
+                            
+                            updateOtherTitleElement(titleElement, originalTitle, videoId);
+                            otherTitlesLog(`Updated title from : ${currentTitle} to : ${originalTitle}`);
+                        } catch (error) {
+                            otherTitlesLog('Failed to update recommended title:', error);
+                        }
                     }
                 }
             }
@@ -198,6 +207,7 @@ function setupOtherTitlesObserver() {
         otherTitlesLog('Search results observer setup completed');
     });
 
+    /*
     // Observer for playlist/queue videos
     waitForElement('#playlist ytd-playlist-panel-renderer #items').then((contents) => {
         otherTitlesLog('Setting up playlist/queue videos observer');
@@ -211,6 +221,7 @@ function setupOtherTitlesObserver() {
         });
         otherTitlesLog('Playlist/Queue observer setup completed');
     });
+    */
 }
 
 
@@ -311,10 +322,6 @@ function handleUrlChange() {
     otherTitlesLog('Observers cleaned up');
     setupOtherTitlesObserver();
     
-    // refresh titles 2 seconds after URL change 
-    setTimeout(() => {
-        refreshOtherTitles();
-    }, 2000);
     // refresh titles 10 seconds after URL change 
     setTimeout(() => {
         refreshOtherTitles();

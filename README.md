@@ -1,19 +1,13 @@
 <div align="center">
   <a href="https://addons.mozilla.org/firefox/addon/youtube-no-more-translation/" target="_blank">
     <img src="./assets/icons/icon.svg" alt="Project description"/>
+
   </a>
 </div>
 
 ###
 
 <h1 align="center">No More Translation on YouTube</h1>
-
-###
-
-<p align="center">An addon for Firefox and Chromium browsers, preventing automatic translation on YouTube (audio track, description and video titles).</p>
-
-###
-
 <div align="center">
   <a href="https://addons.mozilla.org/firefox/addon/youtube-no-more-translation/" target="_blank">
     <img src="./assets/images/firefox.png" height="40" alt="Available on Mozilla Firefox" title="Available on Mozilla Firefox"/>
@@ -23,24 +17,17 @@
   </a>
 </div>
 
+###
+
+<p align="center">An addon for Firefox and Chromium browsers, preventing automatic translation on YouTube (audio track, description and video titles).</p>
+
+
 
 
 ###
 
 <div align="center">
   <a href="https://ko-fi.com/yougo" target="_blank"><img src="./assets/images/ko-fi.png" alt="Support me on Ko-fi" style="width:300px" ></a>
-</div>
-
-
-###
-
-<div align="center">
-  This project is not affiliated with YouTube or Google.
-
-###
-
-  Parts of this codebase were developed with the assistance of LLM.<br>
-  All LLM-generated code has been reviewed and validated by humans.
 </div>
 
 ###
