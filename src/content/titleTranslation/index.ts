@@ -12,8 +12,8 @@
 class TitleCache {
     private apiCache = new Map<string, string>();
     private lastCleanupTime = Date.now();
-    private readonly MAX_ENTRIES = 500;
-    private readonly CLEANUP_INTERVAL = 30 * 60 * 1000; // 30 minutes in ms
+    private readonly MAX_ENTRIES = 200;
+    private readonly CLEANUP_INTERVAL = 10 * 60 * 1000; // 10 minutes in ms
 
     private cleanupCache(): void {
         const currentTime = Date.now();

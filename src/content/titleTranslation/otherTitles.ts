@@ -74,8 +74,9 @@ async function refreshOtherTitles(): Promise<void> {
                     // Check if title is not translated
                     const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
                     const originalTitle = await titleCache.getOriginalTitle(apiUrl);
+                    const currentTitle = titleElement.getAttribute('title');
                     try {
-                        if (titleElement.getAttribute('title') === originalTitle) {
+                        if (currentTitle === originalTitle) {
                             //otherTitlesLog('Title is not translated:', videoId);
                             continue;
                         }
@@ -85,7 +86,7 @@ async function refreshOtherTitles(): Promise<void> {
                     }                 
                     try {
                         updateOtherTitleElement(titleElement, originalTitle, videoId);
-                        otherTitlesLog(`Updated title from : ${titleElement.getAttribute('title')} to : ${originalTitle}`);
+                        otherTitlesLog(`Updated title from : ${currentTitle} to : ${originalTitle}`);
                     } catch (error) {
                         otherTitlesLog(`Failed to update recommended title:`, error);
                     }
