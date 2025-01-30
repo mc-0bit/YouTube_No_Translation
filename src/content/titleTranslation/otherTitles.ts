@@ -15,69 +15,6 @@ let recommendedObserver: MutationObserver | null = null;
 let searchObserver: MutationObserver | null = null;
 //let playlistObserver: MutationObserver | null = null;
 
-// Optimized cache manager
-class TitleCache {
-    private apiCache = new Map<string, string>();
-    private lastCleanupTime = Date.now();
-    private readonly MAX_ENTRIES = 500;
-    private readonly CLEANUP_INTERVAL = 30 * 60 * 1000; // 30 minutes in ms
-
-    private cleanupCache(): void {
-        const currentTime = Date.now();
-        
-        // Clear if older than interval
-        if (currentTime - this.lastCleanupTime > this.CLEANUP_INTERVAL) {
-            otherTitlesLog('Cache expired, clearing all entries');
-            this.clear();
-            this.lastCleanupTime = currentTime;
-            return;
-        }
-
-        // Keep only most recent entries if over size limit
-        if (this.apiCache.size > this.MAX_ENTRIES) {
-            const entries = Array.from(this.apiCache.entries());
-            this.apiCache = new Map(entries.slice(-this.MAX_ENTRIES));
-            otherTitlesLog('Cache size limit reached, keeping most recent entries');
-        }
-    }
-
-    clear(): void {
-        this.apiCache.clear();
-        otherTitlesLog('Cache cleared');
-    }
-
-    hasElement(element: HTMLElement): boolean {        
-        return false;
-    }
-
-    setElement(element: HTMLElement, title: string): void {
-        otherTitlesLog('Element caching disabled');
-    }
-
-    async getOriginalTitle(url: string): Promise<string> {
-        this.cleanupCache();
-        if (this.apiCache.has(url)) {
-            //otherTitlesLog('Using cached API response for:', url);
-            return this.apiCache.get(url)!;
-        }
-        
-        //otherTitlesLog('Fetching new title from API:', url);
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            this.apiCache.set(url, data.title);
-            //otherTitlesLog('Received title from API:', data.title);
-            return data.title;
-        } catch (error) {
-            //otherTitlesLog(`API request failed, using title attribute as fallback:`, error);
-            const videoElement = document.querySelector(`a[href*="${url.split('v=')[1]}"] #video-title`);
-            return videoElement?.getAttribute('title') || '';
-        }
-    }
-}
-
-const titleCache = new TitleCache();
-
 
 
 // Utility Functions

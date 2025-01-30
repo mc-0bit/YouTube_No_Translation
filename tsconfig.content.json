@@ -23,6 +23,7 @@
     "src/config/constants.ts",
     "src/content/logging.ts",
     "src/content/utils.ts",
+    "src/content/titleTranslation/index.ts",
     "src/content/titleTranslation/mainTitle.ts",
     "src/content/titleTranslation/otherTitles.ts",
     "src/content/audioTranslation/audioIndex.ts",
