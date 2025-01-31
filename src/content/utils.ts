@@ -25,7 +25,7 @@ function isToggleMessage(message: unknown): message is Message {
 }
 
 // Function to wait for an element to be present in the DOM
-function waitForElement(selector: string, timeout = 5000): Promise<Element> {
+function waitForElement(selector: string, timeout = 7500): Promise<Element> {
     return new Promise((resolve, reject) => {
         if (document.querySelector(selector)) {
             return resolve(document.querySelector(selector)!);
@@ -45,7 +45,7 @@ function waitForElement(selector: string, timeout = 5000): Promise<Element> {
 
         setTimeout(() => {
             observer.disconnect();
-            reject('Timeout waiting for element');
+            reject('Timeout waiting for element : ' + selector);
         }, timeout);
     });
 }

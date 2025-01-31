@@ -11,19 +11,20 @@
 
 let mainTitleObserver: MutationObserver | null = null;
 
-// Utility Functions
+// --- Utility Functions
 function updateMainTitleElement(element: HTMLElement, title: string, videoId: string): void {
     mainTitleLog('Updating element with title:', title);
-    element.innerText = title;
-    element.setAttribute('nmt', videoId);
+    //element.setAttribute('nmt', videoId);
     element.removeAttribute('is-empty');
-
-    // Block YouTube from re-adding the is-empty attribute
+    element.innerText = title;
+    
+    // --- Block YouTube from re-adding the is-empty attribute
     const isEmptyObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === 'attributes' && mutation.attributeName === 'is-empty') {
                 mainTitleLog('Blocking is-empty attribute');
                 element.removeAttribute('is-empty');
+                element.innerText = title;
             }
         });
     });
@@ -43,7 +44,7 @@ function updatePageTitle(mainTitle: string): void {
 }
 
 
-// Main Title Function
+// --- Main Title Function
 async function refreshMainTitle(): Promise<void> {
     const data = await browser.storage.local.get('settings');
     const settings = data.settings as ExtensionSettings;
@@ -54,10 +55,15 @@ async function refreshMainTitle(): Promise<void> {
         mainTitleLog('Processing main title element');
         const videoId = new URLSearchParams(window.location.search).get('v');
         if (videoId) {
-            // Check if element has already been processed with this videoId
+            // --- Check if element has already been processed with this videoId
             const originalTitle = await titleCache.getOriginalTitle(
                 `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
             );
+            // --- Translated title check is not working as the innerText is not modified by YouTube 
+            // as soon as we modified it a first time.
+            // So we probably won't be able to detect if the title is already translated.
+            // Even if we could, it would be better to always update the title
+            // since YouTube won't update it.
             try {
                 if (mainTitle.innerText === originalTitle) {
                     //mainTitleLog('Title is not translated:', videoId);
@@ -91,11 +97,11 @@ function setupMainTitleObserver() {
                     mainTitleLog('Video ID changed:', newVideoId);
                     mainTitleLog('Cache cleared');
                     
-                    // Get the current page URL to check against
+                    // --- Get the current page URL to check against
                     const currentUrl = window.location.href;
                     /*mainTitleLog('Current URL:', currentUrl);*/
                     
-                    // Wait for title element and monitor its changes
+                    // --- Wait for title element and monitor its changes
                     const titleElement = await waitForElement('ytd-watch-metadata yt-formatted-string.style-scope.ytd-watch-metadata');
                     let attempts = 0;
                     const maxAttempts = 20;
@@ -108,7 +114,7 @@ function setupMainTitleObserver() {
                                 const settings = data.settings as ExtensionSettings;
                                 if (settings?.titleTranslation) {
                                     await refreshMainTitle();
-                                    mainTitleLog('Title updated:', titleElement.textContent);
+                                    //mainTitleLog('Title updated:', titleElement.textContent);
                                 }
                             });
                             break;

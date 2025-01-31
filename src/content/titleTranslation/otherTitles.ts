@@ -19,7 +19,7 @@ let searchObserver: MutationObserver | null = null;
 
 // Utility Functions
 function updateOtherTitleElement(element: HTMLElement, title: string, videoId: string): void {
-    otherTitlesLog('Updating element with title:', title);
+    //otherTitlesLog('Updating element with title:', title);
     
     // Inject CSS if not already done
     if (!document.querySelector('#nmt-style')) {
@@ -80,7 +80,7 @@ async function refreshOtherTitles(): Promise<void> {
                             //otherTitlesLog('Title is not translated:', videoId);
                             continue;
                         }
-                        otherTitlesLog('Title is translated:', videoId);
+                        //otherTitlesLog('Title is translated:', videoId);
                     } catch (error) {
                         //otherTitlesLog('Failed to get original title for comparison:', error);
                     }                 
@@ -237,6 +237,12 @@ function setupUrlObserver() {
         handleUrlChange();
     });
 
+    // YouTube's custom page data update event
+    window.addEventListener('yt-page-data-updated', () => {
+        otherTitlesLog('YouTube page data updated');
+        handleUrlChange();
+    });
+
     // YouTube's custom SPA navigation events
     /*
     window.addEventListener('yt-navigate-start', () => {
@@ -245,10 +251,12 @@ function setupUrlObserver() {
     });
     */
 
+    /*
     window.addEventListener('yt-navigate-finish', () => {
         otherTitlesLog('YouTube SPA navigation completed');
         handleUrlChange();
     });
+    */
 }
 
 function handleUrlChange() {
@@ -312,6 +320,10 @@ function handleUrlChange() {
             waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then(() => {
                 otherTitlesLog('Recommended videos container found');
                 refreshOtherTitles();
+                    // refresh titles 4 seconds after loading video page
+                    setTimeout(() => {
+                        refreshOtherTitles();
+                    }, 40000);
             });
             break;
     }
