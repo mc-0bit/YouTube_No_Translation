@@ -77,16 +77,24 @@ async function refreshOtherTitles(): Promise<void> {
                     const currentTitle = titleElement.getAttribute('title');
                     try {
                         if (currentTitle === originalTitle) {
-                            //otherTitlesLog('Title is not translated:', videoId);
+                            //otherTitlesLog('Title is not translated: ', videoId);
                             continue;
                         }
-                        //otherTitlesLog('Title is translated:', videoId);
+                        //otherTitlesLog('Title is translated: ', videoId);
                     } catch (error) {
                         //otherTitlesLog('Failed to get original title for comparison:', error);
                     }                 
                     try {
                         updateOtherTitleElement(titleElement, originalTitle, videoId);
-                        otherTitlesLog(`Updated title from : ${currentTitle} to : ${originalTitle}`);
+                        otherTitlesLog(
+                            `Updated title from : %c${currentTitle}%c to : %c${originalTitle}%c (video id : %c${videoId}%c)`,
+                            'color: white',    // currentTitle style
+                            'color: #fca5a5',      // reset color
+                            'color: white',    // originalTitle style
+                            'color: #fca5a5',      // reset color
+                            'color: #4ade80',  // videoId style (light green)
+                            'color: #fca5a5'       // reset color
+                        );
                     } catch (error) {
                         otherTitlesLog(`Failed to update recommended title:`, error);
                     }
