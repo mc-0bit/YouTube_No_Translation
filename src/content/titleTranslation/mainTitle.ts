@@ -56,6 +56,7 @@ async function refreshMainTitle(): Promise<void> {
         const videoId = new URLSearchParams(window.location.search).get('v');
         if (videoId) {
             // --- Check if element has already been processed with this videoId
+            const currentTitle = mainTitle.textContent?.trim();
             const originalTitle = await titleCache.getOriginalTitle(
                 `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
             );
@@ -65,7 +66,11 @@ async function refreshMainTitle(): Promise<void> {
             // Even if we could, it would be better to always update the title
             // since YouTube won't update it.
             try {
-                if (mainTitle.innerText === originalTitle) {
+                if (!originalTitle) {
+                    mainTitleLog(`Failed to get original title from API: ${videoId}, keeping current title`);
+                    return;
+                }
+                if (currentTitle === originalTitle) {
                     //mainTitleLog('Title is not translated:', videoId);
                     return;
                 }
@@ -77,6 +82,15 @@ async function refreshMainTitle(): Promise<void> {
             try {
                 updateMainTitleElement(mainTitle, originalTitle, videoId);
                 updatePageTitle(originalTitle);
+                mainTitleLog(
+                    `Updated title from : %c${currentTitle}%c to : %c${originalTitle}%c (video id : %c${videoId}%c)`,
+                    'color: white',    // currentTitle style
+                    'color: #fca5a5',      // reset color
+                    'color: white',    // originalTitle style
+                    'color: #fca5a5',      // reset color
+                    'color: #4ade80',  // videoId style (light green)
+                    'color: #fca5a5'       // reset color
+                );
             } catch (error) {
                 mainTitleLog(`Failed to update main title:`, error);
             }

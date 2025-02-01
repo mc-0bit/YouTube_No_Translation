@@ -47,24 +47,35 @@ class TitleCache {
         //titlesLog('Element caching disabled');
     }
 
-    async getOriginalTitle(url: string): Promise<string> {
+    async getOriginalTitle(apiUrl: string): Promise<string> {
         this.cleanupCache();
-        if (this.apiCache.has(url)) {
-            //titlesLog('Using cached API response for:', url);
-            return this.apiCache.get(url)!;
-        }
-        
-        //titlesLog('Fetching new title from API:', url);
         try {
-            const response = await fetch(url);
+            // If in cache, return cached value
+            if (this.apiCache.has(apiUrl)) {
+                return this.apiCache.get(apiUrl) || '';
+            }
+
+            // Fetch new title
+            const response = await fetch(apiUrl);
+            
+            // If no title found keep current title
+            if (!response.ok) {
+                //titlesLog(`API error (${response.status}), keeping current title`);
+                return '';
+            }
+
             const data = await response.json();
-            this.apiCache.set(url, data.title);
-            //titlesLog('Received title from API:', data.title);
-            return data.title;
+            const title = data.title || '';
+            
+            // Cache the result
+            if (title) {
+                this.apiCache.set(apiUrl, title);
+            }
+
+            return title;
         } catch (error) {
-            //titlesLog(`API request failed, using title attribute as fallback:`, error);
-            const videoElement = document.querySelector(`a[href*="${url.split('v=')[1]}"] #video-title`);
-            return videoElement?.getAttribute('title') || '';
+            titlesLog(`Failed to fetch title: ${error}`);
+            return '';
         }
     }
 }

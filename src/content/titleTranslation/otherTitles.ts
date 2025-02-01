@@ -74,8 +74,12 @@ async function refreshOtherTitles(): Promise<void> {
                     // Check if title is not translated
                     const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
                     const originalTitle = await titleCache.getOriginalTitle(apiUrl);
-                    const currentTitle = titleElement.getAttribute('title');
+                    const currentTitle = titleElement.textContent?.trim();
                     try {
+                        if (!originalTitle) {
+                            otherTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title`);
+                            continue;
+                        }
                         if (currentTitle === originalTitle) {
                             //otherTitlesLog('Title is not translated: ', videoId);
                             continue;
