@@ -13,7 +13,15 @@ let mainTitleObserver: MutationObserver | null = null;
 
 // --- Utility Functions
 function updateMainTitleElement(element: HTMLElement, title: string, videoId: string): void {
-    mainTitleLog('Updating element with title:', title);
+    mainTitleLog(
+        `Updated title from : %c${element.textContent?.trim()}%c to : %c${title}%c (video id : %c${videoId}%c)`,
+        'color: white',    // currentTitle style
+        'color: #fcd34d',      // reset color
+        'color: white',    // originalTitle style
+        'color: #fcd34d',      // reset color
+        'color: #4ade80',  // videoId style (light green)
+        'color: #fcd34d'       // reset color
+    );
     //element.setAttribute('nmt', videoId);
     element.removeAttribute('is-empty');
     element.innerText = title;
@@ -38,9 +46,8 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
 }
 
 function updatePageTitle(mainTitle: string): void {
-        mainTitleLog('Updating page title with:', mainTitle);
-    const channelName = document.querySelector('ytd-channel-name yt-formatted-string')?.textContent || '';
-    document.title = `${mainTitle} - ${channelName} - YouTube`;
+    //mainTitleLog('Updating page title with:', mainTitle);
+    document.title = `${mainTitle} - YouTube`;
 }
 
 
@@ -67,7 +74,10 @@ async function refreshMainTitle(): Promise<void> {
             // since YouTube won't update it.
             try {
                 if (!originalTitle) {
-                    mainTitleLog(`Failed to get original title from API: ${videoId}, keeping current title`);
+                    // Extract current title from document.title
+                    const currentPageTitle = document.title.replace(/ - YouTube$/, '');
+                    mainTitleLog(`Failed to get original title from API: ${videoId}, using page title`);
+                    updateMainTitleElement(mainTitle, currentPageTitle, videoId);
                     return;
                 }
                 if (currentTitle === originalTitle) {
@@ -82,15 +92,6 @@ async function refreshMainTitle(): Promise<void> {
             try {
                 updateMainTitleElement(mainTitle, originalTitle, videoId);
                 updatePageTitle(originalTitle);
-                mainTitleLog(
-                    `Updated title from : %c${currentTitle}%c to : %c${originalTitle}%c (video id : %c${videoId}%c)`,
-                    'color: white',    // currentTitle style
-                    'color: #fca5a5',      // reset color
-                    'color: white',    // originalTitle style
-                    'color: #fca5a5',      // reset color
-                    'color: #4ade80',  // videoId style (light green)
-                    'color: #fca5a5'       // reset color
-                );
             } catch (error) {
                 mainTitleLog(`Failed to update main title:`, error);
             }

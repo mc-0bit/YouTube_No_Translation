@@ -19,7 +19,15 @@ let searchObserver: MutationObserver | null = null;
 
 // Utility Functions
 function updateOtherTitleElement(element: HTMLElement, title: string, videoId: string): void {
-    //otherTitlesLog('Updating element with title:', title);
+    otherTitlesLog(
+        `Updated title from : %c${element.textContent?.trim()}%c to : %c${title}%c (video id : %c${videoId}%c)`,
+        'color: white',    // currentTitle style
+        'color: #fca5a5',      // reset color
+        'color: white',    // originalTitle style
+        'color: #fca5a5',      // reset color
+        'color: #4ade80',  // videoId style (light green)
+        'color: #fca5a5'       // reset color
+    );
     
     // Inject CSS if not already done
     if (!document.querySelector('#nmt-style')) {
@@ -90,15 +98,6 @@ async function refreshOtherTitles(): Promise<void> {
                     }                 
                     try {
                         updateOtherTitleElement(titleElement, originalTitle, videoId);
-                        otherTitlesLog(
-                            `Updated title from : %c${currentTitle}%c to : %c${originalTitle}%c (video id : %c${videoId}%c)`,
-                            'color: white',    // currentTitle style
-                            'color: #fca5a5',      // reset color
-                            'color: white',    // originalTitle style
-                            'color: #fca5a5',      // reset color
-                            'color: #4ade80',  // videoId style (light green)
-                            'color: #fca5a5'       // reset color
-                        );
                     } catch (error) {
                         otherTitlesLog(`Failed to update recommended title:`, error);
                     }
