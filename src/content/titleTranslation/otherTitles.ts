@@ -87,11 +87,13 @@ async function refreshOtherTitles(): Promise<void> {
                         if (!originalTitle) {
                             otherTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title`);
                             titleElement.removeAttribute('nmt');
+                            titleElement.removeAttribute('title');
                             continue;
                         }
                         if (currentTitle === originalTitle) {
                             //otherTitlesLog('Title is not translated: ', videoId);
                             titleElement.removeAttribute('nmt');
+                            titleElement.removeAttribute('title');
                             continue;
                         }
                         //otherTitlesLog('Title is translated: ', videoId);
