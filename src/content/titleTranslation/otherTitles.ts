@@ -86,10 +86,12 @@ async function refreshOtherTitles(): Promise<void> {
                     try {
                         if (!originalTitle) {
                             otherTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title`);
+                            titleElement.removeAttribute('nmt');
                             continue;
                         }
                         if (currentTitle === originalTitle) {
                             //otherTitlesLog('Title is not translated: ', videoId);
+                            titleElement.removeAttribute('nmt');
                             continue;
                         }
                         //otherTitlesLog('Title is translated: ', videoId);
@@ -183,44 +185,6 @@ function setupOtherTitlesObserver() {
 }
 
 
-/*
-// New function to handle search results
-async function handleSearchResults(): Promise<void> {
-    otherTitlesLog('Processing search results');
-    
-    // Select all untreated video titles
-    const videoTitles = document.querySelectorAll('ytd-video-renderer #video-title:not([translate="no"])') as NodeListOf<HTMLAnchorElement>;
-    
-    otherTitlesLog('Found video titles:', videoTitles.length);
-
-    for (const titleElement of videoTitles) {
-        if (!titleCache.hasElement(titleElement)) {
-            otherTitlesLog('Processing search result title:', titleElement.textContent);
-            const videoUrl = titleElement.href;
-            if (videoUrl) {
-                const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
-                if (videoId) {
-                    // Check if element has already been processed with this videoId
-                    const currentNMT = titleElement.getAttribute('NMT');
-                    if (currentNMT === videoId) {
-                        otherTitlesLog('Title already processed for video:', videoId);
-                        continue;
-                    }
-
-                    try {
-                        const originalTitle = await titleCache.getOriginalTitle(
-                            `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
-                        );
-                        updateOtherTitleElement(titleElement, originalTitle, videoId);
-                    } catch (error) {
-                        otherTitlesLog(`Failed to update search result title:`, error);
-                    }
-                }
-            }
-        }
-    }
-}
-*/
 
 
 function setupUrlObserver() {
@@ -334,7 +298,7 @@ function handleUrlChange() {
                     // refresh titles 4 seconds after loading video page
                     setTimeout(() => {
                         refreshOtherTitles();
-                    }, 40000);
+                    }, 4000);
             });
             break;
     }

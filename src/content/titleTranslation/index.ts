@@ -12,8 +12,8 @@
 class TitleCache {
     private apiCache = new Map<string, string>();
     private lastCleanupTime = Date.now();
-    private readonly MAX_ENTRIES = 200;
-    private readonly CLEANUP_INTERVAL = 10 * 60 * 1000; // 10 minutes in ms
+    private readonly MAX_ENTRIES = 300;
+    private readonly CLEANUP_INTERVAL = 20 * 60 * 1000; // 20 minutes in ms
 
     private cleanupCache(): void {
         const currentTime = Date.now();
@@ -30,7 +30,7 @@ class TitleCache {
         if (this.apiCache.size > this.MAX_ENTRIES) {
             const entries = Array.from(this.apiCache.entries());
             this.apiCache = new Map(entries.slice(-this.MAX_ENTRIES));
-            titlesLog('Cache size limit reached, keeping most recent entries');
+            //titlesLog('Cache size limit reached, keeping most recent entries');
         }
     }
 
