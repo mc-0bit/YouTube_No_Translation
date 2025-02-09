@@ -10,19 +10,32 @@
 
 
 let mainTitleObserver: MutationObserver | null = null;
+let titleContentObserver: MutationObserver | null = null;
+let isUpdating = false;
 
 // --- Utility Functions
+function cleanupTitleContentObserver(): void {
+    if (titleContentObserver) {
+        mainTitleLog('Cleaning up title content observer');
+        titleContentObserver.disconnect();
+        titleContentObserver = null;
+    }
+}
+
 function updateMainTitleElement(element: HTMLElement, title: string, videoId: string): void {
+    cleanupTitleContentObserver();
+    
     mainTitleLog(
         `Updated title from : %c${element.textContent?.trim()}%c to : %c${title}%c (video id : %c${videoId}%c)`,
-        'color: white',    // currentTitle style
-        'color: #fcd34d',      // reset color
-        'color: white',    // originalTitle style
-        'color: #fcd34d',      // reset color
-        'color: #4ade80',  // videoId style (light green)
-        'color: #fcd34d'       // reset color
+        'color: white',    
+        'color: #fcd34d',      
+        'color: white',    
+        'color: #fcd34d',      
+        'color: #4ade80',  
+        'color: #fcd34d'       
     );
-    //element.setAttribute('nmt', videoId);
+
+    
     element.removeAttribute('is-empty');
     element.innerText = title;
     
@@ -40,6 +53,30 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
     isEmptyObserver.observe(element, {
         attributes: true,
         attributeFilter: ['is-empty']
+    });
+    
+    // --- Block YouTube from adding multiple text nodes
+    titleContentObserver = new MutationObserver((mutations) => {
+        if (isUpdating) return;
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList') {
+                // --- Check if there are multiple text nodes
+                const textNodes = Array.from(element.childNodes)
+                    .filter(node => node.nodeType === Node.TEXT_NODE);
+                
+                if (textNodes.length > 1) {
+                    mainTitleLog('Multiple text nodes detected, cleaning up');
+                    isUpdating = true;
+                    element.innerText = title;
+                    mainTitleLog('YouTube added an other Title, cleaning it up');
+                    isUpdating = false;
+                }
+            }
+        });
+    });
+
+    titleContentObserver.observe(element, {
+        childList: true
     });
 
     titleCache.setElement(element, title);
