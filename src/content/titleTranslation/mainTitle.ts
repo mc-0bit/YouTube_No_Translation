@@ -65,11 +65,10 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
                     .filter(node => node.nodeType === Node.TEXT_NODE);
                 
                 if (textNodes.length > 1) {
-                    mainTitleLog('Multiple text nodes detected, cleaning up');
                     isUpdating = true;
                     element.innerText = title;
-                    mainTitleLog('YouTube added an other Title, cleaning it up');
                     isUpdating = false;
+                    mainTitleLog('Multiple text nodes detected, cleaning up');
                 }
             }
         });
@@ -83,8 +82,25 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
 }
 
 function updatePageTitle(mainTitle: string): void {
-    //mainTitleLog('Updating page title with:', mainTitle);
-    document.title = `${mainTitle} - YouTube`;
+    // Wait for essential elements to be loaded
+    const waitForLoad = async () => {
+        const player = document.querySelector('ytd-player');
+        const metadata = document.querySelector('ytd-watch-metadata');
+        
+        // Check if elements are ready (both have loading=null)
+        if (player?.getAttribute('loading') === null && 
+            metadata?.getAttribute('loading') === null) {
+            document.title = `${mainTitle} - YouTube`;
+            mainTitleLog(`Essential elements loaded, updating page title : ${document.title}`);
+            return;
+        }
+        
+        // Try again in 100ms
+        setTimeout(waitForLoad, 100);
+    };
+
+    // Start waiting for load
+    waitForLoad();
 }
 
 
