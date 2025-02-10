@@ -9,27 +9,40 @@
 
 
 
-// Global variables
+// --- Global variables
 let homeObserver: MutationObserver | null = null;
 let recommendedObserver: MutationObserver | null = null;
 let searchObserver: MutationObserver | null = null;
 //let playlistObserver: MutationObserver | null = null;
+let otherTitlesObservers = new Map<HTMLElement, MutationObserver>();
 
 
 
-// Utility Functions
+// --- Utility Functions
+function cleanupOtherTitlesObserver(element: HTMLElement): void {
+    const observer = otherTitlesObservers.get(element);
+    if (observer) {
+        otherTitlesLog('Cleaning up title observer');
+        observer.disconnect();
+        otherTitlesObservers.delete(element);
+    }
+}
+
 function updateOtherTitleElement(element: HTMLElement, title: string, videoId: string): void {
+    // --- Clean previous observer
+    cleanupOtherTitlesObserver(element);
+    
     otherTitlesLog(
         `Updated title from : %c${element.textContent?.trim()}%c to : %c${title}%c (video id : %c${videoId}%c)`,
-        'color: white',    // currentTitle style
-        'color: #fca5a5',      // reset color
-        'color: white',    // originalTitle style
-        'color: #fca5a5',      // reset color
-        'color: #4ade80',  // videoId style (light green)
-        'color: #fca5a5'       // reset color
+        'color: white',    // --- currentTitle style
+        'color: #fca5a5',      // --- reset color
+        'color: white',    // --- originalTitle style
+        'color: #fca5a5',      // --- reset color
+        'color: #4ade80',  // --- videoId style (light green)
+        'color: #fca5a5'       // --- reset color
     );
     
-    // Inject CSS if not already done
+    // --- Inject CSS if not already done
     if (!document.querySelector('#nmt-style')) {
         const style = document.createElement('style');
         style.id = 'nmt-style';
@@ -48,9 +61,10 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
         document.head.appendChild(style);
     }
 
-    // Wrap existing text in a span if not already done
-    if (!element.querySelector('span')) {
-        const span = document.createElement('span');
+    // --- Create span if not exists
+    let span = element.querySelector('span');
+    if (!span) {
+        span = document.createElement('span');
         span.textContent = element.textContent;
         element.textContent = '';
         element.appendChild(span);
@@ -58,17 +72,45 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
 
     element.setAttribute('title', title);
     element.setAttribute('nmt', videoId);
+
+    // --- Add observer to update span with latest text
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList') {
+                const directTextNodes = Array.from(element.childNodes)
+                    .filter(node => node.nodeType === Node.TEXT_NODE);
+                
+                if (directTextNodes.length > 0) {
+                    otherTitlesLog('Mutiple title detected, updating hidden span');
+                    const span = element.querySelector('span');
+                    if (span) {
+                        // --- Get last added text node
+                        const lastTextNode = directTextNodes[directTextNodes.length - 1];
+                        span.textContent = lastTextNode.textContent;
+                        // --- Remove all direct text nodes
+                        directTextNodes.forEach(node => node.remove());
+                    }
+                }
+            }
+        });
+    });
+
+    observer.observe(element, {
+        childList: true
+    });
+
+    otherTitlesObservers.set(element, observer);
     titleCache.setElement(element, title);
 }
 
 
-// Other Titles Function
+// --- Other Titles Function
 async function refreshOtherTitles(): Promise<void> {
     const data = await browser.storage.local.get('settings');
     const settings = data.settings as ExtensionSettings;
     if (!settings?.titleTranslation) return;
 
-    // Handle recommended video titles
+    // --- Handle recommended video titles
     const recommendedTitles = document.querySelectorAll('#video-title') as NodeListOf<HTMLElement>;
     //otherTitlesLog('Found videos titles:', recommendedTitles.length);
 
@@ -79,7 +121,7 @@ async function refreshOtherTitles(): Promise<void> {
             if (videoUrl) {
                 const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
                 if (videoId) {
-                    // Check if title is not translated
+                    // --- Check if title is not translated
                     const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
                     const originalTitle = await titleCache.getOriginalTitle(apiUrl);
                     const currentTitle = titleElement.textContent?.trim();
@@ -109,15 +151,12 @@ async function refreshOtherTitles(): Promise<void> {
             }
         }
     }
-
-    // Handle search results
-    //await handleSearchResults();
 }
 
 
-// Observers Setup
+// --- Observers Setup
 function setupOtherTitlesObserver() {
-    // Observer for home page | Channel page
+    // --- Observer for home page | Channel page
     waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
         homeObserver = new MutationObserver(() => {
             otherTitlesLog('Home/Channel page mutation detected');
@@ -130,7 +169,7 @@ function setupOtherTitlesObserver() {
         otherTitlesLog('Home/Channel page observer setup completed');
     });
 
-    // Observer for recommended videos
+    // --- Observer for recommended videos
     waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then((contents) => {
         otherTitlesLog('Setting up recommended videos observer');
         recommendedObserver = new MutationObserver(() => {
@@ -144,7 +183,7 @@ function setupOtherTitlesObserver() {
         otherTitlesLog('Recommended videos observer setup completed');
     });
 
-    // Observer for search results
+    // --- Observer for search results
     waitForElement('ytd-section-list-renderer #contents').then((contents) => {
         otherTitlesLog('Setting up search results observer');
         searchObserver = new MutationObserver((mutations) => {
@@ -170,7 +209,7 @@ function setupOtherTitlesObserver() {
     });
 
     /*
-    // Observer for playlist/queue videos
+    // --- Observer for playlist/queue videos
     waitForElement('#playlist ytd-playlist-panel-renderer #items').then((contents) => {
         otherTitlesLog('Setting up playlist/queue videos observer');
         playlistObserver = new MutationObserver(() => {
@@ -192,7 +231,7 @@ function setupOtherTitlesObserver() {
 function setupUrlObserver() {
     otherTitlesLog('Setting up URL observer');
     
-    // Standard History API monitoring
+    // --- Standard History API monitoring
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
 
@@ -208,19 +247,19 @@ function setupUrlObserver() {
         handleUrlChange();
     };
 
-    // Browser navigation (back/forward)
+    // --- Browser navigation (back/forward)
     window.addEventListener('popstate', () => {
         otherTitlesLog('popstate event triggered');
         handleUrlChange();
     });
 
-    // YouTube's custom page data update event
+    // --- YouTube's custom page data update event
     window.addEventListener('yt-page-data-updated', () => {
         otherTitlesLog('YouTube page data updated');
         handleUrlChange();
     });
 
-    // YouTube's custom SPA navigation events
+    // --- YouTube's custom SPA navigation events
     /*
     window.addEventListener('yt-navigate-start', () => {
         otherTitlesLog('YouTube SPA navigation started');
@@ -240,7 +279,7 @@ function handleUrlChange() {
     otherTitlesLog(`${LOG_PREFIX}[URL] Current pathname:`, window.location.pathname);
     otherTitlesLog(`${LOG_PREFIX}[URL] Full URL:`, window.location.href);
     
-    // Clean up existing observers and set up new ones
+    // --- Clean up existing observers and set up new ones
     homeObserver?.disconnect();
     recommendedObserver?.disconnect();
     searchObserver?.disconnect();
@@ -254,50 +293,50 @@ function handleUrlChange() {
     otherTitlesLog('Observers cleaned up');
     setupOtherTitlesObserver();
     
-    // refresh titles 10 seconds after URL change 
+    // --- refresh titles 10 seconds after URL change 
     setTimeout(() => {
         refreshOtherTitles();
     }, 10000);
     
-    // Check if URL contains @username pattern
+    // --- Check if URL contains @username pattern
     const isChannelPage = window.location.pathname.includes('/@');
     if (isChannelPage) {
-        // Handle all new channel page types (videos, featured, shorts, etc.)
+        // --- Handle all new channel page types (videos, featured, shorts, etc.)
         refreshOtherTitles();
         return;
     }
     
     switch(window.location.pathname) {
-        case '/results': // Search page
+        case '/results': // --- Search page
             console.log(`${LOG_PREFIX}[URL] Detected search page`);
             waitForElement('#contents.ytd-section-list-renderer').then(() => {
                 otherTitlesLog('Search results container found');
                 refreshOtherTitles();
             });
             break;
-        case '/': // Home page
+        case '/': // --- Home page
             console.log(`${LOG_PREFIX}[URL] Detected home page`);
             waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
                 otherTitlesLog('Home page container found');
                 refreshOtherTitles();
             });
             break;        
-        case '/feed/subscriptions': // Subscriptions page
+        case '/feed/subscriptions': // --- Subscriptions page
             console.log(`${LOG_PREFIX}[URL] Detected subscriptions page`);
             waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
                 otherTitlesLog('Subscriptions page container found');
                 refreshOtherTitles();
             });
             break;
-        case '/feed/trending':  // Trending page
-        case '/playlist':  // Playlist page
-        case '/channel':  // Channel page (old format)
-        case '/watch': // Video page
+        case '/feed/trending':  // --- Trending page
+        case '/playlist':  // --- Playlist page
+        case '/channel':  // --- Channel page (old format)
+        case '/watch': // --- Video page
             console.log(`${LOG_PREFIX}[URL] Detected video page`);
             waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then(() => {
                 otherTitlesLog('Recommended videos container found');
                 refreshOtherTitles();
-                    // refresh titles 4 seconds after loading video page
+                    // --- refresh titles 4 seconds after loading video page
                     setTimeout(() => {
                         refreshOtherTitles();
                     }, 4000);
