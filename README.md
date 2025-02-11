@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://addons.mozilla.org/firefox/addon/youtube-no-more-translation/" target="_blank">
+  <a href="https://addons.mozilla.org/firefox/addon/youtube-no-translation/" target="_blank">
     <img src="./assets/icons/icon.svg" alt="Project description"/>
 
   </a>
@@ -9,7 +9,7 @@
 
 <h1 align="center">YouTube No Translation</h1>
 <div align="center">
-  <a href="https://addons.mozilla.org/firefox/addon/youtube-no-more-translation/" target="_blank">
+  <a href="https://addons.mozilla.org/firefox/addon/youtube-no-translation/" target="_blank">
     <img src="./assets/images/firefox.png" height="40" alt="Available on Mozilla Firefox" title="Available on Mozilla Firefox"/>
   </a>
   <a href="https://chromewebstore.google.com/detail/youtube-no-more-translati/lmkeolibdeeglfglnncmfleojmakecjb" target="_blank">
