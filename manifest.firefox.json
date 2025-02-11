@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "No More Translation",
+  "name": "YouTube No Translation",
   "version": "2.0.60",
   "description": "A web browser extension that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
 
@@ -15,7 +15,7 @@
       "96": "assets/icons/icon.svg"
     },
     "default_popup": "dist/popup/popup.html",
-    "default_title": "NMT"
+    "default_title": "YNT"
   },
 
   "permissions": [

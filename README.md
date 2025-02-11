@@ -7,7 +7,7 @@
 
 ###
 
-<h1 align="center">No More Translation on YouTube</h1>
+<h1 align="center">YouTube No Translation</h1>
 <div align="center">
   <a href="https://addons.mozilla.org/firefox/addon/youtube-no-more-translation/" target="_blank">
     <img src="./assets/images/firefox.png" height="40" alt="Available on Mozilla Firefox" title="Available on Mozilla Firefox"/>
