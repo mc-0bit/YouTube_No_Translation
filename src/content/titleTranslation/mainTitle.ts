@@ -11,6 +11,7 @@
 
 let mainTitleObserver: MutationObserver | null = null;
 let titleContentObserver: MutationObserver | null = null;
+let pageTitleObserver: MutationObserver | null = null;
 let isUpdating = false;
 
 // --- Utility Functions
@@ -19,6 +20,14 @@ function cleanupTitleContentObserver(): void {
         mainTitleLog('Cleaning up title content observer');
         titleContentObserver.disconnect();
         titleContentObserver = null;
+    }
+}
+
+function cleanupPageTitleObserver(): void {
+    if (pageTitleObserver) {
+        mainTitleLog('Cleaning up page title observer');
+        pageTitleObserver.disconnect();
+        pageTitleObserver = null;
     }
 }
 
@@ -82,25 +91,25 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
 }
 
 function updatePageTitle(mainTitle: string): void {
-    // Wait for essential elements to be loaded
-    const waitForLoad = async () => {
-        const player = document.querySelector('ytd-player');
-        const metadata = document.querySelector('ytd-watch-metadata');
+    cleanupPageTitleObserver();
+    
+    const expectedTitle = `${mainTitle} - YouTube`;
+    document.title = expectedTitle;
+    mainTitleLog('Updated page title:', expectedTitle);
+    
+    const titleElement = document.querySelector('title');
+    if (titleElement) {
+        pageTitleObserver = new MutationObserver(() => {
+            if (document.title !== expectedTitle) {
+                document.title = expectedTitle;
+                mainTitleLog('YouTube changed page title, reverting');
+            }
+        });
         
-        // Check if elements are ready (both have loading=null)
-        if (player?.getAttribute('loading') === null && 
-            metadata?.getAttribute('loading') === null) {
-            document.title = `${mainTitle} - YouTube`;
-            mainTitleLog(`Essential elements loaded, updating page title : ${document.title}`);
-            return;
-        }
-        
-        // Try again in 100ms
-        setTimeout(waitForLoad, 100);
-    };
-
-    // Start waiting for load
-    waitForLoad();
+        pageTitleObserver.observe(titleElement, { 
+            childList: true 
+        });
+    }
 }
 
 
