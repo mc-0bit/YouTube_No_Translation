@@ -7,9 +7,7 @@
  * This program is distributed without any warranty; see the license for details.
  */
 
-async function handleDescriptionTranslation(isEnabled: boolean): Promise<void> {
-    if (!isEnabled) return;
-
+async function handleDescriptionTranslation(): Promise<void> {
     descriptionLog('Waiting for description element');
     try {
         await waitForElement('#description-inline-expander');
@@ -138,14 +136,10 @@ function updateDescriptionElement(element: HTMLElement, description: string): vo
 }
 
 async function refreshDescription(): Promise<void> {
-    const data = await browser.storage.local.get('settings');
-    const settings = data.settings as ExtensionSettings;
-    if (!settings?.descriptionTranslation) return;
-
     const descriptionElement = document.querySelector('#description-inline-expander') as HTMLElement;
     if (descriptionElement && !descriptionCache.hasElement(descriptionElement)) {
         descriptionLog('Processing description element');
-        handleDescriptionTranslation(true);
+        handleDescriptionTranslation();
     }
 }
 
@@ -162,12 +156,7 @@ function setupDescriptionObserver() {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     // Then wait for description element
                     await waitForElement('#description-inline-expander');
-                    browser.storage.local.get('settings').then(async (data: Record<string, any>) => {
-                        const settings = data.settings as ExtensionSettings;
-                        if (settings?.descriptionTranslation) {
-                            handleDescriptionTranslation(true);
-                        }
-                    });
+                    handleDescriptionTranslation();
                 }
             }
         });
@@ -181,36 +170,29 @@ function setupDescriptionObserver() {
     // Observer for description expansion/collapse
     waitForElement('#description-inline-expander').then((descriptionElement) => {
         descriptionLog('Setting up expand/collapse observer');
-        const observer = new MutationObserver((mutations) => {
+        const observer = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'is-expanded') {
                     descriptionLog('Description expanded/collapsed');
-                    browser.storage.local.get('settings').then(async (data: Record<string, any>) => {
-                        const settings = data.settings as ExtensionSettings;
-                        if (settings?.descriptionTranslation) {
-                            const cachedDescription = descriptionCache.getCurrentDescription();
-                            if (cachedDescription) {
-                                descriptionLog('Using cached description');
-                                updateDescriptionElement(descriptionElement as HTMLElement, cachedDescription);
-                            } else {
-                                const description = await new Promise<string | null>((resolve) => {
-                                    const handleDescription = (event: CustomEvent) => {
-                                        window.removeEventListener('nmt-description-data', handleDescription as EventListener);
-                                        resolve(event.detail?.description || null);
-                                    };
-
-                                    window.addEventListener('nmt-description-data', handleDescription as EventListener);
-                                    
-                                    const script = document.createElement('script');
-                                    script.src = browser.runtime.getURL('dist/content/descriptionTranslation/descriptionScript.js');
-                                    document.documentElement.appendChild(script);
-                                });
-                                if (description) {
-                                    updateDescriptionElement(descriptionElement as HTMLElement, description);
-                                }
-                            }
+                    const cachedDescription = descriptionCache.getCurrentDescription();
+                    if (cachedDescription) {
+                        descriptionLog('Using cached description');
+                        updateDescriptionElement(descriptionElement as HTMLElement, cachedDescription);
+                    } else {
+                        const description = await new Promise<string | null>((resolve) => {
+                            const handleDescription = (event: CustomEvent) => {
+                                window.removeEventListener('nmt-description-data', handleDescription as EventListener);
+                                resolve(event.detail?.description || null);
+                            };
+                            window.addEventListener('nmt-description-data', handleDescription as EventListener);
+                            const script = document.createElement('script');
+                            script.src = browser.runtime.getURL('dist/content/descriptionTranslation/descriptionScript.js');
+                            document.documentElement.appendChild(script);
+                        });
+                        if (description) {
+                            updateDescriptionElement(descriptionElement as HTMLElement, description);
                         }
-                    });
+                    }
                 }
             }
         });

@@ -48,13 +48,13 @@ function initializeAudioTranslation() {
     // Initial setup
     browser.storage.local.get('settings').then((data: Record<string, any>) => {
         const settings = data.settings as ExtensionSettings;
-        handleAudioTranslation(settings?.audioTranslation);
+        handleAudioTranslation();
     });
 
     // Message handler
     browser.runtime.onMessage.addListener((message: unknown) => {
         if (isToggleMessage(message) && message.feature === 'audio') {
-            handleAudioTranslation(message.isEnabled);
+            handleAudioTranslation();
         }
         return true;
     });

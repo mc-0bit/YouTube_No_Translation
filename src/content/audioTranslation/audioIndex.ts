@@ -21,11 +21,8 @@
  * When decoded: Contains "original" for original audio and "lang=en-US" for language
  */
 
-async function handleAudioTranslation(isEnabled: boolean) {
-    if (!isEnabled) return;
-    
-    audioLog('Initializing audio translation prevention');
-    
+async function handleAudioTranslation() {   
+    audioLog('Initializing audio translation prevention');   
     const script = document.createElement('script');
     script.src = browser.runtime.getURL('dist/content/audioTranslation/audioScript.js');
     document.documentElement.appendChild(script);
@@ -38,12 +35,7 @@ function setupAudioObserver() {
         audioObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    browser.storage.local.get('settings').then((data: Record<string, any>) => {
-                        const settings = data.settings as ExtensionSettings;
-                        if (settings?.audioTranslation) {
-                            handleAudioTranslation(true);
-                        }
-                    });
+                    handleAudioTranslation();                    
                 }
             }
         });
