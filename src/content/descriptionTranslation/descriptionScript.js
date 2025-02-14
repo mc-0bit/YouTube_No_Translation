@@ -16,7 +16,7 @@
  */
 
 (() => {
-    const LOG_PREFIX = '[NMT-Debug]';
+    const LOG_PREFIX = '[YNT-Debug]';
     const LOG_STYLES = {
         DESCRIPTION: { context: '[DESCRIPTION]', color: '#2196F3' }
     };
@@ -62,25 +62,25 @@
             
             if (description) {
                 descriptionLog('Found description from API for video:', currentVideoId);
-                window.dispatchEvent(new CustomEvent('nmt-description-data', {
+                window.dispatchEvent(new CustomEvent('ynt-description-data', {
                     detail: { description }
                 }));
             } else {
                 descriptionLog('No description found in API response');
-                window.dispatchEvent(new CustomEvent('nmt-description-data', {
+                window.dispatchEvent(new CustomEvent('ynt-description-data', {
                     detail: { description: null }
                 }));
             }
         })
         .catch(error => {
             descriptionLog('Error fetching description:', error);
-            window.dispatchEvent(new CustomEvent('nmt-description-data', {
+            window.dispatchEvent(new CustomEvent('ynt-description-data', {
                 detail: { description: null }
             }));
         });
     } else {
         descriptionLog('window.ytcfg.data_ is not available');
-        window.dispatchEvent(new CustomEvent('nmt-description-data', {
+        window.dispatchEvent(new CustomEvent('ynt-description-data', {
             detail: { description: null }
         }));
     }

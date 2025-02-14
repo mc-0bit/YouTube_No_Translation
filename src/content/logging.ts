@@ -9,7 +9,7 @@
 
 
 
-const LOG_PREFIX = '[NMT]';
+const LOG_PREFIX = '[YNT]';
 
 const LOG_STYLES = {
     MAIN_TITLE: {

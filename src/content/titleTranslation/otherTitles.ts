@@ -43,15 +43,15 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
     );
     
     // --- Inject CSS if not already done
-    if (!document.querySelector('#nmt-style')) {
+    if (!document.querySelector('#ynt-style')) {
         const style = document.createElement('style');
-        style.id = 'nmt-style';
+        style.id = 'ynt-style';
         style.textContent = `
-            #video-title[nmt] > span {
+            #video-title[ynt] > span {
                 display: none;
             }
 
-            #video-title[nmt]::after {
+            #video-title[ynt]::after {
                 content: attr(title);
                 font-size: var(--ytd-tab-system-font-size-body);
                 line-height: var(--ytd-tab-system-line-height-body);
@@ -71,7 +71,7 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
     }
 
     element.setAttribute('title', title);
-    element.setAttribute('nmt', videoId);
+    element.setAttribute('ynt', videoId);
 
     // --- Add observer to update span with latest text
     const observer = new MutationObserver((mutations) => {
@@ -128,13 +128,13 @@ async function refreshOtherTitles(): Promise<void> {
                     try {
                         if (!originalTitle) {
                             otherTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title`);
-                            titleElement.removeAttribute('nmt');
+                            titleElement.removeAttribute('ynt');
                             titleElement.removeAttribute('title');
                             continue;
                         }
                         if (currentTitle === originalTitle) {
                             //otherTitlesLog('Title is not translated: ', videoId);
-                            titleElement.removeAttribute('nmt');
+                            titleElement.removeAttribute('ynt');
                             titleElement.removeAttribute('title');
                             continue;
                         }

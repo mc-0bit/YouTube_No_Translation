@@ -18,7 +18,7 @@ async function initializeSettings() {
         await api.storage.local.set({
             settings: DEFAULT_SETTINGS
         });
-        console.log('[NTM-Debug] Settings initialized with default values');
+        console.log('[YNT-Debug] Settings initialized with default values');
     }
 }
 
