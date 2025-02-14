@@ -34,28 +34,28 @@
   <table>
     <tr>
       <td align="center">
-        <img src="./assets/images/QR/btc_adress.png" width="150" style="border-radius: 10px" />
+        <img src="./assets/images/QR/btc_adress.png" width="150"/>
         <br />
         <strong>BTC</strong>
         <br />
         <code>bc1q0m5e0lp73m20skkj9cc2purvl43ch3lslxkh63</code>
       </td>
       <td align="center">
-        <img src="./assets/images/QR/eth_adress.png" width="150" style="border-radius: 10px" />
+        <img src="./assets/images/QR/eth_adress.png" width="150"/>
         <br />
         <strong>ETH</strong>
         <br />
         <code>0xdf25A33FbCb8aBDb7727A6E31A4eA619B9Df4546</code>
       </td>
       <td align="center">
-        <img src="./assets/images/QR/bat-eth_adress.png" width="150" style="border-radius: 10px" />
+        <img src="./assets/images/QR/bat-eth_adress.png" width="150"/>
         <br />
         <strong>BAT (ETH)</strong>
         <br />
         <code>0xdf25A33FbCb8aBDb7727A6E31A4eA619B9Df4546</code>
       </td>
       <td align="center">
-        <img src="./assets/images/QR/ltc_adress.png" width="150" style="border-radius: 10px" />
+        <img src="./assets/images/QR/ltc_adress.png" width="150"/>
         <br />
         <strong>LTC</strong>
         <br />
