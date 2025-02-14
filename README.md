@@ -22,17 +22,44 @@
 ###
 
 <div align="center">
-  <h1>Support</h1>
-  <p>If you find this add-on useful, you can support its development through KO-FI:</p>
+  <h1>Support Me</h1>
+  <p>This add-on is fully free to use and does not contain any advertising. It is maintained on my free time. If you find it useful, you can support its development through KO-FI:</p>
   
   <a href="https://ko-fi.com/yougo" target="_blank">
     <img src="./assets/images/ko-fi.png" alt="Support me on Ko-fi" width="300">
   </a>
   
-  <p>Or using cryptocurrency:</p>
-<a href="https://commerce.coinbase.com/checkout/b10b057f-ec7c-4586-b974-1f671b42a6bc" target="_blank">
-    <img src="https://img.shields.io/badge/Support_with_Crypto-0052FF?style=for-the-badge&logo=coinbase" alt="Support with Crypto" width="300">
-</a>
+<p>Or using cryptocurrency:</p>
+<div style="display: flex; justify-content: center; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
+    <div style="text-align: center; max-width: 150px;">
+        <img src="./assets/images/QR/btc_adress.png" width="150" alt="BTC QR Code" style="border-radius: 15px;">
+        <p>
+            <strong>BTC</strong><br/>
+            <code style="font-size: 0.8em; word-break: break-all;">bc1q0m5e0lp73m20skkj9cc2purvl43ch3lslxkh63</code>
+        </p>
+    </div>
+    <div style="text-align: center; max-width: 150px;">
+        <img src="./assets/images/QR/eth_adress.png" width="150" alt="ETH QR Code" style="border-radius: 15px;">
+        <p>
+            <strong>ETH</strong><br/>
+            <code style="font-size: 0.8em; word-break: break-all;">0xdf25A33FbCb8aBDb7727A6E31A4eA619B9Df4546</code>
+        </p>
+    </div>
+    <div style="text-align: center; max-width: 150px;">
+        <img src="./assets/images/QR/bat-eth_adress.png" width="150" alt="BAT (ETH) QR Code" style="border-radius: 15px;">
+        <p>
+            <strong>BAT (ETH)</strong><br/>
+            <code style="font-size: 0.8em; word-break: break-all;">0xdf25A33FbCb8aBDb7727A6E31A4eA619B9Df4546</code>
+        </p>
+    </div>
+    <div style="text-align: center; max-width: 150px;">
+        <img src="./assets/images/QR/ltc_adress.png" width="150" alt="LTC QR Code" style="border-radius: 15px;">
+        <p>
+            <strong>LTC</strong><br/>
+            <code style="font-size: 0.8em; word-break: break-all;">Li5ootmMUik2YKQrMmubRjLupKxjwqS37Y</code>
+        </p>
+    </div>
+</div>
 </div>
 
 ###

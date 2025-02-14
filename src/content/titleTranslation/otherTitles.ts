@@ -161,7 +161,7 @@ function setupOtherTitlesObserver() {
         homeObserver.observe(contents, {
             childList: true
         });
-        otherTitlesLog('Home/Channel page observer setup completed');
+        //otherTitlesLog('Home/Channel page observer setup completed');
     });
 
     // --- Observer for recommended videos
@@ -175,7 +175,7 @@ function setupOtherTitlesObserver() {
         recommendedObserver.observe(contents, {
             childList: true
         });
-        otherTitlesLog('Recommended videos observer setup completed');
+        //otherTitlesLog('Recommended videos observer setup completed');
     });
 
     // --- Observer for search results
@@ -200,7 +200,7 @@ function setupOtherTitlesObserver() {
             childList: true,
             subtree: true
         });
-        otherTitlesLog('Search results observer setup completed');
+        //otherTitlesLog('Search results observer setup completed');
     });
 
     /*
