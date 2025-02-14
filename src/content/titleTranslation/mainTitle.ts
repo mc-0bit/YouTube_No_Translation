@@ -115,11 +115,7 @@ function updatePageTitle(mainTitle: string): void {
 
 // --- Main Title Function
 async function refreshMainTitle(): Promise<void> {
-    const data = await browser.storage.local.get('settings');
-    const settings = data.settings as ExtensionSettings;
-    if (!settings?.titleTranslation) return;
-
-    const mainTitle = document.querySelector('h1.ytd-watch-metadata > yt-formatted-string') as HTMLElement;
+const mainTitle = document.querySelector('h1.ytd-watch-metadata > yt-formatted-string') as HTMLElement;
     if (mainTitle && window.location.pathname === '/watch' && !titleCache.hasElement(mainTitle)) {
         mainTitleLog('Processing main title element');
         const videoId = new URLSearchParams(window.location.search).get('v');
@@ -187,13 +183,7 @@ function setupMainTitleObserver() {
                         const pageUrl = window.location.href;
                         
                         if (pageUrl === currentUrl && titleElement.textContent) {
-                            browser.storage.local.get('settings').then(async (data: Record<string, any>) => {
-                                const settings = data.settings as ExtensionSettings;
-                                if (settings?.titleTranslation) {
-                                    await refreshMainTitle();
-                                    //mainTitleLog('Title updated:', titleElement.textContent);
-                                }
-                            });
+                            await refreshMainTitle();
                             break;
                         }
                         

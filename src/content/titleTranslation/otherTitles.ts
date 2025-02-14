@@ -22,7 +22,7 @@ let otherTitlesObservers = new Map<HTMLElement, MutationObserver>();
 function cleanupOtherTitlesObserver(element: HTMLElement): void {
     const observer = otherTitlesObservers.get(element);
     if (observer) {
-        otherTitlesLog('Cleaning up title observer');
+        //otherTitlesLog('Cleaning up title observer');
         observer.disconnect();
         otherTitlesObservers.delete(element);
     }
@@ -106,15 +106,10 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
 
 // --- Other Titles Function
 async function refreshOtherTitles(): Promise<void> {
-    const data = await browser.storage.local.get('settings');
-    const settings = data.settings as ExtensionSettings;
-    if (!settings?.titleTranslation) return;
+const otherTitles = document.querySelectorAll('#video-title') as NodeListOf<HTMLElement>;
+    //otherTitlesLog('Found videos titles:', otherTitles.length);
 
-    // --- Handle recommended video titles
-    const recommendedTitles = document.querySelectorAll('#video-title') as NodeListOf<HTMLElement>;
-    //otherTitlesLog('Found videos titles:', recommendedTitles.length);
-
-    for (const titleElement of recommendedTitles) {
+    for (const titleElement of otherTitles) {
         if (!titleCache.hasElement(titleElement)) {
             //otherTitlesLog('Processing video title:', titleElement.textContent);
             const videoUrl = titleElement.closest('a')?.href;
