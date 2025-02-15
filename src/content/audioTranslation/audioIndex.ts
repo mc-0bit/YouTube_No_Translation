@@ -35,7 +35,10 @@ function setupAudioObserver() {
         audioObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    handleAudioTranslation();                    
+                    // Wait for movie_player before injecting script
+                    waitForElement('#movie_player').then(() => {
+                        handleAudioTranslation();
+                    });
                 }
             }
         });

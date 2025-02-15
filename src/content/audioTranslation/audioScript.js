@@ -13,7 +13,7 @@
 */
 
 (() => {
-    const LOG_PREFIX = '[NMT]';
+    const LOG_PREFIX = '[YNT]';
     const LOG_STYLES = {
         AUDIO: { context: '[AUDIO]', color: '#4CAF50' }
     };
@@ -49,7 +49,7 @@
 
         try {
             const tracks = player.getAvailableAudioTracks();
-            audioLog('Available tracks:', tracks);
+            //audioLog('Available tracks:', tracks);
             
             const originalTrack = tracks.find(track => {
                 const base64Part = track.id.split(';')[1];
@@ -71,7 +71,7 @@
             }
             return false; // No original track found
         } catch (error) {
-            console.error('[YT-DEBUG] Error:', error);
+            audioLog('Error:', error);
             return false;
         }
     }
