@@ -124,13 +124,13 @@ const otherTitles = document.querySelectorAll('#video-title') as NodeListOf<HTML
                         if (!originalTitle) {
                             otherTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title`);
                             titleElement.removeAttribute('ynt');
-                            titleElement.removeAttribute('title');
+                            titleElement.setAttribute('title', currentTitle);
                             continue;
                         }
                         if (currentTitle === originalTitle) {
                             //otherTitlesLog('Title is not translated: ', videoId);
                             titleElement.removeAttribute('ynt');
-                            titleElement.removeAttribute('title');
+                            titleElement.setAttribute('title', currentTitle);
                             continue;
                         }
                         //otherTitlesLog('Title is translated: ', videoId);
