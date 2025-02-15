@@ -22,14 +22,15 @@
 ###
 
 <div align="center">
-  <h1>Support Me</h1>
-  <p>This add-on is fully free to use and does not contain any advertising. It is maintained on my free time. If you find it useful, you can support its development through KO-FI:</p>
-  
+  <h1>Support me</h1>
+  <p>This add-on is fully free to use and does not contain any advertising. It is maintained on my free time. If you want to, you can support its development.</p>
+  <br>
+  <p>Support me by donating on KO-FI </p>
   <a href="https://ko-fi.com/yougo" target="_blank">
     <img src="./assets/images/ko-fi.png" alt="Support me on Ko-fi" width="300">
   </a>
-  
-<p>Or using cryptocurrency:</p>
+  <br>
+<p>Support me by donating through cryptocurrency:</p>
 <div align="center">
   <table>
     <tr>
