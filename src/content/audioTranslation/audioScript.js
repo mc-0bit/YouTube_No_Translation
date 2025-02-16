@@ -49,7 +49,18 @@
 
         try {
             const tracks = player.getAvailableAudioTracks();
-            //audioLog('Available tracks:', tracks);
+            const currentTrack = player.getAudioTrack();
+            
+            // Check if current track is already the original one
+            if (currentTrack) {
+                const base64Part = currentTrack.id.split(';')[1];
+                const decoded = atob(base64Part);
+                if (decoded.includes('original')) {
+                    // Current track is already original, no need to change
+                    audioLog('Audio track is already original');
+                    return true;
+                }
+            }
             
             const originalTrack = tracks.find(track => {
                 const base64Part = track.id.split(';')[1];
