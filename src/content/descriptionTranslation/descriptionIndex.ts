@@ -15,11 +15,11 @@ async function handleDescriptionTranslation(): Promise<void> {
         
         const description = await new Promise<string | null>((resolve) => {
             const handleDescription = (event: CustomEvent) => {
-                window.removeEventListener('nmt-description-data', handleDescription as EventListener);
+                window.removeEventListener('ynt-description-data', handleDescription as EventListener);
                 resolve(event.detail?.description || null);
             };
 
-            window.addEventListener('nmt-description-data', handleDescription as EventListener);
+            window.addEventListener('ynt-description-data', handleDescription as EventListener);
             
             const script = document.createElement('script');
             script.src = browser.runtime.getURL('dist/content/descriptionTranslation/descriptionScript.js');
@@ -152,11 +152,9 @@ function setupDescriptionObserver() {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
                     descriptionLog('Video ID changed!');
                     descriptionCache.clearCurrentDescription();  // Clear cache on video change
-                    // Wait a bit for YouTube to update its data
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    // Then wait for description element
-                    await waitForElement('#description-inline-expander');
-                    handleDescriptionTranslation();
+                    waitForElement('#description-inline-expander').then(() => {
+                        refreshDescription();
+                    });
                 }
             }
         });
@@ -181,10 +179,10 @@ function setupDescriptionObserver() {
                     } else {
                         const description = await new Promise<string | null>((resolve) => {
                             const handleDescription = (event: CustomEvent) => {
-                                window.removeEventListener('nmt-description-data', handleDescription as EventListener);
+                                window.removeEventListener('ynt-description-data', handleDescription as EventListener);
                                 resolve(event.detail?.description || null);
                             };
-                            window.addEventListener('nmt-description-data', handleDescription as EventListener);
+                            window.addEventListener('ynt-description-data', handleDescription as EventListener);
                             const script = document.createElement('script');
                             script.src = browser.runtime.getURL('dist/content/descriptionTranslation/descriptionScript.js');
                             document.documentElement.appendChild(script);
