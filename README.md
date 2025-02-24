@@ -23,7 +23,7 @@
 
 <div align="center">
   <h1>Support me</h1>
-  <p>This add-on is fully free to use and does not contain any advertising. It is maintained on my free time. If you want to, you can support its development.</p>
+  <p>This add-on is free to use and does not contain any advertising. It is maintained on my free time. If you want to, you can support its development.</p>
   <br>
   <p>Support me by donating on KO-FI </p>
   <a href="https://ko-fi.com/yougo" target="_blank">
