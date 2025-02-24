@@ -1,7 +1,7 @@
 {
   "name": "ynt",
   "version": "2.0.65",
-  "description": "A web browser extension that prevents auto-translation on YouTube (titles, dubbing, video descriptions)",
+  "description": "Stop YouTube's automatic translations! This extension keeps titles, descriptions and video audio in their original language.",
   "scripts": {
     "clean": "rimraf dist/*",
     "create-dirs": "mkdir -p dist/popup dist/content dist/background dist/styles dist/assets/icons",
