@@ -26,7 +26,7 @@ const LOG_STYLES = {
     },
     DESCRIPTION: {
         context: '[Description]',
-        color: '#fca5a5'  // light red
+        color: '#2196F3'  // blue
     },
     AUDIO: {
         context: '[Audio]',
