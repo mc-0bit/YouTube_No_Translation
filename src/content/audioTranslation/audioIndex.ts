@@ -27,25 +27,3 @@ async function handleAudioTranslation() {
     script.src = browser.runtime.getURL('dist/content/audioTranslation/audioScript.js');
     document.documentElement.appendChild(script);
 }
-
-let audioObserver: MutationObserver | null = null;
-
-function setupAudioObserver() {
-    waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        audioObserver = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    // Wait for movie_player before injecting script
-                    waitForElement('#movie_player').then(() => {
-                        handleAudioTranslation();
-                    });
-                }
-            }
-        });
-
-        audioObserver.observe(watchFlexy, {
-            attributes: true,
-            attributeFilter: ['video-id']
-        });
-    });
-}

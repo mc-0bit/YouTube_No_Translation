@@ -28,6 +28,7 @@
     "src/content/titleTranslation/otherTitles.ts",
     "src/content/audioTranslation/audioIndex.ts",
     "src/content/descriptionTranslation/descriptionIndex.ts",
+    "src/content/observer.ts",
     "src/content/index.ts"
   ]
 }

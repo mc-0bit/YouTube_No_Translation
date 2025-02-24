@@ -9,17 +9,16 @@
 
 
 
-let mainTitleObserver: MutationObserver | null = null;
-let titleContentObserver: MutationObserver | null = null;
+let mainTitleContentObserver: MutationObserver | null = null;
 let pageTitleObserver: MutationObserver | null = null;
-let isUpdating = false;
+let mainTitleIsUpdating = false;
 
 // --- Utility Functions
-function cleanupTitleContentObserver(): void {
-    if (titleContentObserver) {
+function cleanupmainTitleContentObserver(): void {
+    if (mainTitleContentObserver) {
         mainTitleLog('Cleaning up title content observer');
-        titleContentObserver.disconnect();
-        titleContentObserver = null;
+        mainTitleContentObserver.disconnect();
+        mainTitleContentObserver = null;
     }
 }
 
@@ -32,7 +31,7 @@ function cleanupPageTitleObserver(): void {
 }
 
 function updateMainTitleElement(element: HTMLElement, title: string, videoId: string): void {
-    cleanupTitleContentObserver();
+    cleanupmainTitleContentObserver();
     
     mainTitleLog(
         `Updated title from : %c${element.textContent?.trim()}%c to : %c${title}%c (video id : %c${videoId}%c)`,
@@ -65,8 +64,8 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
     });
     
     // --- Block YouTube from adding multiple text nodes
-    titleContentObserver = new MutationObserver((mutations) => {
-        if (isUpdating) return;
+    mainTitleContentObserver = new MutationObserver((mutations) => {
+        if (mainTitleIsUpdating) return;
         mutations.forEach((mutation) => {
             if (mutation.type === 'childList') {
                 // --- Check if there are multiple text nodes
@@ -74,16 +73,16 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
                     .filter(node => node.nodeType === Node.TEXT_NODE);
                 
                 if (textNodes.length > 1) {
-                    isUpdating = true;
+                    mainTitleIsUpdating = true;
                     element.innerText = title;
-                    isUpdating = false;
+                    mainTitleIsUpdating = false;
                     mainTitleLog('Multiple text nodes detected, cleaning up');
                 }
             }
         });
     });
 
-    titleContentObserver.observe(element, {
+    mainTitleContentObserver.observe(element, {
         childList: true
     });
 
@@ -155,48 +154,4 @@ const mainTitle = document.querySelector('h1.ytd-watch-metadata > yt-formatted-s
             }
         }
     }
-}
-
-
-function setupMainTitleObserver() {
-    waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        mainTitleLog('Setting up video-id observer');
-        mainTitleObserver = new MutationObserver(async (mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    titleCache.clear();
-                    
-                    const newVideoId = (mutation.target as HTMLElement).getAttribute('video-id');
-                    mainTitleLog('Video ID changed:', newVideoId);
-                    mainTitleLog('Cache cleared');
-                    
-                    // --- Get the current page URL to check against
-                    const currentUrl = window.location.href;
-                    /*mainTitleLog('Current URL:', currentUrl);*/
-                    
-                    // --- Wait for title element and monitor its changes
-                    const titleElement = await waitForElement('ytd-watch-metadata yt-formatted-string.style-scope.ytd-watch-metadata');
-                    let attempts = 0;
-                    const maxAttempts = 20;
-                    
-                    while (attempts < maxAttempts) {
-                        const pageUrl = window.location.href;
-                        
-                        if (pageUrl === currentUrl && titleElement.textContent) {
-                            await refreshMainTitle();
-                            break;
-                        }
-                        
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        attempts++;
-                    }
-                }
-            }
-        });
-
-        mainTitleObserver.observe(watchFlexy, {
-            attributes: true,
-            attributeFilter: ['video-id']
-        });
-    });
 }

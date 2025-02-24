@@ -11,45 +11,51 @@
 
 coreLog('Content script starting to load...');
 
-// Initialize features
-browser.storage.local.get('settings').then((data: Record<string, any>) => {
-    const settings = data.settings as ExtensionSettings;
+let currentSettings: ExtensionSettings | null = null;
+
+// Fetch settings once and store them in currentSettings
+async function fetchSettings() {
+    const data = await browser.storage.local.get('settings');
+    currentSettings = data.settings as ExtensionSettings;
+};
+
+
+// Initialize features based on settings
+async function initializeFeatures() {
+    await fetchSettings();
     
-    if (settings?.titleTranslation) {
+    if (currentSettings?.titleTranslation) {
         initializeTitleTranslation();
         setupMainTitleObserver();
         setupOtherTitlesObserver();
         setupUrlObserver();
     }
-    if (settings?.audioTranslation) {
+    if (currentSettings?.audioTranslation) {
         initializeAudioTranslation();
         setupAudioObserver();
     }
-    if (settings?.descriptionTranslation) {
+    if (currentSettings?.descriptionTranslation) {
         initializeDescriptionTranslation();
         setupDescriptionObserver();
     }
-});
+}
 
-// Initialization
+// Initialize functions
 function initializeTitleTranslation() {
-    browser.storage.local.get('settings').then((data: Record<string, any>) => {
-        const settings = data.settings as ExtensionSettings;
-        if (settings?.titleTranslation) {
-            refreshMainTitle();
-            refreshOtherTitles();
-        }
-    });
+    titlesLog('Initializing title translation prevention');
+    if (currentSettings?.titleTranslation) {
+        refreshMainTitle();
+        refreshOtherTitles();
+    }
 }
 
 function initializeAudioTranslation() {
     audioLog('Initializing audio translation prevention');
 
     // Initial setup
-    browser.storage.local.get('settings').then((data: Record<string, any>) => {
-        const settings = data.settings as ExtensionSettings;
-        handleAudioTranslation();
-    });
+    if (currentSettings?.audioTranslation) {
+        handleAudioTranslation
+    }
 
     // Message handler
     browser.runtime.onMessage.addListener((message: unknown) => {
@@ -63,12 +69,9 @@ function initializeAudioTranslation() {
 function initializeDescriptionTranslation() {
     descriptionLog('Initializing description translation prevention');
 
-    browser.storage.local.get('settings').then((data: Record<string, any>) => {
-        const settings = data.settings as ExtensionSettings;
-        if (settings?.descriptionTranslation) {
-            refreshDescription();
-        }
-    });
+    if (currentSettings?.descriptionTranslation) {
+        refreshDescription();
+    }
 
     browser.runtime.onMessage.addListener((message: unknown) => {
         if (isToggleMessage(message) && message.feature === 'description') {
@@ -87,3 +90,7 @@ browser.runtime.onMessage.addListener((message: unknown) => {
     }
     return true;
 });
+
+
+// Start initialization
+initializeFeatures();
