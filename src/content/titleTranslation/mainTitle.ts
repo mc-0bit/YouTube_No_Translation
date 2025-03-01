@@ -99,9 +99,15 @@ function updatePageTitle(mainTitle: string): void {
     const titleElement = document.querySelector('title');
     if (titleElement) {
         pageTitleObserver = new MutationObserver(() => {
-            if (document.title !== expectedTitle) {
-                document.title = expectedTitle;
+            // Normalize spaces in both titles before comparing
+            const normalizedCurrentTitle = document.title.replace(/\s+/g, ' ');
+            const normalizedExpectedTitle = expectedTitle.replace(/\s+/g, ' ');
+            
+            if (normalizedCurrentTitle !== normalizedExpectedTitle) {
                 mainTitleLog('YouTube changed page title, reverting');
+                //mainTitleLog('Current:', document.title);
+                //mainTitleLog('Expected:', expectedTitle);
+                document.title = expectedTitle;
             }
         });
         
