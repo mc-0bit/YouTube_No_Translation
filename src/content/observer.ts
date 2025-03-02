@@ -120,25 +120,15 @@ function setupMainTitleObserver() {
                     mainTitleLog('Video ID changed:', newVideoId);
                     mainTitleLog('Cache cleared');
                     
-                    // --- Get the current page URL to check against
-                    const currentUrl = window.location.href;
-                    /*mainTitleLog('Current URL:', currentUrl);*/
-                    
-                    // --- Wait for title element and monitor its changes
-                    const titleElement = await waitForElement('ytd-watch-metadata yt-formatted-string.style-scope.ytd-watch-metadata');
-                    let attempts = 0;
-                    const maxAttempts = 20;
-                    
-                    while (attempts < maxAttempts) {
-                        const pageUrl = window.location.href;
-                        
-                        if (pageUrl === currentUrl && titleElement.textContent) {
-                            await refreshMainTitle();
-                            break;
-                        }
-                        
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        attempts++;
+                    // Wait for movie_player and title element
+                    const [player, titleElement] = await Promise.all([
+                        waitForElement('#movie_player'),
+                        waitForElement('ytd-watch-metadata yt-formatted-string.style-scope.ytd-watch-metadata')
+                    ]);
+
+                    // Only proceed if we're still on the same page
+                    if (titleElement.textContent) {
+                        await refreshMainTitle();
                     }
                 }
             }

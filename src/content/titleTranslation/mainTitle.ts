@@ -120,38 +120,63 @@ function updatePageTitle(mainTitle: string): void {
 
 // --- Main Title Function
 async function refreshMainTitle(): Promise<void> {
-const mainTitle = document.querySelector('h1.ytd-watch-metadata > yt-formatted-string') as HTMLElement;
+    const mainTitle = document.querySelector('h1.ytd-watch-metadata > yt-formatted-string') as HTMLElement;
     if (mainTitle && window.location.pathname === '/watch' && !titleCache.hasElement(mainTitle)) {
         mainTitleLog('Processing main title element');
         const videoId = new URLSearchParams(window.location.search).get('v');
         if (videoId) {
-            // --- Check if element has already been processed with this videoId
             const currentTitle = mainTitle.textContent?.trim();
-            const originalTitle = await titleCache.getOriginalTitle(
-                `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
-            );
-            // --- Translated title check is not working as the innerText is not modified by YouTube 
-            // as soon as we modified it a first time.
-            // So we probably won't be able to detect if the title is already translated.
-            // Even if we could, it would be better to always update the title
-            // since YouTube won't update it.
-            try {
-                if (!originalTitle) {
-                    // Extract current title from document.title
-                    const currentPageTitle = document.title.replace(/ - YouTube$/, '');
-                    mainTitleLog(`Failed to get original title from API: ${videoId}, using page title`);
-                    updateMainTitleElement(mainTitle, currentPageTitle, videoId);
-                    return;
-                }
-                if (currentTitle === originalTitle) {
-                    //mainTitleLog('Title is not translated:', videoId);
-                    return;
-                }
-                //mainTitleLog('Main Title is translated:', videoId);
-            } catch (error) {
-                //mainTitleLog('Failed to get original title for comparison:', error);
-            }        
+            let originalTitle: string | null = null;
 
+            // First try: Get title from player
+            try {
+                // Create and inject script
+                const mainTitleScript = document.createElement('script');
+                mainTitleScript.type = 'text/javascript';
+                mainTitleScript.src = browser.runtime.getURL('dist/content/titleTranslation/mainTitleScript.js');
+
+                // Set up event listener before injecting script
+                const playerTitle = await new Promise<string | null>((resolve) => {
+                    const titleListener = (event: TitleDataEvent) => {
+                        window.removeEventListener('ynt-title-data', titleListener as EventListener);
+                        resolve(event.detail.title);
+                    };
+                    window.addEventListener('ynt-title-data', titleListener as EventListener);
+                    
+                    // Inject script after listener is ready
+                    document.head.appendChild(mainTitleScript);
+                });
+
+                if (playerTitle) {
+                    //mainTitleLog('Got original title from player');
+                    originalTitle = playerTitle;
+                }
+            } catch (error) {
+                mainTitleLog('Failed to get title from player:', error);
+            }
+
+            // Second try: Fallback to oembed API
+            if (!originalTitle) {
+                mainTitleLog('Falling back to oembed API');
+                originalTitle = await titleCache.getOriginalTitle(
+                    `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
+                );
+            }
+
+            // Last resort: Use page title
+            if (!originalTitle) {
+                const currentPageTitle = document.title.replace(/ - YouTube$/, '');
+                mainTitleLog(`Failed to get original title using both methods, using page title as last resort`);
+                updateMainTitleElement(mainTitle, currentPageTitle, videoId);
+                return;
+            }
+
+            // Skip if title is already correct
+            if (currentTitle === originalTitle) {
+                return;
+            }
+
+            // Apply the original title
             try {
                 updateMainTitleElement(mainTitle, originalTitle, videoId);
                 updatePageTitle(originalTitle);

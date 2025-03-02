@@ -52,3 +52,11 @@ interface YouTubePlayerResponse {
 interface Window {
     ytInitialPlayerResponse?: YouTubePlayerResponse;
 }
+
+interface TitleData {
+    title: string | null;
+}
+
+interface TitleDataEvent extends CustomEvent {
+    detail: TitleData;
+}
