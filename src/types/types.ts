@@ -11,7 +11,7 @@
 
 interface Message {
     action: 'toggleTranslation';
-    feature: 'titles' | 'audio' | 'description';
+    feature: 'titles' | 'audio' | 'description' | 'subtitles';
     isEnabled: boolean;
 }
 
@@ -38,6 +38,7 @@ interface ExtensionSettings {
     titleTranslation: boolean;
     audioTranslation: boolean;
     descriptionTranslation: boolean;
+    subtitlesTranslation: boolean;
 }
 
 interface YouTubePlayerResponse {

@@ -18,7 +18,12 @@ function isToggleMessage(message: unknown): message is Message {
         'action' in message &&
         message.action === 'toggleTranslation' &&
         'feature' in message &&
-        (message.feature === 'titles' || message.feature === 'audio') &&
+        (
+            message.feature === 'titles' || 
+            message.feature === 'audio' || 
+            message.feature === 'description' ||
+            message.feature === 'subtitles'
+        ) &&
         'isEnabled' in message &&
         typeof message.isEnabled === 'boolean'
     );

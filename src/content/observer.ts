@@ -155,6 +155,30 @@ function setupMainTitleObserver() {
 }
 
 
+// SUBTITLES OBSERVERS --------------------------------------------------------------------
+let subtitlesObserver: MutationObserver | null = null;
+
+function setupSubtitlesObserver() {
+    waitForElement('ytd-watch-flexy').then((watchFlexy) => {
+        subtitlesObserver = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
+                    // Wait for movie_player before injecting script
+                    waitForElement('#movie_player').then(() => {
+                        handleSubtitlesTranslation();
+                    });
+                }
+            }
+        });
+
+        subtitlesObserver.observe(watchFlexy, {
+            attributes: true,
+            attributeFilter: ['video-id']
+        });
+    });
+}
+
+
 // OTHER TITLES OBSERVER -----------------------------------------------------------
 let homeObserver: MutationObserver | null = null;
 let recommendedObserver: MutationObserver | null = null;

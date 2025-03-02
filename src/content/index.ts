@@ -38,6 +38,10 @@ async function initializeFeatures() {
         initializeDescriptionTranslation();
         setupDescriptionObserver();
     }
+    if (currentSettings?.subtitlesTranslation) {
+        initializeSubtitlesTranslation();
+        setupSubtitlesObserver();
+    }
 }
 
 // Initialize functions
@@ -77,6 +81,23 @@ function initializeDescriptionTranslation() {
         if (isToggleMessage(message) && message.feature === 'description') {
             if (message.isEnabled) {
                 refreshDescription();
+            }
+        }
+        return true;
+    });
+}
+
+function initializeSubtitlesTranslation() {
+    subtitlesLog('Initializing subtitles translation prevention');
+
+    if (currentSettings?.subtitlesTranslation) {
+        handleSubtitlesTranslation();
+    }
+
+    browser.runtime.onMessage.addListener((message: unknown) => {
+        if (isToggleMessage(message) && message.feature === 'subtitles') {
+            if (message.isEnabled) {
+                handleSubtitlesTranslation();
             }
         }
         return true;

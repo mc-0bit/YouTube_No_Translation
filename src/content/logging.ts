@@ -35,6 +35,10 @@ const LOG_STYLES = {
     CORE: {
         context: '[Core]',
         color: '#c084fc'  // light purple
+    },
+    SUBTITLES: {
+        context: '[Subtitles]',
+        color: '#FF9800'  // orange
     }
 } as const;
 
@@ -54,3 +58,4 @@ const audioLog = createLogger(LOG_STYLES.AUDIO);
 const descriptionLog = createLogger(LOG_STYLES.DESCRIPTION);
 const coreLog = createLogger(LOG_STYLES.CORE);
 const titlesLog = createLogger(LOG_STYLES.TITLES);
+const subtitlesLog = createLogger(LOG_STYLES.SUBTITLES);

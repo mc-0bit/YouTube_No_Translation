@@ -47,7 +47,8 @@
   "web_accessible_resources": [{
       "resources": [
           "dist/content/audioTranslation/audioScript.js",
-          "dist/content/descriptionTranslation/descriptionScript.js"
+          "dist/content/descriptionTranslation/descriptionScript.js",
+          "dist/content/subtitlesTranslation/subtitlesScript.js"
       ],
       "matches": ["*://*.youtube.com/*"]
   }]
