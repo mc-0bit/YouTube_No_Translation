@@ -48,9 +48,6 @@ function setupDescriptionObserver() {
                     const descriptionElement = document.querySelector('#description-inline-expander');
                     if (descriptionElement) {
                         refreshDescription();
-                        setTimeout(() => {
-                            refreshDescription();
-                        }, 200);
                     } else {
                         // If not found, wait for it
                         waitForElement('#description-inline-expander').then(() => {

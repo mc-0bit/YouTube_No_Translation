@@ -16,7 +16,7 @@
  */
 
 (() => {
-    const LOG_PREFIX = '[YNT-Debug]';
+    const LOG_PREFIX = '[YNT]';
     const LOG_STYLES = {
         DESCRIPTION: { context: '[DESCRIPTION]', color: '#2196F3' }
     };
@@ -33,53 +33,26 @@
 
     const descriptionLog = createLogger(LOG_STYLES.DESCRIPTION);
     
-    // Get current video ID from URL
-    const currentVideoId = new URLSearchParams(window.location.search).get('v');
-    descriptionLog('Current video ID:', currentVideoId);
+    // Get player and video response
+    const player = document.getElementById('movie_player');
+    if (!player) {
+        descriptionLog('Player not found');
+        window.dispatchEvent(new CustomEvent('ynt-description-data', {
+            detail: { description: null }
+        }));
+        return;
+    }
+
+    const response = player.getPlayerResponse();
+    const description = response?.videoDetails?.shortDescription;
     
-    // Try to get description from the player API endpoint
-    if (window.ytcfg && window.ytcfg.data_) {
-        descriptionLog('Attempting to fetch with API key:', window.ytcfg.data_.INNERTUBE_API_KEY);
-        fetch('/youtubei/v1/player?key=' + window.ytcfg.data_.INNERTUBE_API_KEY, {
-            method: 'POST',
-            body: JSON.stringify({
-                videoId: currentVideoId,
-                context: {
-                    client: {
-                        clientName: 'WEB',
-                        clientVersion: window.ytcfg.data_.INNERTUBE_CLIENT_VERSION
-                    }
-                }
-            })
-        })
-        .then(response => {
-            descriptionLog('Got response:', response.status);
-            return response.json();
-        })
-        .then(data => {
-            descriptionLog('Got data:', data);
-            const description = data?.videoDetails?.shortDescription;
-            
-            if (description) {
-                descriptionLog('Found description from API for video:', currentVideoId);
-                window.dispatchEvent(new CustomEvent('ynt-description-data', {
-                    detail: { description }
-                }));
-            } else {
-                descriptionLog('No description found in API response');
-                window.dispatchEvent(new CustomEvent('ynt-description-data', {
-                    detail: { description: null }
-                }));
-            }
-        })
-        .catch(error => {
-            descriptionLog('Error fetching description:', error);
-            window.dispatchEvent(new CustomEvent('ynt-description-data', {
-                detail: { description: null }
-            }));
-        });
+    if (description) {
+        descriptionLog('Found description from player response');
+        window.dispatchEvent(new CustomEvent('ynt-description-data', {
+            detail: { description }
+        }));
     } else {
-        descriptionLog('window.ytcfg.data_ is not available');
+        descriptionLog('No description found in player response');
         window.dispatchEvent(new CustomEvent('ynt-description-data', {
             detail: { description: null }
         }));
