@@ -8,7 +8,19 @@
 ###
 
 <h1 align="center">YouTube No Translation</h1>
-<p align="center">An add-on for Firefox and Chromium browsers, preventing automatic translation on YouTube (audio track, description and video titles).</p>
+
+<p align="center">
+  A web browser extension that keeps your YouTube experience authentic by preventing automatic translations.
+</p>
+
+<div align="center">
+  <h2>Features :</h2>
+  
+  - **Video Titles**: Keep titles in their original language
+  - **Audio Tracks**: Always use the original audio track
+  - **Descriptions**: Prevent description translations
+  - **Subtitles**: Force original language subtitles or disable auto-generated ones
+</div>
 
 <div align="center">
   <a href="https://addons.mozilla.org/firefox/addon/youtube-no-translation/" target="_blank">
@@ -39,28 +51,28 @@
         <br />
         <strong>BTC</strong>
         <br />
-        <code>bc1q0m5e0lp73m20skkj9cc2purvl43ch3lslxkh63</code>
+        <code>bc1qcwx8a7d05sm7dhc2hrueppey0a0cn66zkez6lq</code>
       </td>
       <td align="center">
         <img src="./assets/images/QR/eth_adress.png" width="150"/>
         <br />
         <strong>ETH</strong>
         <br />
-        <code>0xdf25A33FbCb8aBDb7727A6E31A4eA619B9Df4546</code>
+        <code>0x4e452cBAAb8D5A0E9bB2eE36dcad051a7d6fD063</code>
       </td>
       <td align="center">
         <img src="./assets/images/QR/bat-eth_adress.png" width="150"/>
         <br />
         <strong>BAT (ETH)</strong>
         <br />
-        <code>0xdf25A33FbCb8aBDb7727A6E31A4eA619B9Df4546</code>
+        <code>0x4e452cBAAb8D5A0E9bB2eE36dcad051a7d6fD063</code>
       </td>
       <td align="center">
         <img src="./assets/images/QR/ltc_adress.png" width="150"/>
         <br />
         <strong>LTC</strong>
         <br />
-        <code>Li5ootmMUik2YKQrMmubRjLupKxjwqS37Y</code>
+        <code>Li9Fsrr335SyCe5JfR8cxgse6kb6fSBBKb</code>
       </td>
     </tr>
   </table>
