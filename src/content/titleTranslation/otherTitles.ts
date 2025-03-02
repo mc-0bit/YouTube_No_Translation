@@ -25,6 +25,11 @@ function cleanupOtherTitlesObserver(element: HTMLElement): void {
 }
 
 function updateOtherTitleElement(element: HTMLElement, title: string, videoId: string): void {
+    // If title is already set to this value, skip
+    if (element.getAttribute('title') === title) {
+        return;
+    }
+    
     // --- Clean previous observer
     cleanupOtherTitlesObserver(element);
     
