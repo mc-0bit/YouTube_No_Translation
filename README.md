@@ -25,7 +25,7 @@
 ###
 
 <div align="center">
-  <img src="./assets/images/before-after.jpg" alt="Before/After comparison showing how the extension prevents automatic translations" />
+  <img src="./assets/images/before-after.jpg" width="600" alt="Before/After comparison showing how the extension prevents automatic translations" />
 </div>
 
 ###
