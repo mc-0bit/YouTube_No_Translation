@@ -47,7 +47,9 @@ function setupDescriptionObserver() {
                     descriptionCache.clearCurrentDescription();  // Clear cache on video change
                     const descriptionElement = document.querySelector('#description-inline-expander');
                     if (descriptionElement) {
-                        refreshDescription();
+                        waitForElement('#movie_player').then(() => {
+                            refreshDescription();
+                        });
                     } else {
                         // If not found, wait for it
                         waitForElement('#description-inline-expander').then(() => {
@@ -247,33 +249,33 @@ function setupOtherTitlesObserver() {
 
 
 function setupUrlObserver() {
-    otherTitlesLog('Setting up URL observer');
+    coreLog('Setting up URL observer');
     
     // --- Standard History API monitoring
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
 
     history.pushState = function(...args) {
-        otherTitlesLog('pushState called with:', args);
+        coreLog('pushState called with:', args);
         originalPushState.apply(this, args);
         handleUrlChange();
     };
 
     history.replaceState = function(...args) {
-        otherTitlesLog('replaceState called with:', args);
+        coreLog('replaceState called with:', args);
         originalReplaceState.apply(this, args);
         handleUrlChange();
     };
 
     // --- Browser navigation (back/forward)
     window.addEventListener('popstate', () => {
-        otherTitlesLog('popstate event triggered');
+        coreLog('popstate event triggered');
         handleUrlChange();
     });
 
     // --- YouTube's custom page data update event
     window.addEventListener('yt-page-data-updated', () => {
-        otherTitlesLog('YouTube page data updated');
+        coreLog('YouTube page data updated');
         handleUrlChange();
     });
 
@@ -294,19 +296,21 @@ function setupUrlObserver() {
 }
 
 function handleUrlChange() {
-    otherTitlesLog(`${LOG_PREFIX}[URL] Current pathname:`, window.location.pathname);
-    otherTitlesLog(`${LOG_PREFIX}[URL] Full URL:`, window.location.href);
+    coreLog(`${LOG_PREFIX}[URL] Current pathname:`, window.location.pathname);
+    coreLog(`${LOG_PREFIX}[URL] Full URL:`, window.location.href);
     
     // --- Clean up existing observers and set up new ones
     homeObserver?.disconnect();
     recommendedObserver?.disconnect();
     searchObserver?.disconnect();
     //playlistObserver?.disconnect();
-    
     homeObserver = null;
     recommendedObserver = null;
     searchObserver = null;
     //playlistObserver = null;
+    cleanupmainTitleContentObserver();
+    cleanupPageTitleObserver();
+    
     
     otherTitlesLog('Observers cleaned up');
     setupOtherTitlesObserver();

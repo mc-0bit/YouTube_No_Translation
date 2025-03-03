@@ -25,12 +25,7 @@ function cleanupOtherTitlesObserver(element: HTMLElement): void {
 }
 
 function updateOtherTitleElement(element: HTMLElement, title: string, videoId: string): void {
-    // If title is already set to this value, skip
-    if (element.getAttribute('title') === title) {
-        return;
-    }
-    
-    // --- Clean previous observer
+// --- Clean previous observer
     cleanupOtherTitlesObserver(element);
     
     otherTitlesLog(
@@ -132,6 +127,9 @@ const otherTitles = document.querySelectorAll('#video-title') as NodeListOf<HTML
                             //otherTitlesLog('Title is not translated: ', videoId);
                             titleElement.removeAttribute('ynt');
                             currentTitle && titleElement.setAttribute('title', currentTitle);
+                            continue;
+                        }
+                        if (titleElement.getAttribute('title') === originalTitle) {
                             continue;
                         }
                         //otherTitlesLog('Title is translated: ', videoId);

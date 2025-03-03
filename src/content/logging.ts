@@ -52,10 +52,10 @@ function createLogger(category: { context: string; color: string }) {
     };
 }
 
+const coreLog = createLogger(LOG_STYLES.CORE);
+const titlesLog = createLogger(LOG_STYLES.TITLES);
 const mainTitleLog = createLogger(LOG_STYLES.MAIN_TITLE);
 const otherTitlesLog = createLogger(LOG_STYLES.OTHER_TITLES);
 const audioLog = createLogger(LOG_STYLES.AUDIO);
 const descriptionLog = createLogger(LOG_STYLES.DESCRIPTION);
-const coreLog = createLogger(LOG_STYLES.CORE);
-const titlesLog = createLogger(LOG_STYLES.TITLES);
 const subtitlesLog = createLogger(LOG_STYLES.SUBTITLES);

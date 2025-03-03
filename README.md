@@ -22,6 +22,14 @@
   - **Subtitles**: Force original language subtitles or disable auto-generated ones
 </div>
 
+###
+
+<div align="center">
+  <img src="./assets/images/before-after.jpg" alt="Before/After comparison showing how the extension prevents automatic translations" />
+</div>
+
+###
+
 <div align="center">
   <a href="https://addons.mozilla.org/firefox/addon/youtube-no-translation/" target="_blank">
     <img src="./assets/images/firefox.png" height="40" alt="Available on Mozilla Firefox" title="Available on Mozilla Firefox"/>
