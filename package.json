@@ -31,7 +31,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YouG-o/YNT_Browser-Extension.git"
+    "url": "git+https://github.com/YouG-o/YouTube_No_Translation.git"
   },
   "keywords": [
     "youtube",
@@ -44,9 +44,9 @@
   "author": "YouGo",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/YouG-o/YNT_Browser-Extension/issues"
+    "url": "https://github.com/YouG-o/YouTube_No_Translation/issues"
   },
-  "homepage": "https://github.com/YouG-o/YNT_Browser-Extension#readme",
+  "homepage": "https://github.com/YouG-o/YouTube_No_Translation#readme",
   "devDependencies": {
     "@types/chrome": "^0.0.299",
     "@types/webextension-polyfill": "^0.12.1",

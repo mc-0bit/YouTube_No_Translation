@@ -47,6 +47,7 @@ async function initializeFeatures() {
 // Initialize functions
 function initializeTitleTranslation() {
     titlesLog('Initializing title translation prevention');
+    
     if (currentSettings?.titleTranslation) {
         refreshMainTitle();
         refreshOtherTitles();
@@ -58,7 +59,7 @@ function initializeAudioTranslation() {
 
     // Initial setup
     if (currentSettings?.audioTranslation) {
-        handleAudioTranslation
+        handleAudioTranslation();
     }
 
     // Message handler

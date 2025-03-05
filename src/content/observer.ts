@@ -172,7 +172,7 @@ function setupSubtitlesObserver() {
 let homeObserver: MutationObserver | null = null;
 let recommendedObserver: MutationObserver | null = null;
 let searchObserver: MutationObserver | null = null;
-//let playlistObserver: MutationObserver | null = null;
+let playlistObserver: MutationObserver | null = null;
 
 // --- Observers Setup
 function setupOtherTitlesObserver() {
@@ -228,7 +228,6 @@ function setupOtherTitlesObserver() {
         //otherTitlesLog('Search results observer setup completed');
     });
 
-    /*
     // --- Observer for playlist/queue videos
     waitForElement('#playlist ytd-playlist-panel-renderer #items').then((contents) => {
         otherTitlesLog('Setting up playlist/queue videos observer');
@@ -242,7 +241,6 @@ function setupOtherTitlesObserver() {
         });
         otherTitlesLog('Playlist/Queue observer setup completed');
     });
-    */
 }
 
 
