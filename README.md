@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://addons.mozilla.org/firefox/addon/youtube-no-translation/" target="_blank">
+  <a href="https://youtube-no-translation.vercel.app/" target="_blank">
     <img src="./assets/icons/icon.svg" alt="Project description"/>
 
   </a>
