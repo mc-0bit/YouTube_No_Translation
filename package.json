@@ -19,7 +19,7 @@
     "watch:ts": "tsc --watch",
     "watch:css": "tailwindcss -i ./src/styles/main.css -o ./dist/styles/main.css --watch",
     "copy:assets": "cp -r assets/* dist/assets/",
-    "copy:scripts": "mkdir -p dist/content/audioTranslation dist/content/descriptionTranslation dist/content/subtitlesTranslation dist/content/titleTranslation && cp src/content/audioTranslation/audioScript.js dist/content/audioTranslation/ && cp src/content/descriptionTranslation/descriptionScript.js dist/content/descriptionTranslation/ && cp src/content/subtitlesTranslation/subtitlesScript.js dist/content/subtitlesTranslation/ && cp src/content/titleTranslation/mainTitleScript.js dist/content/titleTranslation/",
+    "copy:scripts": "mkdir -p dist/content/audio dist/content/description dist/content/subtitles dist/content/titles && cp src/content/audio/audioScript.js dist/content/audio/ && cp src/content/description/descriptionScript.js dist/content/description/ && cp src/content/subtitles/subtitlesScript.js dist/content/subtitles/ && cp src/content/titles/mainTitleScript.js dist/content/titles/",
     "pre:web-ext:firefox": "cp manifest.firefox.json manifest.json",
     "pre:web-ext:chrome": "cp manifest.chrome.json manifest.json",
     "web-ext:firefox": "web-ext build --overwrite-dest -a web-ext-artifacts/firefox",

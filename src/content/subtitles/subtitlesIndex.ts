@@ -24,6 +24,6 @@
 async function handleSubtitlesTranslation() {   
     subtitlesLog('Initializing subtitles translation prevention');   
     const script = document.createElement('script');
-    script.src = browser.runtime.getURL('dist/content/subtitlesTranslation/subtitlesScript.js');
+    script.src = browser.runtime.getURL('dist/content/subtitles/subtitlesScript.js');
     document.documentElement.appendChild(script);
 }

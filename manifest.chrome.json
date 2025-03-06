@@ -38,10 +38,10 @@
   
     "web_accessible_resources": [{
         "resources": [
-            "dist/content/audioTranslation/audioScript.js",
-            "dist/content/descriptionTranslation/descriptionScript.js",
-            "dist/content/subtitlesTranslation/subtitlesScript.js",
-            "dist/content/titleTranslation/mainTitleScript.js"
+            "dist/content/audio/audioScript.js",
+            "dist/content/description/descriptionScript.js",
+            "dist/content/subtitles/subtitlesScript.js",
+            "dist/content/titles/mainTitleScript.js"
         ],
         "matches": ["*://*.youtube.com/*"]
     }]

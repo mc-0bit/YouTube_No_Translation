@@ -129,7 +129,7 @@ async function refreshMainTitle(): Promise<void> {
                 // Create and inject script
                 const mainTitleScript = document.createElement('script');
                 mainTitleScript.type = 'text/javascript';
-                mainTitleScript.src = browser.runtime.getURL('dist/content/titleTranslation/mainTitleScript.js');
+                mainTitleScript.src = browser.runtime.getURL('dist/content/titles/mainTitleScript.js');
 
                 // Set up event listener before injecting script
                 const playerTitle = await new Promise<string | null>((resolve) => {

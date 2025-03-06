@@ -22,7 +22,7 @@ async function handleDescriptionTranslation(): Promise<void> {
             window.addEventListener('ynt-description-data', handleDescription as EventListener);
             
             const script = document.createElement('script');
-            script.src = browser.runtime.getURL('dist/content/descriptionTranslation/descriptionScript.js');
+            script.src = browser.runtime.getURL('dist/content/description/descriptionScript.js');
             document.documentElement.appendChild(script);
         });
 

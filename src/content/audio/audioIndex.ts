@@ -24,6 +24,6 @@
 async function handleAudioTranslation() {   
     audioLog('Initializing audio translation prevention');   
     const script = document.createElement('script');
-    script.src = browser.runtime.getURL('dist/content/audioTranslation/audioScript.js');
+    script.src = browser.runtime.getURL('dist/content/audio/audioScript.js');
     document.documentElement.appendChild(script);
 }

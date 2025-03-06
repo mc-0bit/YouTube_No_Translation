@@ -23,12 +23,12 @@
     "src/config/constants.ts",
     "src/content/logging.ts",
     "src/content/utils.ts",
-    "src/content/titleTranslation/index.ts",
-    "src/content/titleTranslation/mainTitle.ts",
-    "src/content/titleTranslation/browsingTitles.ts",
-    "src/content/audioTranslation/audioIndex.ts",
-    "src/content/descriptionTranslation/descriptionIndex.ts",
-    "src/content/subtitlesTranslation/subtitlesIndex.ts",
+    "src/content/titles/index.ts",
+    "src/content/titles/mainTitle.ts",
+    "src/content/titles/browsingTitles.ts",
+    "src/content/audio/audioIndex.ts",
+    "src/content/description/descriptionIndex.ts",
+    "src/content/subtitles/subtitlesIndex.ts",
     "src/content/observer.ts",
     "src/content/index.ts"
   ]
