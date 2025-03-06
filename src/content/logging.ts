@@ -16,8 +16,8 @@ const LOG_STYLES = {
         context: '[Main Title]',
         color: '#fcd34d'  // yellow
     },
-    OTHER_TITLES: {
-        context: '[Other Titles]',
+    BROWSING_TITLES: {
+        context: '[Browsing Titles]',
         color: '#fca5a5'  // light red
     },
     TITLES: {
@@ -55,7 +55,7 @@ function createLogger(category: { context: string; color: string }) {
 const coreLog = createLogger(LOG_STYLES.CORE);
 const titlesLog = createLogger(LOG_STYLES.TITLES);
 const mainTitleLog = createLogger(LOG_STYLES.MAIN_TITLE);
-const otherTitlesLog = createLogger(LOG_STYLES.OTHER_TITLES);
+const browsingTitlesLog = createLogger(LOG_STYLES.BROWSING_TITLES);
 const audioLog = createLogger(LOG_STYLES.AUDIO);
 const descriptionLog = createLogger(LOG_STYLES.DESCRIPTION);
 const subtitlesLog = createLogger(LOG_STYLES.SUBTITLES);

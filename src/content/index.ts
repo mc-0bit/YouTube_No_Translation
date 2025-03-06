@@ -27,7 +27,7 @@ async function initializeFeatures() {
     if (currentSettings?.titleTranslation) {
         initializeTitleTranslation();
         setupMainTitleObserver();
-        setupOtherTitlesObserver();
+        setupBrowsingTitlesObserver();
         setupUrlObserver();
     }
     if (currentSettings?.audioTranslation) {
@@ -50,7 +50,7 @@ function initializeTitleTranslation() {
     
     if (currentSettings?.titleTranslation) {
         refreshMainTitle();
-        refreshOtherTitles();
+        refreshBrowsingTitles();
     }
 }
 

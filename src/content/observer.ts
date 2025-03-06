@@ -168,44 +168,44 @@ function setupSubtitlesObserver() {
 }
 
 
-// OTHER TITLES OBSERVER -----------------------------------------------------------
+// BROWSING TITLES OBSERVER -----------------------------------------------------------
 let homeObserver: MutationObserver | null = null;
 let recommendedObserver: MutationObserver | null = null;
 let searchObserver: MutationObserver | null = null;
 let playlistObserver: MutationObserver | null = null;
 
 // --- Observers Setup
-function setupOtherTitlesObserver() {
+function setupBrowsingTitlesObserver() {
     // --- Observer for home page | Channel page
     waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
         homeObserver = new MutationObserver(() => {
-            otherTitlesLog('Home/Channel page mutation detected');
-            refreshOtherTitles();
+            browsingTitlesLog('Home/Channel page mutation detected');
+            refreshBrowsingTitles();
         });
 
         homeObserver.observe(contents, {
             childList: true
         });
-        //otherTitlesLog('Home/Channel page observer setup completed');
+        //browsingTitlesLog('Home/Channel page observer setup completed');
     });
 
     // --- Observer for recommended videos
     waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then((contents) => {
-        otherTitlesLog('Setting up recommended videos observer');
+        browsingTitlesLog('Setting up recommended videos observer');
         recommendedObserver = new MutationObserver(() => {
-            otherTitlesLog('Recommended videos mutation detected');
-            refreshOtherTitles();
+            browsingTitlesLog('Recommended videos mutation detected');
+            refreshBrowsingTitles();
         });
 
         recommendedObserver.observe(contents, {
             childList: true
         });
-        //otherTitlesLog('Recommended videos observer setup completed');
+        //browsingTitlesLog('Recommended videos observer setup completed');
     });
 
     // --- Observer for search results
     waitForElement('ytd-section-list-renderer #contents').then((contents) => {
-        otherTitlesLog('Setting up search results observer');
+        browsingTitlesLog('Setting up search results observer');
         searchObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'childList' && 
@@ -213,8 +213,8 @@ function setupOtherTitlesObserver() {
                     mutation.target instanceof HTMLElement) {
                     const titles = mutation.target.querySelectorAll('#video-title');
                     if (titles.length > 0) {
-                        otherTitlesLog('Search results mutation detected');
-                        refreshOtherTitles();
+                        browsingTitlesLog('Search results mutation detected');
+                        refreshBrowsingTitles();
                         break;
                     }
                 }
@@ -225,21 +225,21 @@ function setupOtherTitlesObserver() {
             childList: true,
             subtree: true
         });
-        //otherTitlesLog('Search results observer setup completed');
+        //browsingTitlesLog('Search results observer setup completed');
     });
 
     // --- Observer for playlist/queue videos
     waitForElement('#playlist ytd-playlist-panel-renderer #items').then((contents) => {
-        otherTitlesLog('Setting up playlist/queue videos observer');
+        browsingTitlesLog('Setting up playlist/queue videos observer');
         playlistObserver = new MutationObserver(() => {
-            otherTitlesLog('Playlist/Queue mutation detected');
-            refreshOtherTitles();
+            browsingTitlesLog('Playlist/Queue mutation detected');
+            refreshBrowsingTitles();
         });
 
         playlistObserver.observe(contents, {
             childList: true
         });
-        otherTitlesLog('Playlist/Queue observer setup completed');
+        browsingTitlesLog('Playlist/Queue observer setup completed');
     });
 }
 
@@ -280,14 +280,14 @@ function setupUrlObserver() {
     // --- YouTube's custom SPA navigation events
     /*
     window.addEventListener('yt-navigate-start', () => {
-        otherTitlesLog('YouTube SPA navigation started');
+        coreLog('YouTube SPA navigation started');
         handleUrlChange();
     });
     */
 
     /*
     window.addEventListener('yt-navigate-finish', () => {
-        otherTitlesLog('YouTube SPA navigation completed');
+        coreLog('YouTube SPA navigation completed');
         handleUrlChange();
     });
     */
@@ -310,19 +310,19 @@ function handleUrlChange() {
     cleanupPageTitleObserver();
     
     
-    otherTitlesLog('Observers cleaned up');
-    setupOtherTitlesObserver();
+    browsingTitlesLog('Observers cleaned up');
+    setupBrowsingTitlesObserver();
     
     // --- refresh titles 10 seconds after URL change 
     setTimeout(() => {
-        refreshOtherTitles();
+        refreshBrowsingTitles();
     }, 10000);
     
     // --- Check if URL contains @username pattern
     const isChannelPage = window.location.pathname.includes('/@');
     if (isChannelPage) {
         // --- Handle all new channel page types (videos, featured, shorts, etc.)
-        refreshOtherTitles();
+        refreshBrowsingTitles();
         return;
     }
     
@@ -330,22 +330,22 @@ function handleUrlChange() {
         case '/results': // --- Search page
             console.log(`${LOG_PREFIX}[URL] Detected search page`);
             waitForElement('#contents.ytd-section-list-renderer').then(() => {
-                otherTitlesLog('Search results container found');
-                refreshOtherTitles();
+                browsingTitlesLog('Search results container found');
+                refreshBrowsingTitles();
             });
             break;
         case '/': // --- Home page
             console.log(`${LOG_PREFIX}[URL] Detected home page`);
             waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
-                otherTitlesLog('Home page container found');
-                refreshOtherTitles();
+                browsingTitlesLog('Home page container found');
+                refreshBrowsingTitles();
             });
             break;        
         case '/feed/subscriptions': // --- Subscriptions page
             console.log(`${LOG_PREFIX}[URL] Detected subscriptions page`);
             waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
-                otherTitlesLog('Subscriptions page container found');
-                refreshOtherTitles();
+                browsingTitlesLog('Subscriptions page container found');
+                refreshBrowsingTitles();
             });
             break;
         case '/feed/trending':  // --- Trending page
@@ -354,11 +354,11 @@ function handleUrlChange() {
         case '/watch': // --- Video page
             console.log(`${LOG_PREFIX}[URL] Detected video page`);
             waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then(() => {
-                otherTitlesLog('Recommended videos container found');
-                refreshOtherTitles();
+                browsingTitlesLog('Recommended videos container found');
+                refreshBrowsingTitles();
                     // --- refresh titles 4 seconds after loading video page
                     setTimeout(() => {
-                        refreshOtherTitles();
+                        refreshBrowsingTitles();
                     }, 4000);
             });
             break;

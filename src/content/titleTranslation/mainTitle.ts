@@ -34,7 +34,7 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
     cleanupmainTitleContentObserver();
     
     mainTitleLog(
-        `Updated title from : %c${element.textContent?.trim()}%c to : %c${title}%c (video id : %c${videoId}%c)`,
+        `Updated title from : %c${normalizeTitle(element.textContent)}%c to : %c${normalizeTitle(title)}%c (video id : %c${videoId}%c)`,
         'color: white',    
         'color: #fcd34d',      
         'color: white',    
@@ -101,8 +101,8 @@ function updatePageTitle(mainTitle: string): void {
         pageTitleObserver = new MutationObserver(() => {
             if (normalizeTitle(document.title) !== normalizeTitle(expectedTitle)) {
                 mainTitleLog('YouTube changed page title, reverting');
-                //mainTitleLog('Current:', document.title);
-                //mainTitleLog('Expected:', expectedTitle);
+                //mainTitleLog('Current:', normalizeTitle(document.title));
+                //mainTitleLog('Expected:', normalizeTitle(expectedTitle));
                 document.title = expectedTitle;
             }
         });

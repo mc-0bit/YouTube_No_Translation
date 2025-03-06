@@ -10,26 +10,26 @@
 
 
 // --- Global variables
-let otherTitlesObservers = new Map<HTMLElement, MutationObserver>();
+let browsingTitlesObservers = new Map<HTMLElement, MutationObserver>();
 
 
 
 // --- Utility Functions
-function cleanupOtherTitlesObserver(element: HTMLElement): void {
-    const observer = otherTitlesObservers.get(element);
+function cleanupBrowsingTitlesObserver(element: HTMLElement): void {
+    const observer = browsingTitlesObservers.get(element);
     if (observer) {
-        //otherTitlesLog('Cleaning up title observer');
+        //browsingTitlesLog('Cleaning up title observer');
         observer.disconnect();
-        otherTitlesObservers.delete(element);
+        browsingTitlesObservers.delete(element);
     }
 }
 
-function updateOtherTitleElement(element: HTMLElement, title: string, videoId: string): void {
+function updateBrowsingTitleElement(element: HTMLElement, title: string, videoId: string): void {
 // --- Clean previous observer
-    cleanupOtherTitlesObserver(element);
+    cleanupBrowsingTitlesObserver(element);
     
-    otherTitlesLog(
-        `Updated title from : %c${element.textContent}%c to : %c${title}%c (video id : %c${videoId}%c)`,
+    browsingTitlesLog(
+        `Updated title from : %c${normalizeTitle(element.textContent)}%c to : %c${normalizeTitle(title)}%c (video id : %c${videoId}%c)`,
         'color: white',    // --- currentTitle style
         'color: #fca5a5',      // --- reset color
         'color: white',    // --- originalTitle style
@@ -77,7 +77,7 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
                     .filter(node => node.nodeType === Node.TEXT_NODE);
                 
                 if (directTextNodes.length > 0) {
-                    otherTitlesLog('Mutiple title detected, updating hidden span');
+                    browsingTitlesLog('Mutiple title detected, updating hidden span');
                     const span = element.querySelector('span');
                     if (span) {
                         // --- Get last added text node
@@ -95,19 +95,19 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
         childList: true
     });
 
-    otherTitlesObservers.set(element, observer);
+    browsingTitlesObservers.set(element, observer);
     titleCache.setElement(element, title);
 }
 
 
 // --- Other Titles Function
-async function refreshOtherTitles(): Promise<void> {
-const otherTitles = document.querySelectorAll('#video-title') as NodeListOf<HTMLElement>;
-    //otherTitlesLog('Found videos titles:', otherTitles.length);
+async function refreshBrowsingTitles(): Promise<void> {
+const browsingTitles = document.querySelectorAll('#video-title') as NodeListOf<HTMLElement>;
+    //browsingTitlesLog('Found videos titles:', browsingTitles.length);
 
-    for (const titleElement of otherTitles) {
+    for (const titleElement of browsingTitles) {
         if (!titleCache.hasElement(titleElement)) {
-            //otherTitlesLog('Processing video title:', titleElement.textContent);
+            //browsingTitlesLog('Processing video title:', titleElement.textContent);
             const videoUrl = titleElement.closest('a')?.href;
             if (videoUrl) {
                 const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
@@ -118,13 +118,13 @@ const otherTitles = document.querySelectorAll('#video-title') as NodeListOf<HTML
                     const currentTitle = titleElement.textContent;
                     try {
                         if (!originalTitle) {
-                            otherTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title`);
+                            browsingTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title`);
                             titleElement.removeAttribute('ynt');
                             currentTitle && titleElement.setAttribute('title', currentTitle);
                             continue;
                         }
                         if (normalizeTitle(currentTitle) === normalizeTitle(originalTitle)) {
-                            //otherTitlesLog('Title is not translated: ', videoId);
+                            //browsingTitlesLog('Title is not translated: ', videoId);
                             titleElement.removeAttribute('ynt');
                             currentTitle && titleElement.setAttribute('title', currentTitle);
                             continue;
@@ -132,14 +132,14 @@ const otherTitles = document.querySelectorAll('#video-title') as NodeListOf<HTML
                         if (normalizeTitle(titleElement.getAttribute('title')) === normalizeTitle(originalTitle)) {
                             continue;
                         }
-                        //otherTitlesLog('Title is translated: ', videoId);
+                        //browsingTitlesLog('Title is translated: ', videoId);
                     } catch (error) {
-                        //otherTitlesLog('Failed to get original title for comparison:', error);
+                        //browsingTitlesLog('Failed to get original title for comparison:', error);
                     }                 
                     try {
-                        updateOtherTitleElement(titleElement, originalTitle, videoId);
+                        updateBrowsingTitleElement(titleElement, originalTitle, videoId);
                     } catch (error) {
-                        otherTitlesLog(`Failed to update recommended title:`, error);
+                        browsingTitlesLog(`Failed to update recommended title:`, error);
                     }
                 }
             }
