@@ -29,7 +29,7 @@ function updateOtherTitleElement(element: HTMLElement, title: string, videoId: s
     cleanupOtherTitlesObserver(element);
     
     otherTitlesLog(
-        `Updated title from : %c${element.textContent?.trim()}%c to : %c${title}%c (video id : %c${videoId}%c)`,
+        `Updated title from : %c${element.textContent}%c to : %c${title}%c (video id : %c${videoId}%c)`,
         'color: white',    // --- currentTitle style
         'color: #fca5a5',      // --- reset color
         'color: white',    // --- originalTitle style
@@ -115,7 +115,7 @@ const otherTitles = document.querySelectorAll('#video-title') as NodeListOf<HTML
                     // --- Check if title is not translated
                     const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
                     const originalTitle = await titleCache.getOriginalTitle(apiUrl);
-                    const currentTitle = titleElement.textContent?.trim();
+                    const currentTitle = titleElement.textContent;
                     try {
                         if (!originalTitle) {
                             otherTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title`);
@@ -123,13 +123,13 @@ const otherTitles = document.querySelectorAll('#video-title') as NodeListOf<HTML
                             currentTitle && titleElement.setAttribute('title', currentTitle);
                             continue;
                         }
-                        if (currentTitle === originalTitle) {
+                        if (normalizeTitle(currentTitle) === normalizeTitle(originalTitle)) {
                             //otherTitlesLog('Title is not translated: ', videoId);
                             titleElement.removeAttribute('ynt');
                             currentTitle && titleElement.setAttribute('title', currentTitle);
                             continue;
                         }
-                        if (titleElement.getAttribute('title') === originalTitle) {
+                        if (normalizeTitle(titleElement.getAttribute('title')) === normalizeTitle(originalTitle)) {
                             continue;
                         }
                         //otherTitlesLog('Title is translated: ', videoId);

@@ -99,11 +99,7 @@ function updatePageTitle(mainTitle: string): void {
     const titleElement = document.querySelector('title');
     if (titleElement) {
         pageTitleObserver = new MutationObserver(() => {
-            // Normalize spaces in both titles before comparing
-            const normalizedCurrentTitle = document.title.replace(/\s+/g, ' ');
-            const normalizedExpectedTitle = expectedTitle.replace(/\s+/g, ' ');
-            
-            if (normalizedCurrentTitle !== normalizedExpectedTitle) {
+            if (normalizeTitle(document.title) !== normalizeTitle(expectedTitle)) {
                 mainTitleLog('YouTube changed page title, reverting');
                 //mainTitleLog('Current:', document.title);
                 //mainTitleLog('Expected:', expectedTitle);
@@ -125,7 +121,7 @@ async function refreshMainTitle(): Promise<void> {
         mainTitleLog('Processing main title element');
         const videoId = new URLSearchParams(window.location.search).get('v');
         if (videoId) {
-            const currentTitle = mainTitle.textContent?.trim();
+            const currentTitle = mainTitle.textContent;
             let originalTitle: string | null = null;
 
             // First try: Get title from player
@@ -172,7 +168,7 @@ async function refreshMainTitle(): Promise<void> {
             }
 
             // Skip if title is already correct
-            if (currentTitle === originalTitle) {
+            if (normalizeTitle(currentTitle) === normalizeTitle(originalTitle)) {
                 return;
             }
 

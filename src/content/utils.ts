@@ -54,3 +54,16 @@ function waitForElement(selector: string, timeout = 7500): Promise<Element> {
         }, timeout);
     });
 }
+
+// Function to normalize titles before comparison
+function normalizeTitle(title: string | null | undefined): string {
+    if (title === null || title === undefined) {
+        return '';
+    }
+    
+    return title
+        .normalize('NFD')  // Decompose accented characters
+        .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+        .replace(/\s+/g, ' ')  // Normalize spaces
+        .trim();  // Remove leading/trailing spaces
+}
