@@ -25,7 +25,7 @@
 ###
 
 <div>
-  <h2 align="center">Features :</h2>
+  <h1 align="center">Features :</h1>
   
   - **Video Titles**: Keep titles in their original language
   - **Audio Tracks**: Always use the original audio track
@@ -41,24 +41,25 @@
 
 ###
 
-<h1 align="center"> Support This Project </h1>
-
-This extension is completely free, ad-free, and maintained in my spare time. If you find it useful, consider supporting its development!
-
 <div align="center">
+<h1 align="center"> Support This Project </h1>
+  <p>This extension is completely free, ad-free, and maintained in my spare time. If you find it useful, consider supporting its development!</p>
+
   <a href="https://ko-fi.com/yougo" target="_blank">
     <img src="./assets/images/ko-fi.png" alt="Support me on Ko-fi" height="40">
   </a>
-  &nbsp;&nbsp;&nbsp;
+  
+  <br>
+  
   <a href="https://youtube-no-translation.vercel.app/?donate=crypto" target="_blank">
-    <img src="https://img.shields.io/badge/Donate-Cryptocurrency-8256D0?style=for-the-badge&logo=bitcoin&logoColor=white" alt="Donate Cryptocurrency" height="40">
+    <img src="https://img.shields.io/badge/Donate-Cryptocurrency-8256D0?style=for-the-badge&logo=bitcoin&logoColor=white" alt="Donate Cryptocurrency" height="30">
   </a>
 </div>
 
 ###
 
 <div align="center">
-  <h1>License</h1>
+  <h2>License</h2>
   This project is licensed under the <a href="LICENSE">GNU Affero General Public License v3.0</a>.
   <br>
   Any reuse, modification or distribution of this code must credit the original author.
@@ -68,7 +69,7 @@ This extension is completely free, ad-free, and maintained in my spare time. If 
 ###
 
 <div align="center">
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" height="20" alt="typescript logo" title="typescript logo" />
-  <img src="https://cdn.simpleicons.org/tailwindcss/06B6D4" height="20" alt="tailwindcss logo" title="tailwindcss logo" />
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" height="20" alt="html5 logo"  />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" height="30" alt="typescript logo" title="typescript logo" />
+  <img src="https://cdn.simpleicons.org/tailwindcss/06B6D4" height="30" alt="tailwindcss logo" title="tailwindcss logo" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" height="30" alt="html5 logo"  />
 </div>
