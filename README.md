@@ -41,50 +41,18 @@
 
 ###
 
+<h1 align="center"> Support This Project </h1>
+
+This extension is completely free, ad-free, and maintained in my spare time. If you find it useful, consider supporting its development!
+
 <div align="center">
-  <h1>Support me</h1>
-  <p>This add-on is free to use and does not contain any advertising. It is maintained on my free time. If you want to, you can support its development.</p>
-  <br>
-  <p>Support me by donating on KO-FI </p>
   <a href="https://ko-fi.com/yougo" target="_blank">
-    <img src="./assets/images/ko-fi.png" alt="Support me on Ko-fi" width="300">
+    <img src="./assets/images/ko-fi.png" alt="Support me on Ko-fi" height="40">
   </a>
-  <br>
-<p>Support me by donating through cryptocurrency:</p>
-<div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <img src="./assets/images/QR/btc_adress.png" width="150"/>
-        <br />
-        <strong>BTC</strong>
-        <br />
-        <code>bc1qcwx8a7d05sm7dhc2hrueppey0a0cn66zkez6lq</code>
-      </td>
-      <td align="center">
-        <img src="./assets/images/QR/eth_adress.png" width="150"/>
-        <br />
-        <strong>ETH</strong>
-        <br />
-        <code>0x4e452cBAAb8D5A0E9bB2eE36dcad051a7d6fD063</code>
-      </td>
-      <td align="center">
-        <img src="./assets/images/QR/bat-eth_adress.png" width="150"/>
-        <br />
-        <strong>BAT (ETH)</strong>
-        <br />
-        <code>0x4e452cBAAb8D5A0E9bB2eE36dcad051a7d6fD063</code>
-      </td>
-      <td align="center">
-        <img src="./assets/images/QR/ltc_adress.png" width="150"/>
-        <br />
-        <strong>LTC</strong>
-        <br />
-        <code>Li9Fsrr335SyCe5JfR8cxgse6kb6fSBBKb</code>
-      </td>
-    </tr>
-  </table>
-</div>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://youtube-no-translation.vercel.app/?donate=crypto" target="_blank">
+    <img src="https://img.shields.io/badge/Donate-Cryptocurrency-8256D0?style=for-the-badge&logo=bitcoin&logoColor=white" alt="Donate Cryptocurrency" height="40">
+  </a>
 </div>
 
 ###
