@@ -24,8 +24,8 @@
 
 ###
 
-<div align="center">
-  <h2>Features :</h2>
+<div>
+  <h2 align="center">Features :</h2>
   
   - **Video Titles**: Keep titles in their original language
   - **Audio Tracks**: Always use the original audio track
