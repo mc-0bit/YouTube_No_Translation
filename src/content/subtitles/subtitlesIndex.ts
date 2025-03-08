@@ -7,9 +7,22 @@
  * This program is distributed without any warranty; see the license for details.
  */
 
+async function syncSubtitlesLanguagePreference() {
+    try {
+        const result = await browser.storage.local.get('subtitlesLanguage');
+        if (result.subtitlesLanguage && typeof result.subtitlesLanguage === 'string') {
+            localStorage.setItem('subtitlesLanguage', result.subtitlesLanguage);
+            //subtitlesLog(`Synced subtitle language preference from extension storage: ${result.subtitlesLanguage}`);
+        }
+    } catch (error) {
+        subtitlesLog('Error syncing subtitle language preference:', error);
+    }
+}
 
+// Call this function during initialization
 async function handleSubtitlesTranslation() {   
-    subtitlesLog('Initializing subtitles translation prevention');   
+    subtitlesLog('Initializing subtitles translation prevention');
+    await syncSubtitlesLanguagePreference(); // Sync language preference
     const script = document.createElement('script');
     script.src = browser.runtime.getURL('dist/content/subtitles/subtitlesScript.js');
     document.documentElement.appendChild(script);
