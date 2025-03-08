@@ -56,7 +56,6 @@
                 const base64Part = currentTrack.id.split(';')[1];
                 const decoded = atob(base64Part);
                 if (decoded.includes('original')) {
-                    // Current track is already original, no need to change
                     audioLog('Audio track is already original');
                     return true;
                 }
@@ -82,7 +81,7 @@
             }
             return false; // No original track found
         } catch (error) {
-            audioLog('Error:', error);
+            audioLog(`%c${error.name}: ${error.message}`, 'color: #F44336');
             return false;
         }
     }
