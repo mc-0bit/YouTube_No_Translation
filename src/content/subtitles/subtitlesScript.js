@@ -7,6 +7,21 @@
  * This program is distributed without any warranty; see the license for details.
 */
 
+/**
+ * Handles YouTube's subtitles selection to force original language
+ * 
+ * YouTube provides different types of subtitle tracks:
+ * - ASR (Automatic Speech Recognition) tracks: Always in original video language
+ * - Manual tracks: Can be original or translated
+ * - Translated tracks: Generated from manual tracks
+ * 
+ * Strategy:
+ * 1. Find ASR track to determine original video language
+ * 2. Look for manual track in same language
+ * 3. Apply original language track if found
+ */
+
+
 (() => {
     const LOG_PREFIX = '[YNT]';
     const LOG_STYLES = {
@@ -25,47 +40,61 @@
 
     const subtitlesLog = createLogger(LOG_STYLES.SUBTITLES);
 
-    function setOriginalSubtitles() {
+    function setPreferredSubtitles() {
         const player = document.getElementById('movie_player');
         if (!player) return false;
 
-        try {
-            // Get current track - if no track, subtitles are disabled
-            const currentTrack = player.getOption('captions', 'track');
-            if (!currentTrack) return true; // No captions enabled, nothing to do
+        // Get language preference from localStorage
+        const subtitlesLanguage = localStorage.getItem('subtitlesLanguage') || 'original';
+        subtitlesLog(`Using preferred language: ${subtitlesLanguage}`);
 
+        try {
             // Get video response to access caption tracks
             const response = player.getPlayerResponse();
             const captionTracks = response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
             if (!captionTracks) return false;
 
-            // Find ASR track to determine original language
-            const asrTrack = captionTracks.find(track => track.kind === 'asr');
-            if (!asrTrack) return false;
+            // If preference is "original", look for original language
+            if (subtitlesLanguage === 'original') {
+                // Find ASR track to determine original language
+                const asrTrack = captionTracks.find(track => track.kind === 'asr');
+                if (!asrTrack) {
+                    subtitlesLog('Cannot determine original language, disabling subtitles');
+                    player.setOption('captions', 'track', {});
+                    return true;
+                }
 
-            // Find manual track in original language
-            const originalTrack = captionTracks.find(track => 
-                track.languageCode === asrTrack.languageCode && !track.kind
+                // Find manual track in original language
+                const originalTrack = captionTracks.find(track => 
+                    track.languageCode === asrTrack.languageCode && !track.kind
+                );
+
+                // If no manual track in original language exists
+                if (!originalTrack) {
+                    subtitlesLog('No manual track in original language, disabling subtitles');
+                    player.setOption('captions', 'track', {});
+                    return true;
+                }
+
+                subtitlesLog(`Setting subtitles to original language: "${originalTrack.name.simpleText}"`);
+                player.setOption('captions', 'track', originalTrack);
+                return true;
+            } 
+            
+            // For specific language preference, search for matching track
+            const languageTrack = captionTracks.find(track => 
+                track.languageCode === subtitlesLanguage && !track.kind
             );
-
-            // If no manual track in original language exists
-            if (!originalTrack) {
-                subtitlesLog('No manual track in original language, disabling subtitles');
-                player.setOption('captions', 'track', {}); // Disable subtitles
+            
+            if (languageTrack) {
+                subtitlesLog(`Setting subtitles to selected language: "${languageTrack.name.simpleText}"`);
+                player.setOption('captions', 'track', languageTrack);
+                return true;
+            } else {
+                subtitlesLog(`Selected language "${subtitlesLanguage}" not available, disabling subtitles`);
+                player.setOption('captions', 'track', {});
                 return true;
             }
-
-            // If current track is already the original manual track, do nothing
-            if (currentTrack.languageCode === asrTrack.languageCode && !currentTrack.kind) {
-                subtitlesLog(`Subtitles are already in original language: "${currentTrack.languageName}"`);
-                return true;
-            }
-
-            // Apply original manual track
-            subtitlesLog(`Setting subtitles from "${currentTrack.languageName}" to original language "${originalTrack.name.simpleText}"`);
-            player.setOption('captions', 'track', originalTrack);
-            return true;
-
         } catch (error) {
             subtitlesLog('Error:', error);
             return false;
@@ -84,20 +113,20 @@
             processingVideoId = videoId;
             subtitlesLog('Video data changed, checking subtitles...');
             
-            const success = setOriginalSubtitles();
+            const success = setPreferredSubtitles();
             if (success) {
                 processingVideoId = null;
             } else if (!initialSetupDone) {
                 initialSetupDone = true;
                 setTimeout(() => {
-                    setOriginalSubtitles();
+                    setPreferredSubtitles();
                     processingVideoId = null;
                 }, 200);
             }
         });
 
         // Initial setup
-        setOriginalSubtitles();
+        setPreferredSubtitles();
         initialSetupDone = true;
     }
 })();

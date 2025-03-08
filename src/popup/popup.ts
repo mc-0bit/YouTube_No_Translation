@@ -11,6 +11,7 @@ const titleToggle = document.getElementById('titleTranslation') as HTMLInputElem
 const audioToggle = document.getElementById('audioTranslation') as HTMLInputElement;
 const descriptionToggle = document.getElementById('descriptionTranslation') as HTMLInputElement;
 const subtitlesToggle = document.getElementById('subtitlesTranslation') as HTMLInputElement;
+const subtitlesLanguageSelect = document.getElementById('subtitlesLanguage') as HTMLSelectElement;
 
 // Initialize toggle states from storage
 document.addEventListener('DOMContentLoaded', async () => {
@@ -67,6 +68,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Load error:', error);
     }
+
+    // Load subtitles language
+    browser.storage.local.get('subtitlesLanguage').then((result) => {
+        if (result.subtitlesLanguage && typeof result.subtitlesLanguage === 'string') {
+            subtitlesLanguageSelect.value = result.subtitlesLanguage;
+        }
+    });
 });
 
 // Handle title toggle changes
@@ -192,5 +200,27 @@ subtitlesToggle.addEventListener('change', async () => {
         });
     } catch (error) {
         console.error('Save error:', error);
+    }
+});
+
+// Handle subtitles language selection changes
+subtitlesLanguageSelect.addEventListener('change', async () => {
+    const selectedLanguage = subtitlesLanguageSelect.value;
+    
+    // Save language preference
+    try {
+        await browser.storage.local.set({ subtitlesLanguage: selectedLanguage });
+        console.log('Subtitles language saved:', selectedLanguage);
+        
+        // Inform active tab about the change
+        const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+        if (tabs[0]?.id) {
+            await browser.tabs.sendMessage(tabs[0].id, {
+                feature: 'subtitlesLanguage',  // Remove 'action' field to match listener
+                language: selectedLanguage
+            });
+        }
+    } catch (error) {
+        console.error('Failed to save subtitles language:', error);
     }
 });

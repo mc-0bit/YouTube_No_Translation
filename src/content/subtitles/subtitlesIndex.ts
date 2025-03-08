@@ -7,19 +7,6 @@
  * This program is distributed without any warranty; see the license for details.
  */
 
-/**
- * Handles YouTube's subtitles selection to force original language
- * 
- * YouTube provides different types of subtitle tracks:
- * - ASR (Automatic Speech Recognition) tracks: Always in original video language
- * - Manual tracks: Can be original or translated
- * - Translated tracks: Generated from manual tracks
- * 
- * Strategy:
- * 1. Find ASR track to determine original video language
- * 2. Look for manual track in same language
- * 3. Apply original language track if found
- */
 
 async function handleSubtitlesTranslation() {   
     subtitlesLog('Initializing subtitles translation prevention');   
@@ -27,3 +14,21 @@ async function handleSubtitlesTranslation() {
     script.src = browser.runtime.getURL('dist/content/subtitles/subtitlesScript.js');
     document.documentElement.appendChild(script);
 }
+
+// Function to handle subtitle language selection
+browser.runtime.onMessage.addListener((message: unknown) => {
+    subtitlesLog('Received message:', message); // Add debug log
+    
+    if (typeof message === 'object' && message !== null &&
+        'feature' in message && message.feature === 'subtitlesLanguage' &&
+        'language' in message && typeof message.language === 'string') {
+        
+        // Store preference directly without JSON.stringify
+        subtitlesLog(`Setting subtitle language preference to: ${message.language}`);
+        localStorage.setItem('subtitlesLanguage', message.language);
+        
+        // Reapply subtitles if a video is currently playing
+        handleSubtitlesTranslation();
+    }
+    return true;
+});
