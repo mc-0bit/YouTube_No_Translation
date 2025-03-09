@@ -148,7 +148,7 @@ async function refreshMainTitle(): Promise<void> {
                     originalTitle = playerTitle;
                 }
             } catch (error) {
-                mainTitleLog('Failed to get title from player:', error);
+                mainTitleErrorLog('Failed to get title from player:', error);
             }
 
             // Second try: Fallback to oembed API
@@ -177,7 +177,7 @@ async function refreshMainTitle(): Promise<void> {
                 updateMainTitleElement(mainTitle, originalTitle, videoId);
                 updatePageTitle(originalTitle);
             } catch (error) {
-                mainTitleLog(`Failed to update main title:`, error);
+                mainTitleErrorLog(`Failed to update main title:`, error);
             }
         }
     }

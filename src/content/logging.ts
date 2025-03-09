@@ -42,6 +42,9 @@ const LOG_STYLES = {
     }
 } as const;
 
+// Error color for all error logs
+const ERROR_COLOR = '#F44336';  // Red
+
 function createLogger(category: { context: string; color: string }) {
     return (message: string, ...args: any[]) => {
         console.log(
@@ -52,10 +55,36 @@ function createLogger(category: { context: string; color: string }) {
     };
 }
 
+// Create error logger function
+function createErrorLogger(category: { context: string; color: string }) {
+    return (message: string, ...args: any[]) => {
+        console.log(
+            `%c${LOG_PREFIX}${category.context} %c${message}`,
+            `color: ${category.color}`,  // Keep category color for prefix
+            `color: ${ERROR_COLOR}`,     // Red color for error message
+            ...args
+        );
+    };
+}
+
+// Create standard loggers
 const coreLog = createLogger(LOG_STYLES.CORE);
+const coreErrorLog = createErrorLogger(LOG_STYLES.CORE);
+
 const titlesLog = createLogger(LOG_STYLES.TITLES);
+const titlesErrorLog = createErrorLogger(LOG_STYLES.TITLES);
+
 const mainTitleLog = createLogger(LOG_STYLES.MAIN_TITLE);
+const mainTitleErrorLog = createErrorLogger(LOG_STYLES.MAIN_TITLE);
+
 const browsingTitlesLog = createLogger(LOG_STYLES.BROWSING_TITLES);
+const browsingTitlesErrorLog = createErrorLogger(LOG_STYLES.BROWSING_TITLES);
+
 const audioLog = createLogger(LOG_STYLES.AUDIO);
+const audioErrorLog = createErrorLogger(LOG_STYLES.AUDIO);
+
 const descriptionLog = createLogger(LOG_STYLES.DESCRIPTION);
+const descriptionErrorLog = createErrorLogger(LOG_STYLES.DESCRIPTION);
+
 const subtitlesLog = createLogger(LOG_STYLES.SUBTITLES);
+const subtitlesErrorLog = createErrorLogger(LOG_STYLES.SUBTITLES);

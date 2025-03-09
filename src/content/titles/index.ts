@@ -74,7 +74,7 @@ class TitleCache {
 
             return title;
         } catch (error) {
-            titlesLog(`Failed to fetch title: ${error}`);
+            titlesErrorLog(`Failed to fetch title: ${error}`);
             return '';
         }
     }

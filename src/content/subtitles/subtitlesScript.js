@@ -38,7 +38,23 @@
         };
     }
 
+    // Create error logger function
+    const ERROR_COLOR = '#F44336';  // Red
+
+    function createErrorLogger(category) {
+        return (message, ...args) => {
+            console.log(
+                `%c${LOG_PREFIX}${category.context} %c${message}`,
+                `color: ${category.color}`,  // Keep category color for prefix
+                `color: ${ERROR_COLOR}`,     // Red color for error message
+                ...args
+            );
+        };
+    }
+
     const subtitlesLog = createLogger(LOG_STYLES.SUBTITLES);
+    const subtitlesErrorLog = createErrorLogger(LOG_STYLES.SUBTITLES);
+
 
     function setPreferredSubtitles() {
         const player = document.getElementById('movie_player');
@@ -96,7 +112,7 @@
                 return true;
             }
         } catch (error) {
-            subtitlesLog('Error:', error);
+            subtitlesErrorLog(`${error.name}: ${error.message}`);
             return false;
         }
     }

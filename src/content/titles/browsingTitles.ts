@@ -134,12 +134,12 @@ const browsingTitles = document.querySelectorAll('#video-title') as NodeListOf<H
                         }
                         //browsingTitlesLog('Title is translated: ', videoId);
                     } catch (error) {
-                        //browsingTitlesLog('Failed to get original title for comparison:', error);
+                        //browsingTitlesErrorLog('Failed to get original title for comparison:', error);
                     }                 
                     try {
                         updateBrowsingTitleElement(titleElement, originalTitle, videoId);
                     } catch (error) {
-                        browsingTitlesLog(`Failed to update recommended title:`, error);
+                        browsingTitlesErrorLog(`Failed to update recommended title:`, error);
                     }
                 }
             }

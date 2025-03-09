@@ -28,7 +28,22 @@
         };
     }
 
+    // Create error logger function
+    const ERROR_COLOR = '#F44336';  // Red
+
+    function createErrorLogger(category) {
+        return (message, ...args) => {
+            console.log(
+                `%c${LOG_PREFIX}${category.context} %c${message}`,
+                `color: ${category.color}`,  // Keep category color for prefix
+                `color: ${ERROR_COLOR}`,     // Red color for error message
+                ...args
+            );
+        };
+    }
+
     const audioLog = createLogger(LOG_STYLES.AUDIO);
+    const audioErrorLog = createErrorLogger(LOG_STYLES.AUDIO);
 
     const languageNames = {
         'en': 'English',
@@ -81,7 +96,7 @@
             }
             return false; // No original track found
         } catch (error) {
-            audioLog(`%c${error.name}: ${error.message}`, 'color: #F44336');
+            audioErrorLog(`${error.name}: ${error.message}`);
             return false;
         }
     }

@@ -31,12 +31,27 @@
         };
     }
 
+    // Create error logger function
+    const ERROR_COLOR = '#F44336';  // Red
+
+    function createErrorLogger(category) {
+        return (message, ...args) => {
+            console.log(
+                `%c${LOG_PREFIX}${category.context} %c${message}`,
+                `color: ${category.color}`,  // Keep category color for prefix
+                `color: ${ERROR_COLOR}`,     // Red color for error message
+                ...args
+            );
+        };
+    }
+
     const descriptionLog = createLogger(LOG_STYLES.DESCRIPTION);
+    const descriptionErrorLog = createErrorLogger(LOG_STYLES.DESCRIPTION);
     
     // Get player and video response
     const player = document.getElementById('movie_player');
     if (!player) {
-        descriptionLog('Player not found');
+        descriptionErrorLog('Player not found');
         window.dispatchEvent(new CustomEvent('ynt-description-data', {
             detail: { description: null }
         }));
@@ -52,7 +67,7 @@
             detail: { description }
         }));
     } else {
-        descriptionLog('No description found in player response');
+        descriptionErrorLog('No description found in player response');
         window.dispatchEvent(new CustomEvent('ynt-description-data', {
             detail: { description: null }
         }));

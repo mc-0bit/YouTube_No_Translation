@@ -25,7 +25,22 @@
         };
     }
 
+    // Create error logger function
+    const ERROR_COLOR = '#F44336';  // Red
+
+    function createErrorLogger(category) {
+        return (message, ...args) => {
+            console.log(
+                `%c${LOG_PREFIX}${category.context} %c${message}`,
+                `color: ${category.color}`,  // Keep category color for prefix
+                `color: ${ERROR_COLOR}`,     // Red color for error message
+                ...args
+            );
+        };
+    }
+
     const mainTitleLog = createLogger(LOG_STYLES.MAIN_TITLE);
+    const mainTitleErrorLog = createErrorLogger(LOG_STYLES.MAIN_TITLE);
 
     function getOriginalTitle() {
         const player = document.getElementById('movie_player');
@@ -57,7 +72,7 @@
                 }));
             }
         } catch (error) {
-            mainTitleLog('Error getting title:', error);
+            mainTitleErrorLog(`${error.name}: ${error.message}`);
             window.dispatchEvent(new CustomEvent('ynt-title-data', {
                 detail: { title: null }
             }));
