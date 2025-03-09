@@ -39,7 +39,7 @@ function setupAudioObserver() {
 function setupDescriptionObserver() {
     // Observer for video changes via URL
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        descriptionLog('Setting up video-id observer');
+        //descriptionLog('Setting up video-id observer');
         const observer = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
@@ -68,7 +68,7 @@ function setupDescriptionObserver() {
 
     // Observer for description expansion/collapse
     waitForElement('#description-inline-expander').then((descriptionElement) => {
-        descriptionLog('Setting up expand/collapse observer');
+        //descriptionLog('Setting up expand/collapse observer');
         const observer = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'is-expanded') {
@@ -103,6 +103,80 @@ function setupDescriptionObserver() {
     });
 }
 
+// Description content observer to prevent YouTube auto-translation
+let descriptionContentObserver: MutationObserver | null = null;
+
+function setupDescriptionContentObserver() {
+    // Clean up existing observer if any
+    cleanupDescriptionContentObserver();
+    
+    const descriptionElement = document.querySelector('#description-inline-expander');
+    if (!descriptionElement) {
+        descriptionLog('Description element not found, skipping content observer setup');
+        return;
+    }
+    
+    // Get cached description
+    const cachedDescription = descriptionCache.getCurrentDescription();
+    if (!cachedDescription) {
+        descriptionLog('No cached description available, skipping content observer setup');
+        return;
+    }
+    
+    //descriptionLog('Setting up description content observer');
+    
+    descriptionContentObserver = new MutationObserver((mutations) => {
+        // Skip if we don't have a cached description to compare with
+        if (!cachedDescription) return;
+        
+        // Get current description text
+        const currentText = descriptionElement.textContent?.trim();
+        
+        // Skip if they're the same (ignoring whitespace differences)
+        if (!currentText || normalizeText(currentText) === normalizeText(cachedDescription)) return;
+        
+        descriptionLog('Description content changed by YouTube, restoring original');
+        
+        // Temporarily disconnect to prevent infinite loop
+        descriptionContentObserver?.disconnect();
+        
+        // Update with original description
+        updateDescriptionElement(descriptionElement as HTMLElement, cachedDescription);
+        
+        // Reconnect observer
+        if (descriptionContentObserver) {
+            descriptionContentObserver.observe(descriptionElement, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+        }
+    });
+    
+    // Start observing
+    if (descriptionContentObserver) {
+        descriptionContentObserver.observe(descriptionElement, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
+    
+    //descriptionLog('Description content observer setup completed');
+}
+
+function cleanupDescriptionContentObserver() {
+    if (descriptionContentObserver) {
+        //descriptionLog('Cleaning up description content observer');
+        descriptionContentObserver.disconnect();
+        descriptionContentObserver = null;
+    }
+}
+
+// Helper function to normalize text for comparison
+function normalizeText(text: string): string {
+    return text.replace(/\s+/g, ' ').trim();
+}
 
 
 
@@ -308,6 +382,7 @@ function handleUrlChange() {
     //playlistObserver = null;
     cleanupmainTitleContentObserver();
     cleanupPageTitleObserver();
+    cleanupDescriptionContentObserver()
     
     
     browsingTitlesLog('Observers cleaned up');

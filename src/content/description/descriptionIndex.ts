@@ -133,6 +133,9 @@ function updateDescriptionElement(element: HTMLElement, description: string): vo
     });
     
     descriptionCache.setElement(element, description);
+    
+    // Set up content observer to prevent re-translation
+    setupDescriptionContentObserver();
 }
 
 async function refreshDescription(): Promise<void> {
