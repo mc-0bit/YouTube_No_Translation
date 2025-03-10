@@ -8,6 +8,14 @@
 */
 
 /**
+ * NOTE ON SCRIPT INJECTION:
+ * We use script injection to access YouTube's player API directly from the page context.
+ * This is necessary because the player API is not accessible from the content script context.
+ * As you can see below, the injected code only uses YouTube's official player API methods.
+ */
+
+
+/**
  * Handles YouTube's subtitles selection to force original language
  * 
  * YouTube provides different types of subtitle tracks:

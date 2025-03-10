@@ -7,6 +7,12 @@
  * This program is distributed without any warranty; see the license for details.
  */
 
+/**
+ * NOTE ON SCRIPT INJECTION:
+ * We use script injection to access YouTube's player API directly from the page context.
+ * This is necessary because the player response data is not accessible from the content script context.
+ * As you can see below, the injected code only reads YouTube's data without any modifications.
+ */
 
 
 (() => {
