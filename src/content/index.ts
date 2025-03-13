@@ -33,14 +33,7 @@ async function initializeFeatures() {
     if (isYoutubeNoCookie()) {
         coreLog('Detected youtube-nocookie.com domain, using special initialization');
         
-        // For embedded videos, only handle audio and subtitles features
-        if (currentSettings?.audioTranslation) {
-            setupNoCookieObserver();
-        }
-        
-        if (currentSettings?.subtitlesTranslation) {
-            setupNoCookieObserver();
-        }
+        setupNoCookieObserver();
         
         return; // Skip standard initialization for regular YouTube
     }
