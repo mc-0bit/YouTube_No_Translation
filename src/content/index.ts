@@ -19,10 +19,31 @@ async function fetchSettings() {
     currentSettings = data.settings as ExtensionSettings;
 };
 
+// Helper function to detect if we're on youtube-nocookie.com domain
+function isYoutubeNoCookie(): boolean {
+    return window.location.hostname.includes('youtube-nocookie.com');
+}
+
 
 // Initialize features based on settings
 async function initializeFeatures() {
     await fetchSettings();
+
+    // Special handling for youtube-nocookie.com
+    if (isYoutubeNoCookie()) {
+        coreLog('Detected youtube-nocookie.com domain, using special initialization');
+        
+        // For embedded videos, only handle audio and subtitles features
+        if (currentSettings?.audioTranslation) {
+            setupNoCookieObserver();
+        }
+        
+        if (currentSettings?.subtitlesTranslation) {
+            setupNoCookieObserver();
+        }
+        
+        return; // Skip standard initialization for regular YouTube
+    }
     
     if (currentSettings?.titleTranslation) {
         initializeTitleTranslation();

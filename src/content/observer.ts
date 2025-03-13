@@ -439,3 +439,81 @@ function handleUrlChange() {
             break;
     }
 }
+
+
+// Special observer setup for youtube-nocookie.com embedded videos
+function setupNoCookieObserver() {
+    coreLog('Setting up youtube-nocookie observer');
+    
+    // Create a flag to track if we've already set up the play event listener
+    let playEventSetup = false;
+    let videoObserver: MutationObserver | null = null;
+    
+    // Function to set up the play event listener on video element
+    const setupPlayEventListener = (videoElement: HTMLVideoElement) => {
+        // Avoid setting up the listener multiple times
+        if (playEventSetup || videoElement.dataset.yntListenerSetup === 'true') return;
+        
+        videoElement.dataset.yntListenerSetup = 'true';
+        playEventSetup = true;
+        
+        // Set up one-time play event listener
+        videoElement.addEventListener('play', () => {
+            coreLog('Video play detected on youtube-nocookie, initializing features');
+            
+            // Short timeout to ensure player API is fully ready after play starts
+            setTimeout(() => {
+                if (currentSettings?.audioTranslation) {
+                    handleAudioTranslation();
+                }
+                
+                if (currentSettings?.subtitlesTranslation) {
+                    handleSubtitlesTranslation();
+                }
+                
+                // Clean up the observer since we no longer need it
+                if (videoObserver) {
+                    videoObserver.disconnect();
+                    videoObserver = null;
+                }
+            }, 1000);
+        }, { once: true }); // Only trigger once
+    };
+    
+    // Check if video element already exists
+    const existingVideo = document.querySelector('video');
+    if (existingVideo) {
+        setupPlayEventListener(existingVideo as HTMLVideoElement);
+        return; // No need for observer if video already exists
+    }
+    
+    // Create mutation observer to watch for video element being added to the DOM
+    videoObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                // Look for video element in added nodes and their children
+                for (const node of mutation.addedNodes) {
+                    if (node instanceof HTMLElement) {
+                        // Check if node is video or contains video
+                        if (node.tagName === 'VIDEO') {
+                            setupPlayEventListener(node as HTMLVideoElement);
+                            return;
+                        } else {
+                            const videoElement = node.querySelector('video');
+                            if (videoElement) {
+                                setupPlayEventListener(videoElement);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Observe the entire document for video element
+    videoObserver.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+    });
+}

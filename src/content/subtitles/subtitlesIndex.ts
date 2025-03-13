@@ -30,7 +30,7 @@ async function handleSubtitlesTranslation() {
 
 // Function to handle subtitle language selection
 browser.runtime.onMessage.addListener((message: unknown) => {
-    subtitlesLog('Received message:', message); // Add debug log
+    coreLog('Received message:', message); // Add debug log
     
     if (typeof message === 'object' && message !== null &&
         'feature' in message && message.feature === 'subtitlesLanguage' &&

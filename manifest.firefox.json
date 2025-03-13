@@ -22,12 +22,16 @@
   ],
 
   "host_permissions": [
-    "*://*.youtube.com/*"
+    "*://*.youtube.com/*",
+    "*://*.youtube-nocookie.com/*"
   ],
 
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*"],
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://*.youtube-nocookie.com/*"
+      ],
       "js": ["dist/browser-polyfill.js", "dist/content/content.js"]
     }
   ],
@@ -51,6 +55,9 @@
           "dist/content/subtitles/subtitlesScript.js",
           "dist/content/titles/mainTitleScript.js"
       ],
-      "matches": ["*://*.youtube.com/*"]
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://*.youtube-nocookie.com/*"
+      ]
   }]
 }
