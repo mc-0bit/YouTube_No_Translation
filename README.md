@@ -30,7 +30,7 @@
   - **Video Titles**: Keep titles in their original language
   - **Audio Tracks**: Always use the original audio track
   - **Descriptions**: Prevent description translations
-  - **Subtitles**: Force original language subtitles or disable auto-generated ones
+  - **Subtitles**: Set your preferred subtitle language, if unavailable, subtitles are disabled (auto generated ones are ignored)
 </div>
 
 ###
