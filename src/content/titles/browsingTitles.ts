@@ -43,10 +43,12 @@ function updateBrowsingTitleElement(element: HTMLElement, title: string, videoId
         const style = document.createElement('style');
         style.id = 'ynt-style';
         style.textContent = `
-            #video-title[ynt] > span {
-                display: none;
+            /* Hide all direct children of video titles with ynt attribute (basically hide the translated title) */
+            #video-title[ynt] > * {
+                display: none !important;
             }
 
+            /* Show the untranslated title using the title attribute */
             #video-title[ynt]::after {
                 content: attr(title);
                 font-size: var(--ytd-tab-system-font-size-body);
@@ -129,7 +131,8 @@ const browsingTitles = document.querySelectorAll('#video-title') as NodeListOf<H
                             currentTitle && titleElement.setAttribute('title', currentTitle);
                             continue;
                         }
-                        if (normalizeTitle(titleElement.getAttribute('title')) === normalizeTitle(originalTitle)) {
+                        if (normalizeTitle(titleElement.getAttribute('title')) === normalizeTitle(originalTitle) && 
+                            titleElement.hasAttribute('ynt')) {
                             continue;
                         }
                         //browsingTitlesLog('Title is translated: ', videoId);
