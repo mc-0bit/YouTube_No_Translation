@@ -112,7 +112,22 @@ const browsingTitles = document.querySelectorAll('#video-title') as NodeListOf<H
             //browsingTitlesLog('Processing video title:', titleElement.textContent);
             const videoUrl = titleElement.closest('a')?.href;
             if (videoUrl) {
-                const videoId = new URLSearchParams(new URL(videoUrl).search).get('v');
+                                let videoId: string | null = null;
+                try {
+                    const url = new URL(videoUrl);
+
+                    if (url.pathname.startsWith('/watch')) {
+                        // Classic video
+                        videoId = new URLSearchParams(url.search).get('v');
+                    } else if (url.pathname.startsWith('/shorts/')) {
+                        // Short video - extract ID from path
+                        const pathParts = url.pathname.split('/');
+                        videoId = pathParts.length > 2 ? pathParts[2] : null;
+                    }
+                } catch (urlError) {
+                    browsingTitlesErrorLog('Failed to parse video URL:', urlError);
+                    continue;
+                }
                 if (videoId) {
                     // --- Check if title is not translated
                     const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
@@ -146,6 +161,83 @@ const browsingTitles = document.querySelectorAll('#video-title') as NodeListOf<H
                     }
                 }
             }
+        }
+    }
+}
+
+
+
+// Handle alternative shorts format with different HTML structure
+async function refreshShortsAlternativeFormat(): Promise<void> {
+    // Target the specific structure used for alternative shorts display
+    const shortsLinks = document.querySelectorAll('.shortsLockupViewModelHostEndpoint') as NodeListOf<HTMLAnchorElement>;
+    
+    for (const shortLink of shortsLinks) {
+        try {
+            // Check if we've already processed this element correctly
+            if (shortLink.hasAttribute('ynt')) {
+                const currentTitle = shortLink.querySelector('span')?.textContent;
+                const storedTitle = shortLink.getAttribute('title');
+                
+                // If the current displayed title and stored title attribute match, no need to update
+                if (currentTitle && storedTitle && 
+                    normalizeTitle(currentTitle) === normalizeTitle(storedTitle)) {
+                    continue;
+                }
+            }
+            
+            // Extract video ID from href
+            const href = shortLink.getAttribute('href');
+            if (!href || !href.includes('/shorts/')) {
+                continue;
+            }
+            
+            const videoId = href.split('/shorts/')[1]?.split('?')[0];
+            if (!videoId) {
+                continue;
+            }
+            
+            // Find the title span element
+            const titleSpan = shortLink.querySelector('span');
+            if (!titleSpan) {
+                continue;
+            }
+            
+            // Get original title through API
+            const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
+            const originalTitle = await titleCache.getOriginalTitle(apiUrl);
+            const currentTitle = titleSpan.textContent;
+            
+            if (!originalTitle) {
+                browsingTitlesLog(`Failed to get original title from API for short: ${videoId}, keeping current title`);
+                continue;
+            }
+            
+            if (normalizeTitle(currentTitle) === normalizeTitle(originalTitle)) {
+                // Already showing correct title, no need to modify
+                titleCache.setElement(shortLink, originalTitle);
+                continue;
+            }
+            
+            // Update the title
+            browsingTitlesLog(
+                `Updated shorts title from: %c${normalizeTitle(currentTitle)}%c to: %c${normalizeTitle(originalTitle)}%c (short id: %c${videoId}%c)`,
+                'color: white',
+                'color: #fca5a5',
+                'color: white',
+                'color: #fca5a5',
+                'color: #4ade80',
+                'color: #fca5a5'
+            );
+            
+            // Set the original title
+            titleSpan.textContent = originalTitle;
+            shortLink.setAttribute('title', originalTitle);
+            shortLink.setAttribute('ynt', videoId);
+            titleCache.setElement(shortLink, originalTitle);
+            
+        } catch (error) {
+            browsingTitlesErrorLog('Error processing alternative shorts format:', error);
         }
     }
 }

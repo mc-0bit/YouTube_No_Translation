@@ -289,6 +289,7 @@ function setupBrowsingTitlesObserver() {
                     if (titles.length > 0) {
                         browsingTitlesLog('Search results mutation detected');
                         refreshBrowsingTitles();
+                        refreshShortsAlternativeFormat();
                         break;
                     }
                 }
@@ -407,6 +408,7 @@ function handleUrlChange() {
             waitForElement('#contents.ytd-section-list-renderer').then(() => {
                 browsingTitlesLog('Search results container found');
                 refreshBrowsingTitles();
+                refreshShortsAlternativeFormat();
             });
             break;
         case '/': // --- Home page
