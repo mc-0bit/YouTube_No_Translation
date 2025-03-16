@@ -29,7 +29,7 @@ function updateBrowsingTitleElement(element: HTMLElement, title: string, videoId
     cleanupBrowsingTitlesObserver(element);
     
     browsingTitlesLog(
-        `Updated title from : %c${normalizeTitle(element.textContent)}%c to : %c${normalizeTitle(title)}%c (video id : %c${videoId}%c)`,
+        `Updated title from : %c${normalizeText(element.textContent)}%c to : %c${normalizeText(title)}%c (video id : %c${videoId}%c)`,
         'color: white',    // --- currentTitle style
         'color: #fca5a5',      // --- reset color
         'color: white',    // --- originalTitle style
@@ -140,13 +140,13 @@ const browsingTitles = document.querySelectorAll('#video-title') as NodeListOf<H
                             currentTitle && titleElement.setAttribute('title', currentTitle);
                             continue;
                         }
-                        if (normalizeTitle(currentTitle) === normalizeTitle(originalTitle)) {
+                        if (normalizeText(currentTitle) === normalizeText(originalTitle)) {
                             //browsingTitlesLog('Title is not translated: ', videoId);
                             titleElement.removeAttribute('ynt');
                             currentTitle && titleElement.setAttribute('title', currentTitle);
                             continue;
                         }
-                        if (normalizeTitle(titleElement.getAttribute('title')) === normalizeTitle(originalTitle) && 
+                        if (normalizeText(titleElement.getAttribute('title')) === normalizeText(originalTitle) && 
                             titleElement.hasAttribute('ynt')) {
                             continue;
                         }
@@ -181,7 +181,7 @@ async function refreshShortsAlternativeFormat(): Promise<void> {
                 
                 // If the current displayed title and stored title attribute match, no need to update
                 if (currentTitle && storedTitle && 
-                    normalizeTitle(currentTitle) === normalizeTitle(storedTitle)) {
+                    normalizeText(currentTitle) === normalizeText(storedTitle)) {
                     continue;
                 }
             }
@@ -213,7 +213,7 @@ async function refreshShortsAlternativeFormat(): Promise<void> {
                 continue;
             }
             
-            if (normalizeTitle(currentTitle) === normalizeTitle(originalTitle)) {
+            if (normalizeText(currentTitle) === normalizeText(originalTitle)) {
                 // Already showing correct title, no need to modify
                 titleCache.setElement(shortLink, originalTitle);
                 continue;
@@ -221,7 +221,7 @@ async function refreshShortsAlternativeFormat(): Promise<void> {
             
             // Update the title
             browsingTitlesLog(
-                `Updated shorts title from: %c${normalizeTitle(currentTitle)}%c to: %c${normalizeTitle(originalTitle)}%c (short id: %c${videoId}%c)`,
+                `Updated shorts title from: %c${normalizeText(currentTitle)}%c to: %c${normalizeText(originalTitle)}%c (short id: %c${videoId}%c)`,
                 'color: white',
                 'color: #fca5a5',
                 'color: white',

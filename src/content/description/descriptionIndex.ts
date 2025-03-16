@@ -46,7 +46,7 @@ class DescriptionCache {
     }
 
     setElement(element: HTMLElement, description: string): void {
-        descriptionLog('Caching element with description');
+        //descriptionLog('Caching element with description');
         this.processedElements.set(element, description);
         this.currentVideoDescription = description;
     }
@@ -63,7 +63,7 @@ class DescriptionCache {
 const descriptionCache = new DescriptionCache();
 
 function updateDescriptionElement(element: HTMLElement, description: string): void {
-    descriptionLog('Updating element with description');
+    //descriptionLog('Updating element with description');
     
     // Find the text containers
     const attributedString = element.querySelector('yt-attributed-string');
@@ -146,3 +146,55 @@ async function refreshDescription(): Promise<void> {
     }
 }
 
+// Compare description text and determine if update is needed
+function compareDescription(element: HTMLElement): Promise<boolean> {
+    return new Promise(async (resolve) => {
+        // Get the cached description or fetch a new one
+        let description = descriptionCache.getCurrentDescription();
+        
+        if (!description) {
+            // Fetch description if not cached
+            description = await new Promise<string | null>((resolveDesc) => {
+                const handleDescription = (event: CustomEvent) => {
+                    window.removeEventListener('ynt-description-data', handleDescription as EventListener);
+                    resolveDesc(event.detail?.description || null);
+                };
+                window.addEventListener('ynt-description-data', handleDescription as EventListener);
+                const script = document.createElement('script');
+                script.src = browser.runtime.getURL('dist/content/description/descriptionScript.js');
+                document.documentElement.appendChild(script);
+            });
+        }
+        
+        // If no description available, we need to update (return false)
+        if (!description) {
+            resolve(false);
+            return;
+        }
+        
+        // Find the specific text container with the actual description content
+        const snippetAttributedString = element.querySelector('#attributed-snippet-text');
+        const coreAttributedString = element.querySelector('.yt-core-attributed-string--white-space-pre-wrap');
+        
+        if (!snippetAttributedString && !coreAttributedString) {
+            resolve(false); // Cannot compare, need to update
+            return;
+        }
+        
+        // Get the actual text content
+        const currentTextContainer = snippetAttributedString || coreAttributedString;
+        const currentText = currentTextContainer?.textContent || "";
+        
+        // Check if description is already in original language (using prefix matching)
+        const isOriginal = normalizeText(description, true).startsWith(normalizeText(currentText, true));
+        
+        if (isOriginal) {
+            descriptionLog('Description is already in original language, no update needed');
+        } else {
+            descriptionCache.setElement(element, description);
+        }
+        
+        // Return true if original (no update needed), false if update needed
+        resolve(isOriginal);
+    });
+}

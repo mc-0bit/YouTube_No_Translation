@@ -55,15 +55,33 @@ function waitForElement(selector: string, timeout = 7500): Promise<Element> {
     });
 }
 
-// Function to normalize titles before comparison
-function normalizeTitle(title: string | null | undefined): string {
-    if (title === null || title === undefined) {
+// Function to normalize texts before comparison
+function normalizeText(text: string | null | undefined, description = false): string {
+    if (text === null || text === undefined) {
         return '';
     }
     
-    return title
+    let normalizedText = text;
+    
+    if (description) {
+        // For descriptions, we need more aggressive normalization
+
+        normalizedText = normalizedText.replace(/https?:\/\/(?:www\.)?[^\s]+/g, '');
+        normalizedText = normalizedText.replace(/\/\s*@?[a-zA-Z0-9_-]+/g, '');
+        normalizedText = normalizedText.replace(/@[a-zA-Z0-9_-]+/g, '');
+        
+        normalizedText = normalizedText.replace(/[^\w\s]/g, ''); // Remove punctuation and special characters
+        normalizedText = normalizedText.replace(/\d+:\d+/g, '');  // Remove timestamps
+        normalizedText = normalizedText.toLowerCase();            // Convert to lowercase
+        
+        //remove all non-alphanumeric characters
+        normalizedText = normalizedText.replace(/[^a-z0-9]/g, '');
+    }
+    
+    return normalizedText
         .normalize('NFD')  // Decompose accented characters
         .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
         .replace(/\s+/g, ' ')  // Normalize spaces
+        .replace(/[\p{Emoji}]/gu, '')  // Remove all emojis
         .trim();  // Remove leading/trailing spaces
 }

@@ -36,11 +36,16 @@ function setupAudioObserver() {
 
 
 // DESCRIPTION OBSERVERS ------------------------------------------------------------
+let descriptionObserver: MutationObserver | null = null;
+let descriptionExpansionObserver: MutationObserver | null = null;
+let descriptionContentObserver: MutationObserver | null = null;
+
+
 function setupDescriptionObserver() {
     // Observer for video changes via URL
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        //descriptionLog('Setting up video-id observer');
-        const observer = new MutationObserver(async (mutations) => {
+        descriptionLog('Setting up video-id observer');
+        descriptionObserver = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
                     descriptionLog('Video ID changed!');
@@ -48,34 +53,51 @@ function setupDescriptionObserver() {
                     const descriptionElement = document.querySelector('#description-inline-expander');
                     if (descriptionElement) {
                         waitForElement('#movie_player').then(() => {
-                            refreshDescription();
+                            // Instead of calling refreshDescription directly
+                            // Call compareDescription first
+                            
+                            compareDescription(descriptionElement as HTMLElement).then(isOriginal => {
+                                if (!isOriginal) {
+                                    // Only refresh if not original                                 
+                                    refreshDescription();
+                                    descriptionExpandObserver();
+                                    setupDescriptionContentObserver();
+                                } else {
+                                    cleanupDescriptionObservers();
+                                }
+                            });
                         });
                     } else {
                         // If not found, wait for it
                         waitForElement('#description-inline-expander').then(() => {
                             refreshDescription();
+                            descriptionExpandObserver()
                         });
                     }
                 }
             }
         });
 
-        observer.observe(watchFlexy, {
+        descriptionObserver.observe(watchFlexy, {
             attributes: true,
             attributeFilter: ['video-id']
         });
     });
 
+
+}
+
+function descriptionExpandObserver() {
     // Observer for description expansion/collapse
     waitForElement('#description-inline-expander').then((descriptionElement) => {
         //descriptionLog('Setting up expand/collapse observer');
-        const observer = new MutationObserver(async (mutations) => {
+        descriptionExpansionObserver = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'is-expanded') {
                     descriptionLog('Description expanded/collapsed');
                     const cachedDescription = descriptionCache.getCurrentDescription();
                     if (cachedDescription) {
-                        descriptionLog('Using cached description');
+                        //descriptionLog('Using cached description');
                         updateDescriptionElement(descriptionElement as HTMLElement, cachedDescription);
                     } else {
                         const description = await new Promise<string | null>((resolve) => {
@@ -96,15 +118,12 @@ function setupDescriptionObserver() {
             }
         });
 
-        observer.observe(descriptionElement, {
+        descriptionExpansionObserver.observe(descriptionElement, {
             attributes: true,
             attributeFilter: ['is-expanded']
         });
     });
 }
-
-// Description content observer to prevent YouTube auto-translation
-let descriptionContentObserver: MutationObserver | null = null;
 
 function setupDescriptionContentObserver() {
     // Clean up existing observer if any
@@ -133,8 +152,8 @@ function setupDescriptionContentObserver() {
         const currentText = descriptionElement.textContent?.trim();
         
         // Skip if they're the same (ignoring whitespace differences)
-        if (!currentText || normalizeText(currentText) === normalizeText(cachedDescription)) return;
-        
+        if (!currentText || normalizeText(currentText, true) === normalizeText(cachedDescription, true)) return;
+
         descriptionLog('Description content changed by YouTube, restoring original');
         
         // Temporarily disconnect to prevent infinite loop
@@ -165,6 +184,7 @@ function setupDescriptionContentObserver() {
     //descriptionLog('Description content observer setup completed');
 }
 
+
 function cleanupDescriptionContentObserver() {
     if (descriptionContentObserver) {
         //descriptionLog('Cleaning up description content observer');
@@ -172,12 +192,15 @@ function cleanupDescriptionContentObserver() {
         descriptionContentObserver = null;
     }
 }
+function cleanupDescriptionObservers(): void {
+if (descriptionExpansionObserver) {
+        descriptionExpansionObserver.disconnect();
+        descriptionExpansionObserver = null;
+    }
+    // Clean up content observer
+    cleanupDescriptionContentObserver();
 
-// Helper function to normalize text for comparison
-function normalizeText(text: string): string {
-    return text.replace(/\s+/g, ' ').trim();
 }
-
 
 
 // MAIN TITLE OBSERVERS ---------------------------------------------
@@ -383,7 +406,7 @@ function handleUrlChange() {
     //playlistObserver = null;
     cleanupmainTitleContentObserver();
     cleanupPageTitleObserver();
-    cleanupDescriptionContentObserver()
+    cleanupDescriptionObservers();
     
     
     browsingTitlesLog('Observers cleaned up');
