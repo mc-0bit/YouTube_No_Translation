@@ -38,10 +38,11 @@ async function initializeFeatures() {
         return; // Skip standard initialization for regular YouTube
     }
     
+    setupUrlObserver();
+    
     if (currentSettings?.titleTranslation) {
         initializeTitleTranslation();
         setupMainTitleObserver();
-        setupUrlObserver();
     }
     if (currentSettings?.audioTranslation) {
         initializeAudioTranslation();

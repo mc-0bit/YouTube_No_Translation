@@ -488,64 +488,80 @@ function handleUrlChange() {
     cleanupDescriptionObservers();
     
     coreLog('Observers cleaned up');
+
     
-    // --- refresh titles 10 seconds after URL change 
-    setTimeout(() => {
-        refreshBrowsingTitles();
-    }, 10000);
+    if (currentSettings?.titleTranslation) {
+        setTimeout(() => {
+            refreshBrowsingTitles();
+        }, 2500);
+    }
+    if (currentSettings?.titleTranslation) {
+        setTimeout(() => {
+            refreshBrowsingTitles();
+        }, 5000);
+    }
     
     // --- Check if URL contains @username pattern
     const isChannelPage = window.location.pathname.includes('/@');
     if (isChannelPage) {
         // --- Handle all new channel page types (videos, featured, shorts, etc.)
-        pageVideosObserver();
+        currentSettings?.titleTranslation && pageVideosObserver();
         return;
     }
     
     switch(window.location.pathname) {
         case '/results': // --- Search page
             coreLog(`[URL] Detected search page`);
-            searchResultsObserver();
-            waitForElement('#contents.ytd-section-list-renderer').then(() => {
-                browsingTitlesLog('Search results container found');
-                refreshBrowsingTitles();
-                refreshShortsAlternativeFormat();
-            });
+            if (currentSettings?.titleTranslation) {
+                searchResultsObserver();
+                waitForElement('#contents.ytd-section-list-renderer').then(() => {
+                    browsingTitlesLog('Search results container found');
+                    refreshBrowsingTitles();
+                    refreshShortsAlternativeFormat();
+                });
+            }
+            
             break;
         case '/': // --- Home page
             coreLog(`[URL] Detected home page`);
-            pageVideosObserver();
-            waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
-                browsingTitlesLog('Home page container found');
-                refreshBrowsingTitles();
-            });
+            if (currentSettings?.titleTranslation) {
+                pageVideosObserver();
+                waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
+                    browsingTitlesLog('Home page container found');
+                    refreshBrowsingTitles();
+                });      
+            }
             break;        
         case '/feed/subscriptions': // --- Subscriptions page
             coreLog(`[URL] Detected subscriptions page`);
-            pageVideosObserver();
-            waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
-                browsingTitlesLog('Subscriptions page container found');
-                refreshBrowsingTitles();
-            });
+            if (currentSettings?.titleTranslation) {
+                pageVideosObserver();
+                waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
+                    browsingTitlesLog('Subscriptions page container found');
+                    refreshBrowsingTitles();
+                });
+            }
             break;
         case '/feed/trending':  // --- Trending page
         case '/playlist':  // --- Playlist page
-            playlistVideosObserver();
+            currentSettings?.titleTranslation && playlistVideosObserver();
             break;
         case '/channel':  // --- Channel page (old format)
-            pageVideosObserver();
+            currentSettings?.titleTranslation && pageVideosObserver();
             break;
         case '/watch': // --- Video page
             coreLog(`[URL] Detected video page`);
-            recommandedVideosObserver();
-            waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then(() => {
-                browsingTitlesLog('Recommended videos container found');
-                refreshBrowsingTitles();
-                    // --- refresh titles 4 seconds after loading video page
-                    setTimeout(() => {
-                        refreshBrowsingTitles();
-                    }, 4000);
-            });
+            if (currentSettings?.titleTranslation) {
+                recommandedVideosObserver();
+                waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then(() => {
+                    browsingTitlesLog('Recommended videos container found');
+                    refreshBrowsingTitles();
+                        // --- refresh titles 4 seconds after loading video page
+                        setTimeout(() => {
+                            refreshBrowsingTitles();
+                        }, 4000);
+                });
+            }
             break;
     }
 }

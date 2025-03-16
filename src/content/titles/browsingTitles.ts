@@ -11,6 +11,9 @@
 
 // --- Global variables
 let browsingTitlesObserver = new Map<HTMLElement, MutationObserver>();
+let lastBrowsingTitlesRefresh = 0;
+let lastBrowsingShortsRefresh = 0;
+const TITLES_THROTTLE = 2000; // 2 seconds between refreshes
 
 
 
@@ -30,6 +33,10 @@ function cleanupAllBrowsingTitlesElementsObservers(): void {
         observer.disconnect();
     });
     browsingTitlesObserver.clear();
+    
+    // Reset refresh timestamps
+    lastBrowsingTitlesRefresh = 0;
+    lastBrowsingShortsRefresh = 0;
 }
 
 function updateBrowsingTitleElement(element: HTMLElement, title: string, videoId: string): void {
@@ -112,7 +119,14 @@ function updateBrowsingTitleElement(element: HTMLElement, title: string, videoId
 
 // --- Other Titles Function
 async function refreshBrowsingTitles(): Promise<void> {
-const browsingTitles = document.querySelectorAll('#video-title') as NodeListOf<HTMLElement>;
+    const now = Date.now();
+    if (now - lastBrowsingTitlesRefresh < TITLES_THROTTLE) {
+        return;
+    }
+    lastBrowsingTitlesRefresh = now;
+
+    //browseTitlesLog('Refreshing browsing titles');
+    const browsingTitles = document.querySelectorAll('#video-title') as NodeListOf<HTMLElement>;
     //browsingTitlesLog('Found videos titles:', browsingTitles.length);
 
     for (const titleElement of browsingTitles) {
@@ -184,6 +198,12 @@ const browsingTitles = document.querySelectorAll('#video-title') as NodeListOf<H
 
 // Handle alternative shorts format with different HTML structure
 async function refreshShortsAlternativeFormat(): Promise<void> {
+    const now = Date.now();
+    if (now - lastBrowsingShortsRefresh < TITLES_THROTTLE) {
+        return;
+    }
+    lastBrowsingShortsRefresh = now;
+
     // Target the specific structure used for alternative shorts display
     const shortsLinks = document.querySelectorAll('.shortsLockupViewModelHostEndpoint') as NodeListOf<HTMLAnchorElement>;
     
