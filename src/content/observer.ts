@@ -285,15 +285,27 @@ let recommendedObserver: MutationObserver | null = null;
 let searchObserver: MutationObserver | null = null;
 let playlistObserver: MutationObserver | null = null;
 
+let lastHomeRefresh = 0;
+let lastRecommendedRefresh = 0;
+let lastSearchRefresh = 0;
+let lastPlaylistRefresh = 0;
 
+const THROTTLE_DELAY = 1500; // 1.5 seconds between refreshes
 
 // --- Observers Setup
 function setupBrowsingTitlesObserver() {
+    // Cleanup existing observers to prevent duplicates
+    cleanupBrowsingTitlesObservers();
+    
     // --- Observer for home page | Channel page
     waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
         homeObserver = new MutationObserver(() => {
-            browsingTitlesLog('Home/Channel page mutation detected');
-            refreshBrowsingTitles();
+            const now = Date.now();
+            if (now - lastHomeRefresh >= THROTTLE_DELAY) {
+                browsingTitlesLog('Home/Channel page mutation detected');
+                refreshBrowsingTitles();
+                lastHomeRefresh = now;
+            }
         });
 
         homeObserver.observe(contents, {
@@ -306,8 +318,12 @@ function setupBrowsingTitlesObserver() {
     waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then((contents) => {
         browsingTitlesLog('Setting up recommended videos observer');
         recommendedObserver = new MutationObserver(() => {
-            browsingTitlesLog('Recommended videos mutation detected');
-            refreshBrowsingTitles();
+            const now = Date.now();
+            if (now - lastRecommendedRefresh >= THROTTLE_DELAY) {
+                browsingTitlesLog('Recommended videos mutation detected');
+                refreshBrowsingTitles();
+                lastRecommendedRefresh = now;
+            }
         });
         
         recommendedObserver.observe(contents, {
@@ -315,6 +331,7 @@ function setupBrowsingTitlesObserver() {
         });
         //browsingTitlesLog('Recommended videos observer setup completed');
     });
+
 
     // --- Observer for search results
     waitForElement('ytd-section-list-renderer #contents').then((contents) => {
@@ -324,30 +341,37 @@ function setupBrowsingTitlesObserver() {
                 if (mutation.type === 'childList' && 
                     mutation.addedNodes.length > 0 && 
                     mutation.target instanceof HTMLElement) {
-                        const titles = mutation.target.querySelectorAll('#video-title');
-                        if (titles.length > 0) {
+                    const titles = mutation.target.querySelectorAll('#video-title');
+                    if (titles.length > 0) {
+                        const now = Date.now();
+                        if (now - lastSearchRefresh >= THROTTLE_DELAY) {
                             browsingTitlesLog('Search results mutation detected');
-                        refreshBrowsingTitles();
-                        refreshShortsAlternativeFormat();
+                            refreshBrowsingTitles();
+                            refreshShortsAlternativeFormat();
+                            lastSearchRefresh = now;
+                        }
                         break;
                     }
                 }
             }
         });
-        
+
         searchObserver.observe(contents, {
             childList: true,
             subtree: true
         });
-        //browsingTitlesLog('Search results observer setup completed');
     });
     
     // --- Observer for playlist/queue videos
     waitForElement('#playlist ytd-playlist-panel-renderer #items').then((contents) => {
         browsingTitlesLog('Setting up playlist/queue videos observer');
         playlistObserver = new MutationObserver(() => {
-            browsingTitlesLog('Playlist/Queue mutation detected');
-            refreshBrowsingTitles();
+            const now = Date.now();
+            if (now - lastPlaylistRefresh >= THROTTLE_DELAY) {
+                browsingTitlesLog('Playlist/Queue mutation detected');
+                refreshBrowsingTitles();
+                lastPlaylistRefresh = now;
+            }
         });
         
         playlistObserver.observe(contents, {
@@ -360,15 +384,20 @@ function setupBrowsingTitlesObserver() {
 function cleanupBrowsingTitlesObservers() {
     homeObserver?.disconnect();
     homeObserver = null;
+    lastHomeRefresh = 0;
 
     recommendedObserver?.disconnect();
     recommendedObserver = null;
+    lastRecommendedRefresh = 0;
 
     searchObserver?.disconnect();
     searchObserver = null;
+    lastSearchRefresh = 0;
 
     playlistObserver?.disconnect();
     playlistObserver = null;
+    lastPlaylistRefresh = 0;
+
 };
 
 

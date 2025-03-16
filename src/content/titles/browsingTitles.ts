@@ -130,13 +130,20 @@ const browsingTitles = document.querySelectorAll('#video-title') as NodeListOf<H
                 }
                 if (videoId) {
                     // --- Check if title is not translated
+                    const currentTitle = titleElement.textContent;
+                    if (titleElement.hasAttribute('ynt-fail')) {
+                        if (titleElement.getAttribute('ynt-fail') === videoId) {
+                            continue;
+                        }
+                        titleElement.removeAttribute('ynt-fail');
+                    };
                     const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
                     const originalTitle = await titleCache.getOriginalTitle(apiUrl);
-                    const currentTitle = titleElement.textContent;
                     try {
                         if (!originalTitle) {
-                            browsingTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title`);
+                            browsingTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title : ${currentTitle}`);
                             titleElement.removeAttribute('ynt');
+                            titleElement.setAttribute('ynt-fail', videoId);
                             currentTitle && titleElement.setAttribute('title', currentTitle);
                             continue;
                         }
