@@ -292,17 +292,16 @@ let lastPlaylistRefresh = 0;
 
 const THROTTLE_DELAY = 1500; // 1.5 seconds between refreshes
 
-// --- Observers Setup
-function setupBrowsingTitlesObserver() {
-    // Cleanup existing observers to prevent duplicates
-    cleanupBrowsingTitlesObservers();
-    
+function pageVideosObserver() {
+    cleanupPageVideosObserver();
+
     // --- Observer for home page | Channel page
     waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
+        browsingTitlesLog('Setting up Home/Channel/Subscriptions page videos observer');
         homeObserver = new MutationObserver(() => {
             const now = Date.now();
             if (now - lastHomeRefresh >= THROTTLE_DELAY) {
-                browsingTitlesLog('Home/Channel page mutation detected');
+                browsingTitlesLog('Home/Channel/Subscriptions page mutation detected');
                 refreshBrowsingTitles();
                 lastHomeRefresh = now;
             }
@@ -313,7 +312,11 @@ function setupBrowsingTitlesObserver() {
         });
         //browsingTitlesLog('Home/Channel page observer setup completed');
     });
-    
+};
+
+function recommandedVideosObserver() {
+    cleanupRecommandedVideosObserver();
+
     // --- Observer for recommended videos
     waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then((contents) => {
         browsingTitlesLog('Setting up recommended videos observer');
@@ -331,7 +334,11 @@ function setupBrowsingTitlesObserver() {
         });
         //browsingTitlesLog('Recommended videos observer setup completed');
     });
+};
 
+
+function searchResultsObserver() {
+    cleanupSearchResultsVideosObserver();
 
     // --- Observer for search results
     waitForElement('ytd-section-list-renderer #contents').then((contents) => {
@@ -361,7 +368,11 @@ function setupBrowsingTitlesObserver() {
             subtree: true
         });
     });
-    
+};
+
+function playlistVideosObserver() {
+    cleanupPlaylistVideosObserver();
+
     // --- Observer for playlist/queue videos
     waitForElement('#playlist ytd-playlist-panel-renderer #items').then((contents) => {
         browsingTitlesLog('Setting up playlist/queue videos observer');
@@ -379,26 +390,39 @@ function setupBrowsingTitlesObserver() {
         });
         browsingTitlesLog('Playlist/Queue observer setup completed');
     });
-}
+};
 
-function cleanupBrowsingTitlesObservers() {
+
+function cleanupAllBrowsingTitlesObservers() {
+    cleanupPageVideosObserver();
+    cleanupRecommandedVideosObserver();
+    cleanupSearchResultsVideosObserver();
+    cleanupPlaylistVideosObserver();
+};
+
+function cleanupPageVideosObserver() {
     homeObserver?.disconnect();
     homeObserver = null;
     lastHomeRefresh = 0;
+}
 
+function cleanupRecommandedVideosObserver() {
     recommendedObserver?.disconnect();
     recommendedObserver = null;
     lastRecommendedRefresh = 0;
+}
 
+function cleanupSearchResultsVideosObserver() {
     searchObserver?.disconnect();
     searchObserver = null;
     lastSearchRefresh = 0;
+}
 
+function cleanupPlaylistVideosObserver() {
     playlistObserver?.disconnect();
     playlistObserver = null;
     lastPlaylistRefresh = 0;
-
-};
+}
 
 
 
@@ -455,14 +479,15 @@ function handleUrlChange() {
     coreLog(`${LOG_PREFIX}[URL] Full URL:`, window.location.href);
     
     // --- Clean up existing observers
-    cleanupBrowsingTitlesObservers();
-    cleanupmainTitleContentObserver();
+    cleanupMainTitleContentObserver();
     cleanupPageTitleObserver();
-    cleanupDescriptionObservers();
-    coreLog('Observers cleaned up');
     
-    // --- set up new observers
-    setupBrowsingTitlesObserver();
+    cleanupAllBrowsingTitlesObservers();
+    cleanupAllBrowsingTitlesElementsObservers();
+
+    cleanupDescriptionObservers();
+    
+    coreLog('Observers cleaned up');
     
     // --- refresh titles 10 seconds after URL change 
     setTimeout(() => {
@@ -473,13 +498,14 @@ function handleUrlChange() {
     const isChannelPage = window.location.pathname.includes('/@');
     if (isChannelPage) {
         // --- Handle all new channel page types (videos, featured, shorts, etc.)
-        refreshBrowsingTitles();
+        pageVideosObserver();
         return;
     }
     
     switch(window.location.pathname) {
         case '/results': // --- Search page
             coreLog(`[URL] Detected search page`);
+            searchResultsObserver();
             waitForElement('#contents.ytd-section-list-renderer').then(() => {
                 browsingTitlesLog('Search results container found');
                 refreshBrowsingTitles();
@@ -488,6 +514,7 @@ function handleUrlChange() {
             break;
         case '/': // --- Home page
             coreLog(`[URL] Detected home page`);
+            pageVideosObserver();
             waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
                 browsingTitlesLog('Home page container found');
                 refreshBrowsingTitles();
@@ -495,6 +522,7 @@ function handleUrlChange() {
             break;        
         case '/feed/subscriptions': // --- Subscriptions page
             coreLog(`[URL] Detected subscriptions page`);
+            pageVideosObserver();
             waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
                 browsingTitlesLog('Subscriptions page container found');
                 refreshBrowsingTitles();
@@ -502,9 +530,14 @@ function handleUrlChange() {
             break;
         case '/feed/trending':  // --- Trending page
         case '/playlist':  // --- Playlist page
+            playlistVideosObserver();
+            break;
         case '/channel':  // --- Channel page (old format)
+            pageVideosObserver();
+            break;
         case '/watch': // --- Video page
             coreLog(`[URL] Detected video page`);
+            recommandedVideosObserver();
             waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then(() => {
                 browsingTitlesLog('Recommended videos container found');
                 refreshBrowsingTitles();

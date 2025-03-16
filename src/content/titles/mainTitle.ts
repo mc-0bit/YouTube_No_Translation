@@ -14,7 +14,7 @@ let pageTitleObserver: MutationObserver | null = null;
 let mainTitleIsUpdating = false;
 
 // --- Utility Functions
-function cleanupmainTitleContentObserver(): void {
+function cleanupMainTitleContentObserver(): void {
     if (mainTitleContentObserver) {
         mainTitleLog('Cleaning up title content observer');
         mainTitleContentObserver.disconnect();
@@ -31,7 +31,7 @@ function cleanupPageTitleObserver(): void {
 }
 
 function updateMainTitleElement(element: HTMLElement, title: string, videoId: string): void {
-    cleanupmainTitleContentObserver();
+    cleanupMainTitleContentObserver();
     
     mainTitleLog(
         `Updated title from : %c${normalizeText(element.textContent)}%c to : %c${normalizeText(title)}%c (video id : %c${videoId}%c)`,

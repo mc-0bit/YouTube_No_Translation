@@ -10,23 +10,31 @@
 
 
 // --- Global variables
-let browsingTitlesObservers = new Map<HTMLElement, MutationObserver>();
+let browsingTitlesObserver = new Map<HTMLElement, MutationObserver>();
 
 
 
 // --- Utility Functions
-function cleanupBrowsingTitlesObserver(element: HTMLElement): void {
-    const observer = browsingTitlesObservers.get(element);
+function cleanupBrowsingTitleElement(element: HTMLElement): void {
+    const observer = browsingTitlesObserver.get(element);
     if (observer) {
         //browsingTitlesLog('Cleaning up title observer');
         observer.disconnect();
-        browsingTitlesObservers.delete(element);
+        browsingTitlesObserver.delete(element);
     }
+}
+
+function cleanupAllBrowsingTitlesElementsObservers(): void {
+    //browsingTitlesLog('Cleaning up all title observers');
+    browsingTitlesObserver.forEach((observer, element) => {
+        observer.disconnect();
+    });
+    browsingTitlesObserver.clear();
 }
 
 function updateBrowsingTitleElement(element: HTMLElement, title: string, videoId: string): void {
 // --- Clean previous observer
-    cleanupBrowsingTitlesObserver(element);
+    cleanupBrowsingTitleElement(element);
     
     browsingTitlesLog(
         `Updated title from : %c${normalizeText(element.textContent)}%c to : %c${normalizeText(title)}%c (video id : %c${videoId}%c)`,
@@ -97,7 +105,7 @@ function updateBrowsingTitleElement(element: HTMLElement, title: string, videoId
         childList: true
     });
 
-    browsingTitlesObservers.set(element, observer);
+    browsingTitlesObserver.set(element, observer);
     titleCache.setElement(element, title);
 }
 
