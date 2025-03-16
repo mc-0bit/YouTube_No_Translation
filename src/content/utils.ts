@@ -85,3 +85,32 @@ function normalizeText(text: string | null | undefined, description = false): st
         .replace(/[\p{Emoji}]/gu, '')  // Remove all emojis
         .trim();  // Remove leading/trailing spaces
 }
+
+function calculateSimilarity(str1: string, str2: string): number {
+    // Use character frequency approach for better handling of long strings
+    const charCount1 = new Map<string, number>();
+    const charCount2 = new Map<string, number>();
+    
+    // Count characters in first string
+    for (const char of str1) {
+        charCount1.set(char, (charCount1.get(char) || 0) + 1);
+    }
+    
+    // Count characters in second string
+    for (const char of str2) {
+        charCount2.set(char, (charCount2.get(char) || 0) + 1);
+    }
+    
+    // Calculate common character count
+    let commonCount = 0;
+    for (const [char, count1] of charCount1.entries()) {
+        const count2 = charCount2.get(char) || 0;
+        commonCount += Math.min(count1, count2);
+    }
+    
+    // Calculate total character count
+    const totalCount = Math.max(str1.length, str2.length);
+    
+    // Return similarity as ratio
+    return commonCount / totalCount;
+}

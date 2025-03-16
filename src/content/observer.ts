@@ -7,7 +7,8 @@
  * This program is distributed without any warranty; see the license for details.
  */
 
-
+// TODO: Current observer implementation could be refactored for better efficiency, some are not even used
+// Keeping current structure for stability, needs architectural review in future updates
 
 
 // AUDIO OBSERVERS --------------------------------------------------------------------
@@ -126,9 +127,8 @@ function descriptionExpandObserver() {
 }
 
 function setupDescriptionContentObserver() {
-    // Clean up existing observer if any
+    // Cleanup existing observer avoiding infinite loops
     cleanupDescriptionContentObserver();
-    
     const descriptionElement = document.querySelector('#description-inline-expander');
     if (!descriptionElement) {
         descriptionLog('Description element not found, skipping content observer setup');
@@ -148,28 +148,47 @@ function setupDescriptionContentObserver() {
         // Skip if we don't have a cached description to compare with
         if (!cachedDescription) return;
         
-        // Get current description text
-        const currentText = descriptionElement.textContent?.trim();
-        
-        // Skip if they're the same (ignoring whitespace differences)
-        if (!currentText || normalizeText(currentText, true) === normalizeText(cachedDescription, true)) return;
-
-        descriptionLog('Description content changed by YouTube, restoring original');
-        
-        // Temporarily disconnect to prevent infinite loop
-        descriptionContentObserver?.disconnect();
-        
-        // Update with original description
-        updateDescriptionElement(descriptionElement as HTMLElement, cachedDescription);
-        
-        // Reconnect observer
-        if (descriptionContentObserver) {
-            descriptionContentObserver.observe(descriptionElement, {
-                childList: true,
-                subtree: true,
-                characterData: true
-            });
-        }
+        // Add a small delay to allow YouTube to finish its modifications
+        setTimeout(() => {
+            // Find the specific text container with the actual description content
+            const snippetAttributedString = descriptionElement.querySelector('#attributed-snippet-text');
+            const coreAttributedString = descriptionElement.querySelector('.yt-core-attributed-string--white-space-pre-wrap');
+            
+            if (!snippetAttributedString && !coreAttributedString) return;
+            
+            // Get the actual text content
+            const currentTextContainer = snippetAttributedString || coreAttributedString;
+            const currentText = currentTextContainer?.textContent?.trim();
+            
+            // Compare similarity instead of exact match
+            const similarity = calculateSimilarity(normalizeText(currentText, true), normalizeText(cachedDescription, true));
+            
+            // Consider texts similar if they match at least 75%
+            const isOriginal = similarity >= 0.75;
+            if (isOriginal) return;
+            
+            
+            //descriptionLog(`currentText: ${normalizeText(currentText, true)}`);
+            //descriptionLog(`cachedDescription: ${normalizeText(cachedDescription, true)}`);
+            //descriptionLog(`Similarity: ${(similarity * 100).toFixed(1)}%`);
+            
+            descriptionLog('Description content changed by YouTube, restoring original');
+            
+            // Temporarily disconnect to prevent infinite loop
+            descriptionContentObserver?.disconnect();
+            
+            // Update with original description
+            updateDescriptionElement(descriptionElement as HTMLElement, cachedDescription);
+            
+            // Reconnect observer
+            if (descriptionContentObserver) {
+                descriptionContentObserver.observe(descriptionElement, {
+                    childList: true,
+                    subtree: true,
+                    characterData: true
+                });
+            }
+        }, 50); // 50ms delay
     });
     
     // Start observing
@@ -185,21 +204,16 @@ function setupDescriptionContentObserver() {
 }
 
 
-function cleanupDescriptionContentObserver() {
-    if (descriptionContentObserver) {
-        //descriptionLog('Cleaning up description content observer');
-        descriptionContentObserver.disconnect();
-        descriptionContentObserver = null;
-    }
+function cleanupDescriptionContentObserver(): void{
+    descriptionContentObserver?.disconnect();
+    descriptionContentObserver = null;
 }
-function cleanupDescriptionObservers(): void {
-if (descriptionExpansionObserver) {
-        descriptionExpansionObserver.disconnect();
-        descriptionExpansionObserver = null;
-    }
-    // Clean up content observer
-    cleanupDescriptionContentObserver();
 
+function cleanupDescriptionObservers(): void {
+    descriptionExpansionObserver?.disconnect();
+    descriptionExpansionObserver = null;
+
+    cleanupDescriptionContentObserver();
 }
 
 
@@ -271,6 +285,8 @@ let recommendedObserver: MutationObserver | null = null;
 let searchObserver: MutationObserver | null = null;
 let playlistObserver: MutationObserver | null = null;
 
+
+
 // --- Observers Setup
 function setupBrowsingTitlesObserver() {
     // --- Observer for home page | Channel page
@@ -285,7 +301,7 @@ function setupBrowsingTitlesObserver() {
         });
         //browsingTitlesLog('Home/Channel page observer setup completed');
     });
-
+    
     // --- Observer for recommended videos
     waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then((contents) => {
         browsingTitlesLog('Setting up recommended videos observer');
@@ -293,7 +309,7 @@ function setupBrowsingTitlesObserver() {
             browsingTitlesLog('Recommended videos mutation detected');
             refreshBrowsingTitles();
         });
-
+        
         recommendedObserver.observe(contents, {
             childList: true
         });
@@ -308,9 +324,9 @@ function setupBrowsingTitlesObserver() {
                 if (mutation.type === 'childList' && 
                     mutation.addedNodes.length > 0 && 
                     mutation.target instanceof HTMLElement) {
-                    const titles = mutation.target.querySelectorAll('#video-title');
-                    if (titles.length > 0) {
-                        browsingTitlesLog('Search results mutation detected');
+                        const titles = mutation.target.querySelectorAll('#video-title');
+                        if (titles.length > 0) {
+                            browsingTitlesLog('Search results mutation detected');
                         refreshBrowsingTitles();
                         refreshShortsAlternativeFormat();
                         break;
@@ -318,14 +334,14 @@ function setupBrowsingTitlesObserver() {
                 }
             }
         });
-
+        
         searchObserver.observe(contents, {
             childList: true,
             subtree: true
         });
         //browsingTitlesLog('Search results observer setup completed');
     });
-
+    
     // --- Observer for playlist/queue videos
     waitForElement('#playlist ytd-playlist-panel-renderer #items').then((contents) => {
         browsingTitlesLog('Setting up playlist/queue videos observer');
@@ -333,7 +349,7 @@ function setupBrowsingTitlesObserver() {
             browsingTitlesLog('Playlist/Queue mutation detected');
             refreshBrowsingTitles();
         });
-
+        
         playlistObserver.observe(contents, {
             childList: true
         });
@@ -341,53 +357,67 @@ function setupBrowsingTitlesObserver() {
     });
 }
 
+function cleanupBrowsingTitlesObservers() {
+    homeObserver?.disconnect();
+    homeObserver = null;
+
+    recommendedObserver?.disconnect();
+    recommendedObserver = null;
+
+    searchObserver?.disconnect();
+    searchObserver = null;
+
+    playlistObserver?.disconnect();
+    playlistObserver = null;
+};
 
 
 
+
+// URL OBSERVER -----------------------------------------------------------
 function setupUrlObserver() {
-    coreLog('Setting up URL observer');
-    
+    coreLog('Setting up URL observer');    
     // --- Standard History API monitoring
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
-
+    
     history.pushState = function(...args) {
         coreLog('pushState called with:', args);
         originalPushState.apply(this, args);
         handleUrlChange();
     };
-
+    
     history.replaceState = function(...args) {
         coreLog('replaceState called with:', args);
         originalReplaceState.apply(this, args);
         handleUrlChange();
     };
-
+    
     // --- Browser navigation (back/forward)
     window.addEventListener('popstate', () => {
         coreLog('popstate event triggered');
         handleUrlChange();
     });
-
+    
     // --- YouTube's custom page data update event
     window.addEventListener('yt-page-data-updated', () => {
         coreLog('YouTube page data updated');
         handleUrlChange();
     });
-
+    
     // --- YouTube's custom SPA navigation events
     /*
     window.addEventListener('yt-navigate-start', () => {
         coreLog('YouTube SPA navigation started');
         handleUrlChange();
-    });
-    */
-
-    /*
-    window.addEventListener('yt-navigate-finish', () => {
+        });
+        */
+       
+       /*
+       window.addEventListener('yt-navigate-finish', () => {
         coreLog('YouTube SPA navigation completed');
         handleUrlChange();
-    });
+        });
     */
 }
 
@@ -395,21 +425,14 @@ function handleUrlChange() {
     coreLog(`${LOG_PREFIX}[URL] Current pathname:`, window.location.pathname);
     coreLog(`${LOG_PREFIX}[URL] Full URL:`, window.location.href);
     
-    // --- Clean up existing observers and set up new ones
-    homeObserver?.disconnect();
-    recommendedObserver?.disconnect();
-    searchObserver?.disconnect();
-    //playlistObserver?.disconnect();
-    homeObserver = null;
-    recommendedObserver = null;
-    searchObserver = null;
-    //playlistObserver = null;
+    // --- Clean up existing observers
+    cleanupBrowsingTitlesObservers();
     cleanupmainTitleContentObserver();
     cleanupPageTitleObserver();
     cleanupDescriptionObservers();
+    coreLog('Observers cleaned up');
     
-    
-    browsingTitlesLog('Observers cleaned up');
+    // --- set up new observers
     setupBrowsingTitlesObserver();
     
     // --- refresh titles 10 seconds after URL change 
@@ -427,7 +450,7 @@ function handleUrlChange() {
     
     switch(window.location.pathname) {
         case '/results': // --- Search page
-            console.log(`${LOG_PREFIX}[URL] Detected search page`);
+            coreLog(`[URL] Detected search page`);
             waitForElement('#contents.ytd-section-list-renderer').then(() => {
                 browsingTitlesLog('Search results container found');
                 refreshBrowsingTitles();
@@ -435,14 +458,14 @@ function handleUrlChange() {
             });
             break;
         case '/': // --- Home page
-            console.log(`${LOG_PREFIX}[URL] Detected home page`);
+            coreLog(`[URL] Detected home page`);
             waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
                 browsingTitlesLog('Home page container found');
                 refreshBrowsingTitles();
             });
             break;        
         case '/feed/subscriptions': // --- Subscriptions page
-            console.log(`${LOG_PREFIX}[URL] Detected subscriptions page`);
+            coreLog(`[URL] Detected subscriptions page`);
             waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
                 browsingTitlesLog('Subscriptions page container found');
                 refreshBrowsingTitles();
@@ -452,7 +475,7 @@ function handleUrlChange() {
         case '/playlist':  // --- Playlist page
         case '/channel':  // --- Channel page (old format)
         case '/watch': // --- Video page
-            console.log(`${LOG_PREFIX}[URL] Detected video page`);
+            coreLog(`[URL] Detected video page`);
             waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then(() => {
                 browsingTitlesLog('Recommended videos container found');
                 refreshBrowsingTitles();
@@ -466,7 +489,8 @@ function handleUrlChange() {
 }
 
 
-// Special observer setup for youtube-nocookie.com embedded videos
+// YOUTUBE-NOCOOKIE OBSERVER -----------------------------------------------------------
+
 function setupNoCookieObserver() {
     coreLog('Setting up youtube-nocookie observer');
     
