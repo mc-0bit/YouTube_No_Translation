@@ -313,7 +313,7 @@ let lastRecommendedRefresh = 0;
 let lastSearchRefresh = 0;
 let lastPlaylistRefresh = 0;
 
-const THROTTLE_DELAY = 1500; // 1.5 seconds between refreshes
+const THROTTLE_DELAY = 500; // minimum of .5 seconds between refreshes
 
 function pageVideosObserver() {
     cleanupPageVideosObserver();
@@ -516,7 +516,7 @@ function handleUrlChange() {
     if (currentSettings?.titleTranslation) {
         setTimeout(() => {
             refreshBrowsingTitles();
-        }, 2500);
+        }, 1500);
     }
     if (currentSettings?.titleTranslation) {
         setTimeout(() => {

@@ -13,7 +13,7 @@
 let browsingTitlesObserver = new Map<HTMLElement, MutationObserver>();
 let lastBrowsingTitlesRefresh = 0;
 let lastBrowsingShortsRefresh = 0;
-const TITLES_THROTTLE = 2000; // 2 seconds between refreshes
+const TITLES_THROTTLE = 1000; // minimum of 1 second between refreshes
 
 
 
@@ -151,14 +151,21 @@ async function refreshBrowsingTitles(): Promise<void> {
                     continue;
                 }
                 if (videoId) {
-                    // --- Check if title is not translated
                     const currentTitle = titleElement.textContent;
+
                     if (titleElement.hasAttribute('ynt-fail')) {
                         if (titleElement.getAttribute('ynt-fail') === videoId) {
                             continue;
                         }
                         titleElement.removeAttribute('ynt-fail');
                     };
+                    if (titleElement.hasAttribute('ynt-original')) {
+                        if (titleElement.getAttribute('ynt-original') === videoId) {
+                            continue;
+                        }
+                        titleElement.removeAttribute('ynt-original');
+                    };
+                    
                     const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`;
                     const originalTitle = await titleCache.getOriginalTitle(apiUrl);
                     try {
@@ -172,6 +179,7 @@ async function refreshBrowsingTitles(): Promise<void> {
                         if (normalizeText(currentTitle) === normalizeText(originalTitle)) {
                             //browsingTitlesLog('Title is not translated: ', videoId);
                             titleElement.removeAttribute('ynt');
+                            titleElement.setAttribute('ynt-original', videoId);
                             currentTitle && titleElement.setAttribute('title', currentTitle);
                             continue;
                         }
