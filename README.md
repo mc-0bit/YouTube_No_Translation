@@ -55,8 +55,8 @@
     <img src="https://img.shields.io/badge/Donate-Cryptocurrency-8256D0?style=for-the-badge&logo=bitcoin&logoColor=white" alt="Donate Cryptocurrency" height="30">
   </a>
   
-  <p align="start">You can also support this project by:</p>
-  <ul align="start" style="list-style-type: none; padding: 0;">
+  <p align="left">You can also support this project by:</p>
+  <ul align="left" style="list-style-type: none; padding: 0;">
     <li>⭐ Starring this repository</li>
     <li>👍 Rating the extension on <a href="https://addons.mozilla.org/firefox/addon/youtube-no-translation/" target="_blank">Mozilla Add-ons</a> or the <a href="https://chromewebstore.google.com/detail/youtube-no-translation/lmkeolibdeeglfglnncmfleojmakecjb" target="_blank">Chrome Web Store</a></li>
     <li>👤 Following me on <a href="https://github.com/YouG-o" target="_blank">GitHub</a></li>
