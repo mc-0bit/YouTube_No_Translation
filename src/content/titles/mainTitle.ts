@@ -182,3 +182,72 @@ async function refreshMainTitle(): Promise<void> {
         }
     }
 }
+
+
+
+// --- Embed Title Function
+async function refreshEmbedTitle(): Promise<void> {
+    const embedTitle = document.querySelector('.ytp-title-link') as HTMLElement;
+    if (embedTitle && !titleCache.hasElement(embedTitle)) {
+        mainTitleLog('Processing embed title element');
+        
+        // Get video ID from pathname
+        const videoId = window.location.pathname.split('/embed/')[1];
+        
+        if (videoId) {
+            const currentTitle = embedTitle.textContent;
+            let originalTitle: string | null = null;
+
+            // First try: Get title from player
+            try {
+                const mainTitleScript = document.createElement('script');
+                mainTitleScript.type = 'text/javascript';
+                mainTitleScript.src = browser.runtime.getURL('dist/content/titles/mainTitleScript.js');
+
+                // Set up event listener before injecting script
+                const playerTitle = await new Promise<string | null>((resolve) => {
+                    const titleListener = (event: TitleDataEvent) => {
+                        window.removeEventListener('ynt-title-data', titleListener as EventListener);
+                        resolve(event.detail.title);
+                    };
+                    window.addEventListener('ynt-title-data', titleListener as EventListener);
+                    
+                    // Inject script after listener is ready
+                    document.head.appendChild(mainTitleScript);
+                });
+
+                if (playerTitle) {
+                    originalTitle = playerTitle;
+                }
+            } catch (error) {
+                mainTitleErrorLog('Failed to get title from player:', error);
+            }
+
+            // Second try: Fallback to oembed API
+            if (!originalTitle) {
+                mainTitleLog('Falling back to oembed API');
+                originalTitle = await titleCache.getOriginalTitle(
+                    `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
+                );
+            }
+
+            if (!originalTitle) {
+                mainTitleLog('Failed to get original title, keeping current');
+                return;
+            }
+
+            // Skip if title is already correct
+            if (normalizeText(currentTitle) === normalizeText(originalTitle)) {
+                return;
+            }
+
+            // Apply the original title
+            try {
+                updateMainTitleElement(embedTitle, originalTitle, videoId);
+                updatePageTitle(originalTitle);
+            } catch (error) {
+                mainTitleErrorLog(`Failed to update embed title:`, error);
+            }
+        }
+    }
+}

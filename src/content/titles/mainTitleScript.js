@@ -67,7 +67,7 @@
             const title = response?.videoDetails?.title;
             
             if (title) {
-                mainTitleLog('Found title from player response:', title);
+                //mainTitleLog('Found title from player response:', title);
                 window.dispatchEvent(new CustomEvent('ynt-title-data', {
                     detail: { title }
                 }));

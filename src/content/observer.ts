@@ -601,8 +601,8 @@ function handleUrlChange() {
 
 // YOUTUBE-NOCOOKIE OBSERVER -----------------------------------------------------------
 
-function setupNoCookieObserver() {
-    coreLog('Setting up youtube-nocookie observer');
+function setupEmbedVideoObserver() {
+    coreLog('Setting up embed video observer');
     
     // Create a flag to track if we've already set up the play event listener
     let playEventSetup = false;
@@ -622,6 +622,12 @@ function setupNoCookieObserver() {
             
             // Short timeout to ensure player API is fully ready after play starts
             setTimeout(() => {
+                if (currentSettings?.titleTranslation) {
+                    setTimeout(() => {
+                        refreshEmbedTitle();                       
+                    }, 1000);
+                }
+
                 if (currentSettings?.audioTranslation) {
                     handleAudioTranslation();
                 }
@@ -635,7 +641,7 @@ function setupNoCookieObserver() {
                     videoObserver.disconnect();
                     videoObserver = null;
                 }
-            }, 1000);
+            }, 50);
         }, { once: true }); // Only trigger once
     };
     

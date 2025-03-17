@@ -19,9 +19,9 @@ async function fetchSettings() {
     currentSettings = data.settings as ExtensionSettings;
 };
 
-// Helper function to detect if we're on youtube-nocookie.com domain
-function isYoutubeNoCookie(): boolean {
-    return window.location.hostname.includes('youtube-nocookie.com');
+// Helper functions to detect if we're on an embed video (like youtube-nocookie.com)
+function isEmbedVideo(): boolean {
+    return window.location.pathname.startsWith('/embed/');
 }
 
 
@@ -30,12 +30,12 @@ async function initializeFeatures() {
     await fetchSettings();
 
     // Special handling for youtube-nocookie.com
-    if (isYoutubeNoCookie()) {
-        coreLog('Detected youtube-nocookie.com domain, using special initialization');
+    if (isEmbedVideo()) {
+        coreLog('Detected embed video, using special initialization');
         
-        setupNoCookieObserver();
+        setupEmbedVideoObserver();
         
-        return; // Skip standard initialization for regular YouTube
+        return;
     }
     
     setupUrlObserver();
