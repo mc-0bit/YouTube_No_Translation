@@ -21,7 +21,7 @@ async function syncSubtitlesLanguagePreference() {
 
 // Call this function during initialization
 async function handleSubtitlesTranslation() {   
-    subtitlesLog('Initializing subtitles translation prevention');
+    //subtitlesLog('Initializing subtitles translation prevention');
     await syncSubtitlesLanguagePreference(); // Sync language preference
     const script = document.createElement('script');
     script.src = browser.runtime.getURL('dist/content/subtitles/subtitlesScript.js');

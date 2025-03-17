@@ -42,19 +42,15 @@ async function initializeFeatures() {
     
     if (currentSettings?.titleTranslation) {
         initializeTitleTranslation();
-        setupMainTitleObserver();
     }
     if (currentSettings?.audioTranslation) {
         initializeAudioTranslation();
-        setupAudioObserver();
     }
     if (currentSettings?.descriptionTranslation) {
         initializeDescriptionTranslation();
-        setupDescriptionObserver();
     }
     if (currentSettings?.subtitlesTranslation) {
         initializeSubtitlesTranslation();
-        setupSubtitlesObserver();
     }
 }
 
@@ -65,63 +61,76 @@ function initializeTitleTranslation() {
     if (currentSettings?.titleTranslation) {
         refreshMainTitle();
         refreshBrowsingTitles();
+        
+        setupMainTitleObserver();
     }
 }
 
 function initializeAudioTranslation() {
     audioLog('Initializing audio translation prevention');
-
+    
     // Initial setup
     if (currentSettings?.audioTranslation) {
         handleAudioTranslation();
-    }
-
-    // Message handler
-    browser.runtime.onMessage.addListener((message: unknown) => {
-        if (isToggleMessage(message) && message.feature === 'audio') {
-            handleAudioTranslation();
-        }
-        return true;
-    });
-}
+        
+        setupAudioObserver();
+    };
+};
 
 function initializeDescriptionTranslation() {
     descriptionLog('Initializing description translation prevention');
-
+    
     if (currentSettings?.descriptionTranslation) {
         refreshDescription();
-    }
-
-    browser.runtime.onMessage.addListener((message: unknown) => {
-        if (isToggleMessage(message) && message.feature === 'description') {
-            if (message.isEnabled) {
-                refreshDescription();
-            }
-        }
-        return true;
-    });
-}
+        
+        setupDescriptionObserver();
+    };
+};
 
 function initializeSubtitlesTranslation() {
     subtitlesLog('Initializing subtitles translation prevention');
-
+    
     if (currentSettings?.subtitlesTranslation) {
         handleSubtitlesTranslation();
-    }
+        
+        setupSubtitlesObserver();
+    };
+};
 
-    browser.runtime.onMessage.addListener((message: unknown) => {
-        if (isToggleMessage(message) && message.feature === 'subtitles') {
-            if (message.isEnabled) {
-                handleSubtitlesTranslation();
-            }
-        }
-        return true;
-    });
-}
-
-// Listen for toggle changes
 browser.runtime.onMessage.addListener((message: unknown) => {
     if (isToggleMessage(message)) {
+        switch(message.feature) {
+            case 'audio':
+                if (message.isEnabled) {
+                    handleAudioTranslation();
+                    
+                    setupAudioObserver();
+                }
+                break;
+            case 'titles':
+                if (message.isEnabled) {
+                    refreshMainTitle();
+                    refreshBrowsingTitles();
+                    refreshShortsAlternativeFormat();
+                    
+                    setupMainTitleObserver();
+                }
+                break;
+            case 'description':
+                if (message.isEnabled) {
+                    refreshDescription();
+
+                    setupDescriptionObserver();
+                }
+                break;
+            case 'subtitles':
+                if (message.isEnabled) {
+                    handleSubtitlesTranslation();
+
+                    setupSubtitlesObserver();
+                }
+                break;
+        }
         return true;
     }
     return true;

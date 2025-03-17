@@ -134,7 +134,7 @@ async function refreshBrowsingTitles(): Promise<void> {
             //browsingTitlesLog('Processing video title:', titleElement.textContent);
             const videoUrl = titleElement.closest('a')?.href;
             if (videoUrl) {
-                                let videoId: string | null = null;
+                let videoId: string | null = null;
                 try {
                     const url = new URL(videoUrl);
 
@@ -163,7 +163,7 @@ async function refreshBrowsingTitles(): Promise<void> {
                     const originalTitle = await titleCache.getOriginalTitle(apiUrl);
                     try {
                         if (!originalTitle) {
-                            browsingTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title : ${currentTitle}`);
+                            browsingTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title : ${normalizeText(currentTitle)}`);
                             titleElement.removeAttribute('ynt');
                             titleElement.setAttribute('ynt-fail', videoId);
                             currentTitle && titleElement.setAttribute('title', currentTitle);
@@ -244,7 +244,7 @@ async function refreshShortsAlternativeFormat(): Promise<void> {
             const currentTitle = titleSpan.textContent;
             
             if (!originalTitle) {
-                browsingTitlesLog(`Failed to get original title from API for short: ${videoId}, keeping current title`);
+                browsingTitlesLog(`Failed to get original title from API for short: ${videoId}, keeping current title : ${normalizeText(currentTitle)}`);
                 continue;
             }
             

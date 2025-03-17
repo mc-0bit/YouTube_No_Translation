@@ -16,6 +16,7 @@ let audioObserver: MutationObserver | null = null;
 
 
 function setupAudioObserver() {
+    cleanupAudioObserver();
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
         audioObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
@@ -35,6 +36,10 @@ function setupAudioObserver() {
     });
 }
 
+function cleanupAudioObserver() {
+    audioObserver?.disconnect();
+    audioObserver = null;
+}
 
 // DESCRIPTION OBSERVERS ------------------------------------------------------------
 let descriptionObserver: MutationObserver | null = null;
@@ -43,6 +48,7 @@ let descriptionContentObserver: MutationObserver | null = null;
 
 
 function setupDescriptionObserver() {
+    cleanupAllDescriptionObservers();
     // Observer for video changes via URL
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
         descriptionLog('Setting up video-id observer');
@@ -216,12 +222,18 @@ function cleanupDescriptionObservers(): void {
     cleanupDescriptionContentObserver();
 }
 
+function cleanupAllDescriptionObservers(): void {
+    cleanupDescriptionObservers();
+    cleanupDescriptionContentObserver();
+}
+
 
 // MAIN TITLE OBSERVERS ---------------------------------------------
 let mainTitleObserver: MutationObserver | null = null;
 
 
 function setupMainTitleObserver() {
+    cleanupMainTitleObserver();
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
         mainTitleLog('Setting up video-id observer');
         mainTitleObserver = new MutationObserver(async (mutations) => {
@@ -254,11 +266,17 @@ function setupMainTitleObserver() {
     });
 }
 
+function cleanupMainTitleObserver() {
+    mainTitleObserver?.disconnect();
+    mainTitleObserver = null;
+}
+
 
 // SUBTITLES OBSERVERS --------------------------------------------------------------------
 let subtitlesObserver: MutationObserver | null = null;
 
 function setupSubtitlesObserver() {
+    cleanupSubtitlesObserver();
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
         subtitlesObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
@@ -276,6 +294,11 @@ function setupSubtitlesObserver() {
             attributeFilter: ['video-id']
         });
     });
+}
+
+function cleanupSubtitlesObserver() {
+    subtitlesObserver?.disconnect();
+    subtitlesObserver = null;
 }
 
 
@@ -543,6 +566,15 @@ function handleUrlChange() {
             }
             break;
         case '/feed/trending':  // --- Trending page
+            coreLog(`[URL] Detected trending page`);
+            if (currentSettings?.titleTranslation) {
+                pageVideosObserver();
+                waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
+                    browsingTitlesLog('Trending page container found');
+                    refreshBrowsingTitles();
+                });
+            }
+            break;
         case '/playlist':  // --- Playlist page
             currentSettings?.titleTranslation && playlistVideosObserver();
             break;
