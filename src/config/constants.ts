@@ -14,5 +14,6 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
     titleTranslation: true,
     audioTranslation: true,
     descriptionTranslation: true,
-    subtitlesTranslation: false
+    subtitlesTranslation: false,
+    subtitlesLanguage: 'original'
 };

@@ -39,6 +39,7 @@ interface ExtensionSettings {
     audioTranslation: boolean;
     descriptionTranslation: boolean;
     subtitlesTranslation: boolean;
+    subtitlesLanguage: string;
 }
 
 interface YouTubePlayerResponse {

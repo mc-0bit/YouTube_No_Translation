@@ -26,13 +26,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     titleTranslation: true,
                     audioTranslation: true,
                     descriptionTranslation: true,
-                    subtitlesTranslation: false
+                    subtitlesTranslation: false,
+                    subtitlesLanguage: 'original'
                 }
             });
             titleToggle.checked = true;
             audioToggle.checked = true;
             descriptionToggle.checked = true;
             subtitlesToggle.checked = false;
+            subtitlesLanguageSelect.value = 'original';
             return;
         }
         
@@ -44,6 +46,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         audioToggle.checked = settings.audioTranslation;
         descriptionToggle.checked = settings.descriptionTranslation;
         subtitlesToggle.checked = settings.subtitlesTranslation;
+        
+        // Set subtitle language
+        if (settings.subtitlesLanguage) {
+            subtitlesLanguageSelect.value = settings.subtitlesLanguage;
+        }
         
         console.log(
             '[NTM-Debug] Settings loaded - Title translation prevention is: %c%s',
@@ -209,14 +216,23 @@ subtitlesLanguageSelect.addEventListener('change', async () => {
     
     // Save language preference
     try {
-        await browser.storage.local.set({ subtitlesLanguage: selectedLanguage });
+        const data = await browser.storage.local.get('settings');
+        const settings = data.settings as ExtensionSettings;
+        
+        await browser.storage.local.set({
+            settings: {
+                ...settings,
+                subtitlesLanguage: selectedLanguage
+            }
+        });
+        
         console.log('Subtitles language saved:', selectedLanguage);
         
         // Inform active tab about the change
         const tabs = await browser.tabs.query({ active: true, currentWindow: true });
         if (tabs[0]?.id) {
             await browser.tabs.sendMessage(tabs[0].id, {
-                feature: 'subtitlesLanguage',  // Remove 'action' field to match listener
+                feature: 'subtitlesLanguage',
                 language: selectedLanguage
             });
         }
