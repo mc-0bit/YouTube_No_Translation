@@ -1,35 +1,48 @@
 /* 
- * Copyright (C) 2025-present YouGo (https://github.com/youg-o)
- * This program is licensed under the GNU Affero General Public License v3.0.
- * You may redistribute it and/or modify it under the terms of the license.
- * 
+* Copyright (C) 2025-present YouGo (https://github.com/youg-o)
+* This program is licensed under the GNU Affero General Public License v3.0.
+* You may redistribute it and/or modify it under the terms of the license.
+* 
  * Attribution must be given to the original author.
  * This program is distributed without any warranty; see the license for details.
- */
+*/
 
-async function handleDescriptionTranslation(): Promise<void> {
-    descriptionLog('Waiting for description element');
+
+async function fetchOriginalDescription(): Promise<string | null> {
+    return new Promise<string | null>((resolve) => {
+        const handleDescription = (event: CustomEvent) => {
+            window.removeEventListener('ynt-description-data', handleDescription as EventListener);
+            resolve(event.detail?.description || null);
+        };
+        window.addEventListener('ynt-description-data', handleDescription as EventListener);
+        const script = document.createElement('script');
+        script.src = browser.runtime.getURL('dist/content/description/descriptionScript.js');
+        document.documentElement.appendChild(script);
+    });
+}
+
+async function refreshDescription(): Promise<void> {
+    //descriptionLog('Waiting for description element');
     try {
         await waitForElement('#description-inline-expander');
-        descriptionLog('Description element found, injecting script');
         
-        const description = await new Promise<string | null>((resolve) => {
-            const handleDescription = (event: CustomEvent) => {
-                window.removeEventListener('ynt-description-data', handleDescription as EventListener);
-                resolve(event.detail?.description || null);
-            };
-
-            window.addEventListener('ynt-description-data', handleDescription as EventListener);
-            
-            const script = document.createElement('script');
-            script.src = browser.runtime.getURL('dist/content/description/descriptionScript.js');
-            document.documentElement.appendChild(script);
-        });
+        // First check if we already have the description in cache
+        let description = descriptionCache.getCurrentDescription();
+        
+        // Only fetch if not in cache
+        if (!description) {
+            description = await fetchOriginalDescription();
+            //descriptionLog('Description element found, injecting script');
+        } else {
+            //escriptionLog('Using cached description');
+        }
 
         if (description) {
             const descriptionElement = document.querySelector('#description-inline-expander');
-            if (descriptionElement && !descriptionCache.hasElement(descriptionElement as HTMLElement)) {
+            if (descriptionElement) {
+                // Always update the element, whether it's in cache or not
                 updateDescriptionElement(descriptionElement as HTMLElement, description);
+                descriptionLog('Description updated to original');
             }
         }
     } catch (error) {
@@ -70,7 +83,7 @@ function updateDescriptionElement(element: HTMLElement, description: string): vo
     const snippetAttributedString = element.querySelector('#attributed-snippet-text');
     
     if (!attributedString && !snippetAttributedString) {
-        descriptionLog(`No description text container found`);
+        descriptionErrorLog(`No description text container found`);
         return;
     }
 
@@ -138,13 +151,6 @@ function updateDescriptionElement(element: HTMLElement, description: string): vo
     setupDescriptionContentObserver();
 }
 
-async function refreshDescription(): Promise<void> {
-    const descriptionElement = document.querySelector('#description-inline-expander') as HTMLElement;
-    if (descriptionElement && !descriptionCache.hasElement(descriptionElement)) {
-        descriptionLog('Processing description element');
-        handleDescriptionTranslation();
-    }
-}
 
 // Compare description text and determine if update is needed
 function compareDescription(element: HTMLElement): Promise<boolean> {
@@ -154,16 +160,7 @@ function compareDescription(element: HTMLElement): Promise<boolean> {
         
         if (!description) {
             // Fetch description if not cached
-            description = await new Promise<string | null>((resolveDesc) => {
-                const handleDescription = (event: CustomEvent) => {
-                    window.removeEventListener('ynt-description-data', handleDescription as EventListener);
-                    resolveDesc(event.detail?.description || null);
-                };
-                window.addEventListener('ynt-description-data', handleDescription as EventListener);
-                const script = document.createElement('script');
-                script.src = browser.runtime.getURL('dist/content/description/descriptionScript.js');
-                document.documentElement.appendChild(script);
-            });
+            description = await fetchOriginalDescription();
         }
         
         // If no description available, we need to update (return false)
@@ -198,3 +195,5 @@ function compareDescription(element: HTMLElement): Promise<boolean> {
         resolve(isOriginal);
     });
 }
+
+

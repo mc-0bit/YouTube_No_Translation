@@ -66,9 +66,10 @@ function setupDescriptionObserver() {
                             compareDescription(descriptionElement as HTMLElement).then(isOriginal => {
                                 if (!isOriginal) {
                                     // Only refresh if not original                                 
-                                    refreshDescription();
-                                    descriptionExpandObserver();
-                                    setupDescriptionContentObserver();
+                                    refreshDescription().then(() => {  // Attendre que refreshDescription se termine
+                                        descriptionExpandObserver();
+                                        //setupDescriptionContentObserver();
+                                    });
                                 } else {
                                     cleanupDescriptionObservers();
                                 }
@@ -107,16 +108,7 @@ function descriptionExpandObserver() {
                         //descriptionLog('Using cached description');
                         updateDescriptionElement(descriptionElement as HTMLElement, cachedDescription);
                     } else {
-                        const description = await new Promise<string | null>((resolve) => {
-                            const handleDescription = (event: CustomEvent) => {
-                                window.removeEventListener('ynt-description-data', handleDescription as EventListener);
-                                resolve(event.detail?.description || null);
-                            };
-                            window.addEventListener('ynt-description-data', handleDescription as EventListener);
-                            const script = document.createElement('script');
-                            script.src = browser.runtime.getURL('dist/content/description/descriptionScript.js');
-                            document.documentElement.appendChild(script);
-                        });
+                        const description = await fetchOriginalDescription();
                         if (description) {
                             updateDescriptionElement(descriptionElement as HTMLElement, description);
                         }
@@ -142,73 +134,96 @@ function setupDescriptionContentObserver() {
     }
     
     // Get cached description
-    const cachedDescription = descriptionCache.getCurrentDescription();
+    let cachedDescription = descriptionCache.getCurrentDescription();
     if (!cachedDescription) {
-        descriptionLog('No cached description available, skipping content observer setup');
-        return;
-    }
-    
-    //descriptionLog('Setting up description content observer');
-    
-    descriptionContentObserver = new MutationObserver((mutations) => {
-        // Skip if we don't have a cached description to compare with
-        if (!cachedDescription) return;
+        descriptionLog('No cached description available, fetching from API');
         
-        // Add a small delay to allow YouTube to finish its modifications
-        setTimeout(() => {
-            // Find the specific text container with the actual description content
-            const snippetAttributedString = descriptionElement.querySelector('#attributed-snippet-text');
-            const coreAttributedString = descriptionElement.querySelector('.yt-core-attributed-string--white-space-pre-wrap');
-            
-            if (!snippetAttributedString && !coreAttributedString) return;
-            
-            // Get the actual text content
-            const currentTextContainer = snippetAttributedString || coreAttributedString;
-            const currentText = currentTextContainer?.textContent?.trim();
-            
-            // Compare similarity instead of exact match
-            const similarity = calculateSimilarity(normalizeText(currentText, true), normalizeText(cachedDescription, true));
-            
-            // Consider texts similar if they match at least 75%
-            const isOriginal = similarity >= 0.75;
-            if (isOriginal) return;
-            
-            
-            //descriptionLog(`currentText: ${normalizeText(currentText, true)}`);
-            //descriptionLog(`cachedDescription: ${normalizeText(cachedDescription, true)}`);
-            //descriptionLog(`Similarity: ${(similarity * 100).toFixed(1)}%`);
-            
-            descriptionLog('Description content changed by YouTube, restoring original');
-            
-            // Temporarily disconnect to prevent infinite loop
-            descriptionContentObserver?.disconnect();
-            
-            // Update with original description
-            updateDescriptionElement(descriptionElement as HTMLElement, cachedDescription);
-            
-            // Reconnect observer
-            if (descriptionContentObserver) {
-                descriptionContentObserver.observe(descriptionElement, {
-                    childList: true,
-                    subtree: true,
-                    characterData: true
-                });
+        // Fetch description instead of returning
+        fetchOriginalDescription().then(description => {
+            if (description) {
+                // Cache the description
+                cachedDescription = description;
+                descriptionCache.setElement(descriptionElement as HTMLElement, description);
+                
+                // Now set up the observer with the fetched description
+                setupObserver();
             }
-        }, 50); // 50ms delay
-    });
-    
-    // Start observing
-    if (descriptionContentObserver) {
-        descriptionContentObserver.observe(descriptionElement, {
-            childList: true,
-            subtree: true,
-            characterData: true
         });
+        return; // Still need to return here since we're doing async work
     }
     
-    //descriptionLog('Description content observer setup completed');
+    // If we have a cached description, set up the observer
+    setupObserver();
+    
+    // Local function to avoid duplicating the observer setup code
+    function setupObserver() {
+        //descriptionLog('Setting up description content observer');
+        
+        descriptionContentObserver = new MutationObserver((mutations) => {
+            // Skip if we don't have a cached description to compare with
+            if (!cachedDescription) {
+                descriptionLog('No cached description available, skipping content observer setup');
+                return;
+            }
+            
+            // Add a small delay to allow YouTube to finish its modifications
+            setTimeout(() => {
+                // Make sure descriptionElement still exists in this closure
+                if (!descriptionElement) return;
+                
+                // Find the specific text container with the actual description content
+                const snippetAttributedString = descriptionElement.querySelector('#attributed-snippet-text');
+                const coreAttributedString = descriptionElement.querySelector('.yt-core-attributed-string--white-space-pre-wrap');
+                
+                if (!snippetAttributedString && !coreAttributedString) return;
+                
+                // Get the actual text content
+                const currentTextContainer = snippetAttributedString || coreAttributedString;
+                const currentText = currentTextContainer?.textContent?.trim();
+                
+                // Compare similarity instead of exact match
+                const similarity = calculateSimilarity(normalizeText(currentText, true), normalizeText(cachedDescription, true));
+                
+                // Consider texts similar if they match at least 75%
+                const isOriginal = similarity >= 0.75;
+                if (isOriginal) return;
+                
+                
+                //descriptionLog(`currentText: ${normalizeText(currentText, true)}`);
+                //descriptionLog(`cachedDescription: ${normalizeText(cachedDescription, true)}`);
+                //descriptionLog(`Similarity: ${(similarity * 100).toFixed(1)}%`);
+                
+                descriptionLog('Description content changed by YouTube, restoring original');
+                
+                // Temporarily disconnect to prevent infinite loop
+                descriptionContentObserver?.disconnect();
+                
+                // Update with original description - ensure cachedDescription isn't null
+                updateDescriptionElement(descriptionElement as HTMLElement, cachedDescription as string);
+                
+                // Reconnect observer
+                if (descriptionContentObserver) {
+                    descriptionContentObserver.observe(descriptionElement, {
+                        childList: true,
+                        subtree: true,
+                        characterData: true
+                    });
+                }
+            }, 50); // 50ms delay
+        });
+        
+        // Start observing - ensure descriptionElement isn't null
+        if (descriptionContentObserver && descriptionElement) {
+            descriptionContentObserver.observe(descriptionElement, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+        }
+        
+        //descriptionLog('Description content observer setup completed');
+    }
 }
-
 
 function cleanupDescriptionContentObserver(): void{
     descriptionContentObserver?.disconnect();
@@ -226,6 +241,7 @@ function cleanupAllDescriptionObservers(): void {
     cleanupDescriptionObservers();
     cleanupDescriptionContentObserver();
 }
+
 
 
 // MAIN TITLE OBSERVERS ---------------------------------------------

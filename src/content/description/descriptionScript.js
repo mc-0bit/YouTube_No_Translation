@@ -62,7 +62,7 @@
     const description = response?.videoDetails?.shortDescription;
     
     if (description) {
-        descriptionLog('Found description from player response');
+        //descriptionLog('Found description from player response');
         window.dispatchEvent(new CustomEvent('ynt-description-data', {
             detail: { description }
         }));
