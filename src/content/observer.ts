@@ -519,6 +519,7 @@ function handleUrlChange() {
     
     // --- Clean up existing observers
     cleanupMainTitleContentObserver();
+    cleanupIsEmptyObserver();
     cleanupPageTitleObserver();
     
     cleanupAllBrowsingTitlesObservers();

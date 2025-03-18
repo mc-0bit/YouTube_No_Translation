@@ -11,6 +11,7 @@
 
 let mainTitleContentObserver: MutationObserver | null = null;
 let pageTitleObserver: MutationObserver | null = null;
+let isEmptyObserver: MutationObserver | null = null;
 let mainTitleIsUpdating = false;
 
 // --- Utility Functions
@@ -19,6 +20,14 @@ function cleanupMainTitleContentObserver(): void {
         mainTitleLog('Cleaning up title content observer');
         mainTitleContentObserver.disconnect();
         mainTitleContentObserver = null;
+    }
+}
+
+function cleanupIsEmptyObserver(): void {
+    if (isEmptyObserver) {
+        mainTitleLog('Cleaning up is-empty observer');
+        isEmptyObserver.disconnect();
+        isEmptyObserver = null;
     }
 }
 
@@ -32,6 +41,7 @@ function cleanupPageTitleObserver(): void {
 
 function updateMainTitleElement(element: HTMLElement, title: string, videoId: string): void {
     cleanupMainTitleContentObserver();
+    cleanupIsEmptyObserver();
     
     mainTitleLog(
         `Updated title from : %c${normalizeText(element.textContent)}%c to : %c${normalizeText(title)}%c (video id : %c${videoId}%c)`,
@@ -48,7 +58,7 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
     element.innerText = title;
     
     // --- Block YouTube from re-adding the is-empty attribute
-    const isEmptyObserver = new MutationObserver((mutations) => {
+    isEmptyObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === 'attributes' && mutation.attributeName === 'is-empty') {
                 mainTitleLog('Blocking is-empty attribute');
