@@ -7,23 +7,38 @@
  * This program is distributed without any warranty; see the license for details.
  */
 
-/**
- * Handles YouTube's audio track selection to force original language
- * 
- * YouTube stores audio tracks in a specific format:
- * - Each track has an ID in the format: "251;BASE64_ENCODED_DATA"
- * - The BASE64_ENCODED_DATA contains track information including language code
- * - Track data is encoded as: "acont" (audio content) + "original"/"dubbed-auto" + "lang=XX-XX"
- * - Original track can be identified by "original" in its decoded data
- * 
- * Example of track ID:
- * "251;ChEKBWFjb250EghvcmlnaW5hbAoNCgRsYW5nEgVlbi1VUw"
- * When decoded: Contains "original" for original audio and "lang=en-US" for language
- */
+
+async function syncAudioLanguagePreference() {
+    try {
+        const result = await browser.storage.local.get('settings');
+        const settings = result.settings as ExtensionSettings;
+        
+        if (settings?.audioLanguage) {
+            localStorage.setItem('audioLanguage', settings.audioLanguage);
+        }
+    } catch (error) {
+        audioErrorLog('Error syncing audio language preference:', error);
+    }
+}
 
 async function handleAudioTranslation() {   
-    //audioLog('Initializing audio translation prevention');   
+    await syncAudioLanguagePreference();
     const script = document.createElement('script');
     script.src = browser.runtime.getURL('dist/content/audio/audioScript.js');
     document.documentElement.appendChild(script);
 }
+
+// Function to handle audio language selection
+browser.runtime.onMessage.addListener((message: unknown) => {
+    if (typeof message === 'object' && message !== null &&
+        'feature' in message && message.feature === 'audioLanguage' &&
+        'language' in message && typeof message.language === 'string') {
+        
+        audioLog(`Setting audio language preference to: ${message.language}`);
+        localStorage.setItem('audioLanguage', message.language);
+        
+        // Reapply audio if a video is currently playing
+        handleAudioTranslation();
+    }
+    return true;
+});

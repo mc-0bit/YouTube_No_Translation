@@ -12,6 +12,21 @@
  * As you can see down below, the injected code only uses YouTube's official player API methods.
 */
 
+/**
+ * Handles YouTube's audio track selection to force preferred language
+ * 
+ * YouTube stores audio tracks in a specific format:
+ * - Each track has an ID in the format: "251;BASE64_ENCODED_DATA"
+ * - The BASE64_ENCODED_DATA contains track information including language code
+ * - Track data is encoded as: "acont" (audio content) + "original"/"dubbed-auto" + "lang=XX-XX"
+ * - Original track can be identified by "original" in its decoded data
+ * 
+ * Example of track ID:
+ * "251;ChEKBWFjb250EghvcmlnaW5hbAoNCgRsYW5nEgVlbi1VUw"
+ * When decoded: Contains "original" for original audio and "lang=en-US" for language
+ */
+
+
 (() => {
     const LOG_PREFIX = '[YNT]';
     const LOG_STYLES = {
@@ -58,43 +73,79 @@
         'zh': 'Chinese'
     };
 
-    function setOriginalTrack() {
+    function setPreferredTrack() {
         const player = document.getElementById('movie_player');
         if (!player) return;
 
         try {
+            const audioLanguage = localStorage.getItem('audioLanguage') || 'original';
+            audioLog(`Using preferred language: ${audioLanguage}`);
+
             const tracks = player.getAvailableAudioTracks();
             const currentTrack = player.getAudioTrack();
-            
-            // Check if current track is already the original one
+
+            // First check if current track is already what we want
             if (currentTrack) {
                 const base64Part = currentTrack.id.split(';')[1];
                 const decoded = atob(base64Part);
-                if (decoded.includes('original')) {
-                    audioLog('Audio track is already original');
-                    return true;
+
+                if (audioLanguage === 'original') {
+                    // For original language preference
+                    if (decoded.includes('original')) {
+                        audioLog('Audio track is already original');
+                        return true;
+                    }
+                } else {
+                    // For specific language preference
+                    const langMatch = decoded.match(/lang..([-a-zA-Z]+)/);
+                    const trackLangCode = langMatch ? langMatch[1].split('-')[0] : null;
+                    if (trackLangCode === audioLanguage) {
+                        audioLog('Audio already in preferred language');
+                        return true;
+                    }
                 }
             }
-            
-            const originalTrack = tracks.find(track => {
-                const base64Part = track.id.split(';')[1];
-                const decoded = atob(base64Part);
-                return decoded.includes('original');
-            });
-            
-            if (originalTrack) {
-                const base64Part = originalTrack.id.split(';')[1];
-                const decoded = atob(base64Part);
-                const langMatch = decoded.match(/lang..([-a-zA-Z]+)/);
+
+            // Need to change track - find the right one
+            if (audioLanguage === 'original') {
+                const originalTrack = tracks.find(track => {
+                    const base64Part = track.id.split(';')[1];
+                    const decoded = atob(base64Part);
+                    return decoded.includes('original');
+                });
                 
-                const langCode = langMatch ? langMatch[1].split('-')[0] : 'unknown';
-                const languageName = languageNames[langCode] || langCode.toUpperCase();
-                
-                audioLog('Setting audio to original language: ' + languageName);
-                player.setAudioTrack(originalTrack);
-                return true; // Track was set successfully
+                if (originalTrack) {
+                    const base64Part = originalTrack.id.split(';')[1];
+                    const decoded = atob(base64Part);
+                    const langMatch = decoded.match(/lang..([-a-zA-Z]+)/);
+                    
+                    const langCode = langMatch ? langMatch[1].split('-')[0] : 'unknown';
+                    const languageName = languageNames[langCode] || langCode.toUpperCase();
+                    
+                    audioLog('Setting audio to original language: ' + languageName);
+                    player.setAudioTrack(originalTrack);
+                    return true;
+                }
+            } else {
+                const preferredTrack = tracks.find(track => {
+                    const base64Part = track.id.split(';')[1];
+                    const decoded = atob(base64Part);
+                    const langMatch = decoded.match(/lang..([-a-zA-Z]+)/);
+                    if (!langMatch) return false;
+                    const trackLangCode = langMatch[1].split('-')[0];
+                    return trackLangCode === audioLanguage;
+                });
+
+                if (preferredTrack) {
+                    const languageName = languageNames[audioLanguage] || audioLanguage.toUpperCase();
+                    audioLog('Setting audio to preferred language: ' + languageName);
+                    player.setAudioTrack(preferredTrack);
+                    return true;
+                }
+                audioLog(`Selected language "${audioLanguage}" not available`);
             }
-            return false; // No original track found
+            
+            return false;
         } catch (error) {
             audioErrorLog(`${error.name}: ${error.message}`);
             return false;
@@ -113,18 +164,18 @@
             processingVideoId = videoId;
             audioLog('Video data changed, checking audio tracks...');
             
-            const initialSuccess = setOriginalTrack();
+            const initialSuccess = setPreferredTrack();
             
             if (!initialSuccess && !secondaryCheckScheduled) {
                 secondaryCheckScheduled = true;
                 setTimeout(() => {
-                    setOriginalTrack();
+                    setPreferredTrack();
                     secondaryCheckScheduled = false;
                     processingVideoId = null;
                 }, 200);
             }
         });
 
-        setOriginalTrack();
+        setPreferredTrack();
     }
 })();

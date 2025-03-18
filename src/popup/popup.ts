@@ -9,6 +9,7 @@
 
 const titleToggle = document.getElementById('titleTranslation') as HTMLInputElement;
 const audioToggle = document.getElementById('audioTranslation') as HTMLInputElement;
+const audioLanguageSelect = document.getElementById('audioLanguage') as HTMLSelectElement;
 const descriptionToggle = document.getElementById('descriptionTranslation') as HTMLInputElement;
 const subtitlesToggle = document.getElementById('subtitlesTranslation') as HTMLInputElement;
 const subtitlesLanguageSelect = document.getElementById('subtitlesLanguage') as HTMLSelectElement;
@@ -50,6 +51,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Set subtitle language
         if (settings.subtitlesLanguage) {
             subtitlesLanguageSelect.value = settings.subtitlesLanguage;
+        }
+
+        // Set audio language
+        if (settings.audioLanguage) {
+            audioLanguageSelect.value = settings.audioLanguage;
         }
         
         console.log(
@@ -238,5 +244,35 @@ subtitlesLanguageSelect.addEventListener('change', async () => {
         }
     } catch (error) {
         console.error('Failed to save subtitles language:', error);
+    }
+});
+
+// Handle audio language selection changes
+audioLanguageSelect.addEventListener('change', async () => {
+    const selectedLanguage = audioLanguageSelect.value;
+    
+    try {
+        const data = await browser.storage.local.get('settings');
+        const settings = data.settings as ExtensionSettings;
+        
+        await browser.storage.local.set({
+            settings: {
+                ...settings,
+                audioLanguage: selectedLanguage
+            }
+        });
+        
+        console.log('Audio language saved:', selectedLanguage);
+        
+        // Inform active tab about the change
+        const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+        if (tabs[0]?.id) {
+            await browser.tabs.sendMessage(tabs[0].id, {
+                feature: 'audioLanguage',
+                language: selectedLanguage
+            });
+        }
+    } catch (error) {
+        console.error('Failed to save audio language:', error);
     }
 });

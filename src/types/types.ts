@@ -37,6 +37,7 @@ interface YouTubePlayer extends HTMLElement {
 interface ExtensionSettings {
     titleTranslation: boolean;
     audioTranslation: boolean;
+    audioLanguage: string;
     descriptionTranslation: boolean;
     subtitlesTranslation: boolean;
     subtitlesLanguage: string;
