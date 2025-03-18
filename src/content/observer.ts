@@ -66,9 +66,9 @@ function setupDescriptionObserver() {
                             compareDescription(descriptionElement as HTMLElement).then(isOriginal => {
                                 if (!isOriginal) {
                                     // Only refresh if not original                                 
-                                    refreshDescription().then(() => {  // Attendre que refreshDescription se termine
+                                    refreshDescription().then(() => {
                                         descriptionExpandObserver();
-                                        //setupDescriptionContentObserver();
+                                        setupDescriptionContentObserver();
                                     });
                                 } else {
                                     cleanupDescriptionObservers();
