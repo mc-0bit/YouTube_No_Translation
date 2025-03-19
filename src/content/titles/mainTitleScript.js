@@ -49,7 +49,13 @@
     const mainTitleErrorLog = createErrorLogger(LOG_STYLES.MAIN_TITLE);
 
     function getOriginalTitle() {
-        const player = document.getElementById('movie_player');
+        // Try to get the specified player
+        let targetId = 'movie_player';
+        if (window.location.pathname.startsWith('/shorts')) {
+            targetId = 'shorts-player';
+        }
+        const player = document.getElementById(targetId);
+        //mainTitleLog(`Player is ${targetId}`);
         if (!player) {
             mainTitleLog('Player not found');
             window.dispatchEvent(new CustomEvent('ynt-title-data', {

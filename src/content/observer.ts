@@ -12,27 +12,30 @@
 
 
 // AUDIO OBSERVERS --------------------------------------------------------------------
-let audioObserver: MutationObserver | null = null;
-
+let audioLoadStartHandler: ((e: Event) => void) | null = null;
 
 function setupAudioObserver() {
     cleanupAudioObserver();
 
-    document.addEventListener('loadstart', function(e) {
+    // Create handler function
+    audioLoadStartHandler = function(e: Event) {
         if (!(e.target instanceof HTMLVideoElement)) return;
         if ((e.target as any).srcValue === e.target.src) return;
-
         
         audioLog('Video source changed, reinitializing audio preferences...');
-        
         handleAudioTranslation();
-        
-    }, true);
+    };
+
+    // Add event listener
+    document.addEventListener('loadstart', audioLoadStartHandler, true);
 }
 
 function cleanupAudioObserver() {
-    audioObserver?.disconnect();
-    audioObserver = null;
+    // Remove event listener if it exists
+    if (audioLoadStartHandler) {
+        document.removeEventListener('loadstart', audioLoadStartHandler, true);
+        audioLoadStartHandler = null;
+    }
 }
 
 // DESCRIPTION OBSERVERS ------------------------------------------------------------
@@ -281,6 +284,64 @@ function cleanupMainTitleObserver() {
     mainTitleObserver = null;
 }
 
+let shortMainTitleLoadStartHandler: ((e: Event) => void) | null = null;
+
+function setupShortsMainTitleObserver() {
+    cleanupShortsMainTitleObserver();
+
+
+    waitForElement('yt-shorts-video-title-view-model h2.ytShortsVideoTitleViewModelShortsVideoTitle span')
+            .then(() => {
+                // Initial refresh
+                refreshShortMainTitle();
+            });
+
+    // Create handler function
+    shortMainTitleLoadStartHandler = async function(e: Event) {
+        if (!(e.target instanceof HTMLVideoElement)) return;
+        if ((e.target as any).srcValue === e.target.src) return;
+        
+        // Track that we've handled this source
+        (e.target as any).srcValue = e.target.src;
+        
+        mainTitleLog('Video source changed, updating title...');
+        
+        // Wait for the shorts title element to be available
+        waitForElement('yt-shorts-video-title-view-model h2.ytShortsVideoTitleViewModelShortsVideoTitle span')
+            .then(() => {
+                // Initial refresh
+                refreshShortMainTitle();
+                
+                // Setup multiple refresh attempts with increasing delays
+                const delays = [50, 150, 300, 500];
+                
+                delays.forEach(delay => {
+                    setTimeout(() => {
+                        // Only refresh if we're still on the same video
+                        if (window.location.pathname.startsWith('/shorts')) {
+                            //mainTitleLog(`Refreshing shorts title after ${delay}ms delay`);
+                            refreshShortMainTitle();
+                        }
+                    }, delay);
+                });
+            })
+            .catch(error => {
+                mainTitleErrorLog('Failed to find shorts title element:', error);
+            });
+    };
+
+    // Add event listener
+    document.addEventListener('loadstart', shortMainTitleLoadStartHandler, true);
+}
+
+function cleanupShortsMainTitleObserver() {
+    // Remove event listener if it exists
+    if (shortMainTitleLoadStartHandler) {
+        document.removeEventListener('loadstart', shortMainTitleLoadStartHandler, true);
+        shortMainTitleLoadStartHandler = null;
+    }
+}
+
 
 // SUBTITLES OBSERVERS --------------------------------------------------------------------
 let subtitlesObserver: MutationObserver | null = null;
@@ -336,6 +397,7 @@ function pageVideosObserver() {
             if (now - lastHomeRefresh >= THROTTLE_DELAY) {
                 browsingTitlesLog('Home/Channel/Subscriptions page mutation detected');
                 refreshBrowsingTitles();
+                refreshShortsAlternativeFormat();
                 lastHomeRefresh = now;
             }
         });
@@ -539,13 +601,19 @@ function handleUrlChange() {
     const isChannelPage = window.location.pathname.includes('/@');
     if (isChannelPage) {
         // --- Handle all new channel page types (videos, featured, shorts, etc.)
-        currentSettings?.titleTranslation && pageVideosObserver();
+        coreLog(`[URL] Detected channel page`);
+        if (currentSettings?.titleTranslation) {
+            pageVideosObserver();
+            refreshBrowsingTitles();
+            refreshShortsAlternativeFormat();
         return;
+        }
     }
-    const isShortsPage = window.location.pathname.includes('/shorts');
+    const isShortsPage = window.location.pathname.startsWith('/shorts');
     if (isShortsPage) {
         coreLog(`[URL] Detected shorts page`);
         //currentSettings?.audioTranslation && handleAudioTranslation();
+        currentSettings?.titleTranslation && setupShortsMainTitleObserver();
         return;
     }
 

@@ -17,7 +17,7 @@ let mainTitleIsUpdating = false;
 // --- Utility Functions
 function cleanupMainTitleContentObserver(): void {
     if (mainTitleContentObserver) {
-        mainTitleLog('Cleaning up title content observer');
+        //mainTitleLog('Cleaning up title content observer');
         mainTitleContentObserver.disconnect();
         mainTitleContentObserver = null;
     }
@@ -25,7 +25,7 @@ function cleanupMainTitleContentObserver(): void {
 
 function cleanupIsEmptyObserver(): void {
     if (isEmptyObserver) {
-        mainTitleLog('Cleaning up is-empty observer');
+        //mainTitleLog('Cleaning up is-empty observer');
         isEmptyObserver.disconnect();
         isEmptyObserver = null;
     }
@@ -33,7 +33,7 @@ function cleanupIsEmptyObserver(): void {
 
 function cleanupPageTitleObserver(): void {
     if (pageTitleObserver) {
-        mainTitleLog('Cleaning up page title observer');
+        //mainTitleLog('Cleaning up page title observer');
         pageTitleObserver.disconnect();
         pageTitleObserver = null;
     }
@@ -257,6 +257,112 @@ async function refreshEmbedTitle(): Promise<void> {
                 updatePageTitle(originalTitle);
             } catch (error) {
                 mainTitleErrorLog(`Failed to update embed title:`, error);
+            }
+        }
+    }
+}
+
+// --- Shorts Title Function
+async function refreshShortMainTitle(): Promise<void> {
+    // Get the shorts title element
+    const shortTitle = document.querySelector('yt-shorts-video-title-view-model h2.ytShortsVideoTitleViewModelShortsVideoTitle span') as HTMLElement;
+    
+    // Get the linked video title element (additional title to translate)
+    const linkedVideoTitle = document.querySelector('.ytReelMultiFormatLinkViewModelTitle span') as HTMLElement;
+    
+    if (window.location.pathname.startsWith('/shorts')) {
+        //mainTitleLog('Processing shorts title elements');
+        
+        // Extract the video ID from the URL
+        // Format: /shorts/TNtpUQbW4mg
+        const pathSegments = window.location.pathname.split('/');
+        const videoId = pathSegments.length > 2 ? pathSegments[2] : null;
+        
+        if (videoId) {
+            // Process main shorts title
+            if (shortTitle && !titleCache.hasElement(shortTitle)) {
+                const currentTitle = shortTitle.textContent;
+                let originalTitle: string | null = null;
+
+                // First try: Get title from player
+                try {
+                    // Create and inject script
+                    const mainTitleScript = document.createElement('script');
+                    mainTitleScript.type = 'text/javascript';
+                    mainTitleScript.src = browser.runtime.getURL('dist/content/titles/mainTitleScript.js');
+
+                    // Set up event listener before injecting script
+                    const playerTitle = await new Promise<string | null>((resolve) => {
+                        const titleListener = (event: TitleDataEvent) => {
+                            window.removeEventListener('ynt-title-data', titleListener as EventListener);
+                            resolve(event.detail.title);
+                        };
+                        window.addEventListener('ynt-title-data', titleListener as EventListener);
+                        
+                        // Inject script after listener is ready
+                        document.head.appendChild(mainTitleScript);
+                    });
+
+                    if (playerTitle) {
+                        originalTitle = playerTitle;
+                    }
+                } catch (error) {
+                    mainTitleErrorLog('Failed to get shorts title from player:', error);
+                }
+
+                // Second try: Fallback to oembed API
+                if (!originalTitle) {
+                    mainTitleLog('Falling back to oembed API for shorts');
+                    originalTitle = await titleCache.getOriginalTitle(
+                        `https://www.youtube.com/oembed?url=https://www.youtube.com/shorts/${videoId}`
+                    );
+                }
+
+                // Skip if title is already correct
+                if (!originalTitle || normalizeText(currentTitle) === normalizeText(originalTitle)) {
+                    //mainTitleLog('Main shorts title already correct or could not be retrieved');
+                } else {
+                    // Apply the original title
+                    try {
+                        updateMainTitleElement(shortTitle, originalTitle, videoId);
+                        // No need to update page title for shorts
+                    } catch (error) {
+                        mainTitleErrorLog(`Failed to update shorts title:`, error);
+                    }
+                }
+            }
+            
+            // Process linked video title (if present)
+            if (linkedVideoTitle) {
+                const currentLinkedTitle = linkedVideoTitle.textContent;
+                
+                // Get the linked video ID from the parent anchor element
+                const linkedVideoAnchor = linkedVideoTitle.closest('a.ytReelMultiFormatLinkViewModelEndpoint') as HTMLAnchorElement;
+                if (linkedVideoAnchor) {
+                    const linkedVideoUrl = linkedVideoAnchor.getAttribute('href');
+                    if (linkedVideoUrl) {
+                        // Extract video ID from URL format "/watch?v=VIDEO_ID"
+                        const linkedVideoIdMatch = linkedVideoUrl.match(/\/watch\?v=([^&]+)/);
+                        const linkedVideoId = linkedVideoIdMatch ? linkedVideoIdMatch[1] : null;
+                        
+                        if (linkedVideoId) {
+                           // mainTitleLog(`Processing linked video title with ID: ${linkedVideoId}`);
+                            
+                            // Using only oembed API for linked video as mentioned
+                            const linkedOriginalTitle = await titleCache.getOriginalTitle(
+                                `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${linkedVideoId}`
+                            );
+                            
+                            if (linkedOriginalTitle && normalizeText(currentLinkedTitle) !== normalizeText(linkedOriginalTitle)) {
+                                try {
+                                    updateMainTitleElement(linkedVideoTitle, linkedOriginalTitle, linkedVideoId);
+                                } catch (error) {
+                                    mainTitleErrorLog(`Failed to update linked video title:`, error);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
