@@ -24,6 +24,11 @@
  * Example of track ID:
  * "251;ChEKBWFjb250EghvcmlnaW5hbAoNCgRsYW5nEgVlbi1VUw"
  * When decoded: Contains "original" for original audio and "lang=en-US" for language
+ * 
+ * Note on implementation choice:
+ * - We use base64 decoding to directly identify original tracks rather than UI text matching
+ * - This approach is independent of YouTube's interface language
+ * - Provides consistent behavior across all language interfaces
  */
 
 (() => {
@@ -58,19 +63,6 @@
 
     const audioLog = createLogger(LOG_STYLES.AUDIO);
     const audioErrorLog = createErrorLogger(LOG_STYLES.AUDIO);
-
-    const languageNames = {
-        'en': 'English',
-        'es': 'Spanish',
-        'fr': 'French',
-        'de': 'German',
-        'it': 'Italian',
-        'pt': 'Portuguese',
-        'ru': 'Russian',
-        'ja': 'Japanese',
-        'ko': 'Korean',
-        'zh': 'Chinese'
-    };
 
     let retryCount = 0;
     const MAX_RETRIES = 5;
@@ -128,9 +120,8 @@
                     const langMatch = decoded.match(/lang..([-a-zA-Z]+)/);
                     
                     const langCode = langMatch ? langMatch[1].split('-')[0] : 'unknown';
-                    const languageName = languageNames[langCode] || langCode.toUpperCase();
                     
-                    audioLog('Setting audio to original language: ' + languageName);
+                    audioLog('Setting audio to original language: ' + langCode);
                     player.setAudioTrack(originalTrack);
                     return true;
                 }
@@ -145,8 +136,7 @@
                 });
 
                 if (preferredTrack) {
-                    const languageName = languageNames[audioLanguage] || audioLanguage.toUpperCase();
-                    audioLog('Setting audio to preferred language: ' + languageName);
+                    audioLog('Setting audio to preferred language: ' + audioLanguage);
                     player.setAudioTrack(preferredTrack);
                     return true;
                 }
