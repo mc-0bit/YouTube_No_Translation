@@ -71,8 +71,6 @@ function initializeAudioTranslation() {
     
     // Initial setup
     if (currentSettings?.audioTranslation) {
-        handleAudioTranslation();
-        
         setupAudioObserver();
     };
 };

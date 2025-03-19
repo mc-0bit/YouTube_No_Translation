@@ -26,7 +26,6 @@
  * When decoded: Contains "original" for original audio and "lang=en-US" for language
  */
 
-
 (() => {
     const LOG_PREFIX = '[YNT]';
     const LOG_STYLES = {
@@ -73,13 +72,22 @@
         'zh': 'Chinese'
     };
 
+    let retryCount = 0;
+    const MAX_RETRIES = 5;
+    
     function setPreferredTrack() {
-        const player = document.getElementById('movie_player');
-        if (!player) return;
+        // Try to get the specified player
+        let targetId = 'movie_player';
+        if (window.location.pathname.startsWith('/shorts')) {
+            targetId = 'shorts-player';
+        }
+        const player = document.getElementById(targetId);
+        //audioLog(`Player is ${targetId}`);
+        if (!player) return false;
 
         try {
             const audioLanguage = localStorage.getItem('audioLanguage') || 'original';
-            audioLog(`Using preferred language: ${audioLanguage}`);
+            //audioLog(`Using preferred language: ${audioLanguage}`);
 
             const tracks = player.getAvailableAudioTracks();
             const currentTrack = player.getAudioTrack();
@@ -147,35 +155,25 @@
             
             return false;
         } catch (error) {
-            audioErrorLog(`${error.name}: ${error.message}`);
+            //audioErrorLog(`${error.name}: ${error.message}`);
+            // Implement fallback mechanism with progressive delay
+            if (retryCount < MAX_RETRIES) {
+                retryCount++;
+                const delay = 50 * retryCount;
+                //audioLog(`Retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})...`);
+                
+                setTimeout(() => {
+                    setPreferredTrack();
+                }, delay);
+            } else {
+                //audioErrorLog(`Failed after ${MAX_RETRIES} retries`);
+                retryCount = 0;
+            }
+            
             return false;
         }
     }
 
-    const player = document.getElementById('movie_player');
-    if (player) {
-        let processingVideoId = null;
-        let secondaryCheckScheduled = false;
-
-        player.addEventListener('onVideoDataChange', () => {
-            const videoId = new URLSearchParams(window.location.search).get('v');
-            if (videoId === processingVideoId) return;
-            
-            processingVideoId = videoId;
-            audioLog('Video data changed, checking audio tracks...');
-            
-            const initialSuccess = setPreferredTrack();
-            
-            if (!initialSuccess && !secondaryCheckScheduled) {
-                secondaryCheckScheduled = true;
-                setTimeout(() => {
-                    setPreferredTrack();
-                    secondaryCheckScheduled = false;
-                    processingVideoId = null;
-                }, 200);
-            }
-        });
-
-        setPreferredTrack();
-    }
+    // Initial call
+    setPreferredTrack();
 })();

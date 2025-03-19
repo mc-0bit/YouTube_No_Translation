@@ -17,23 +17,17 @@ let audioObserver: MutationObserver | null = null;
 
 function setupAudioObserver() {
     cleanupAudioObserver();
-    waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        audioObserver = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    // Wait for movie_player before injecting script
-                    waitForElement('#movie_player').then(() => {
-                        handleAudioTranslation();
-                    });
-                }
-            }
-        });
 
-        audioObserver.observe(watchFlexy, {
-            attributes: true,
-            attributeFilter: ['video-id']
-        });
-    });
+    document.addEventListener('loadstart', function(e) {
+        if (!(e.target instanceof HTMLVideoElement)) return;
+        if ((e.target as any).srcValue === e.target.src) return;
+
+        
+        audioLog('Video source changed, reinitializing audio preferences...');
+        
+        handleAudioTranslation();
+        
+    }, true);
 }
 
 function cleanupAudioObserver() {
@@ -541,14 +535,20 @@ function handleUrlChange() {
         }, 5000);
     }
     
-    // --- Check if URL contains @username pattern
+    // --- Check if URL contains patterns
     const isChannelPage = window.location.pathname.includes('/@');
     if (isChannelPage) {
         // --- Handle all new channel page types (videos, featured, shorts, etc.)
         currentSettings?.titleTranslation && pageVideosObserver();
         return;
     }
-    
+    const isShortsPage = window.location.pathname.includes('/shorts');
+    if (isShortsPage) {
+        coreLog(`[URL] Detected shorts page`);
+        //currentSettings?.audioTranslation && handleAudioTranslation();
+        return;
+    }
+
     switch(window.location.pathname) {
         case '/results': // --- Search page
             coreLog(`[URL] Detected search page`);
@@ -600,6 +600,7 @@ function handleUrlChange() {
             break;
         case '/watch': // --- Video page
             coreLog(`[URL] Detected video page`);
+            //currentSettings?.audioTranslation && handleAudioTranslation();
             if (currentSettings?.titleTranslation) {
                 recommandedVideosObserver();
                 waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then(() => {
