@@ -20,6 +20,15 @@
   <a href="https://chromewebstore.google.com/detail/youtube-no-translation/lmkeolibdeeglfglnncmfleojmakecjb" target="_blank">
     <img src="./assets/images/chrome.png" height="40" alt="Available on Chrome Web Store" title="Available on Chrome Web Store"/>
   </a>
+  
+  <br>
+  
+  <a href="https://addons.mozilla.org/firefox/addon/youtube-no-translation/" target="_blank">
+    <img src="https://img.shields.io/amo/users/youtube-no-translation?label=Firefox%20Users&logo=firefox-browser&logoColor=white&style=for-the-badge" alt="Firefox Add-on Users"/>
+  </a>
+  <a href="https://chromewebstore.google.com/detail/youtube-no-translation/lmkeolibdeeglfglnncmfleojmakecjb" target="_blank">
+    <img src="https://img.shields.io/chrome-web-store/users/lmkeolibdeeglfglnncmfleojmakecjb?label=Chrome%20Users&logo=google-chrome&logoColor=white&style=for-the-badge" alt="Chrome Web Store Users"/>
+  </a>
 </div>
 
 ###
