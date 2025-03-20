@@ -46,7 +46,6 @@ let descriptionContentObserver: MutationObserver | null = null;
 
 function setupDescriptionObserver() {
     cleanupAllDescriptionObservers();
-    // Observer for video changes via URL
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
         descriptionLog('Setting up video-id observer');
         descriptionObserver = new MutationObserver(async (mutations) => {
@@ -54,31 +53,8 @@ function setupDescriptionObserver() {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
                     descriptionLog('Video ID changed!');
                     descriptionCache.clearCurrentDescription();  // Clear cache on video change
-                    const descriptionElement = document.querySelector('#description-inline-expander');
-                    if (descriptionElement) {
-                        waitForElement('#movie_player').then(() => {
-                            // Instead of calling refreshDescription directly
-                            // Call compareDescription first
-                            
-                            compareDescription(descriptionElement as HTMLElement).then(isOriginal => {
-                                if (!isOriginal) {
-                                    // Only refresh if not original                                 
-                                    refreshDescription().then(() => {
-                                        descriptionExpandObserver();
-                                        setupDescriptionContentObserver();
-                                    });
-                                } else {
-                                    cleanupDescriptionObservers();
-                                }
-                            });
-                        });
-                    } else {
-                        // If not found, wait for it
-                        waitForElement('#description-inline-expander').then(() => {
-                            refreshDescription();
-                            descriptionExpandObserver()
-                        });
-                    }
+                    // Process the video ID change
+                    processDescriptionForVideoId();
                 }
             }
         });
@@ -87,9 +63,46 @@ function setupDescriptionObserver() {
             attributes: true,
             attributeFilter: ['video-id']
         });
+        
+        // Manually trigger for the initial video when setting up the observer
+        // This handles the case where we navigate to a video page via SPA
+        const currentVideoId = watchFlexy.getAttribute('video-id');
+        if (currentVideoId) {
+            descriptionLog('Manually triggering for initial video-id:', currentVideoId);
+            descriptionCache.clearCurrentDescription();
+            // Process the initial video ID
+            processDescriptionForVideoId();
+        }
     });
-
-
+    
+    // Helper function to process description for current video ID
+    function processDescriptionForVideoId() {
+        const descriptionElement = document.querySelector('#description-inline-expander');
+        if (descriptionElement) {
+            waitForElement('#movie_player').then(() => {
+                // Instead of calling refreshDescription directly
+                // Call compareDescription first
+                
+                compareDescription(descriptionElement as HTMLElement).then(isOriginal => {
+                    if (!isOriginal) {
+                        // Only refresh if not original                                 
+                        refreshDescription().then(() => {
+                            descriptionExpandObserver();
+                            setupDescriptionContentObserver();
+                        });
+                    } else {
+                        cleanupDescriptionObservers();
+                    }
+                });
+            });
+        } else {
+            // If not found, wait for it
+            waitForElement('#description-inline-expander').then(() => {
+                refreshDescription();
+                descriptionExpandObserver();
+            });
+        }
+    }
 }
 
 function descriptionExpandObserver() {
@@ -235,6 +248,10 @@ function cleanupDescriptionObservers(): void {
 }
 
 function cleanupAllDescriptionObservers(): void {
+    // Clean up main description observer
+    descriptionObserver?.disconnect();
+    descriptionObserver = null;
+    
     cleanupDescriptionObservers();
     cleanupDescriptionContentObserver();
 }
@@ -530,11 +547,13 @@ function handleUrlChange() {
     if (currentSettings?.titleTranslation) {
         setTimeout(() => {
             refreshBrowsingTitles();
+            refreshShortsAlternativeFormat();
         }, 1500);
     }
     if (currentSettings?.titleTranslation) {
         setTimeout(() => {
             refreshBrowsingTitles();
+            refreshShortsAlternativeFormat();
         }, 5000);
     }
     
@@ -613,6 +632,7 @@ function handleUrlChange() {
         case '/watch': // --- Video page
             coreLog(`[URL] Detected video page`);
             //currentSettings?.audioTranslation && handleAudioTranslation();
+            !descriptionObserver && currentSettings?.descriptionTranslation && setupDescriptionObserver();
             if (currentSettings?.titleTranslation) {
                 recommandedVideosObserver();
                 waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then(() => {

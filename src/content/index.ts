@@ -80,11 +80,7 @@ function initializeAudioTranslation() {
 function initializeDescriptionTranslation() {
     descriptionLog('Initializing description translation prevention');
     
-    if (currentSettings?.descriptionTranslation) {
-        refreshDescription();
-        
-        setupDescriptionObserver();
-    };
+    //Everything is already called when needed in observer file
 };
 
 function initializeSubtitlesTranslation() {
