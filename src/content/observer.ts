@@ -302,32 +302,30 @@ function cleanupMainTitleObserver() {
 }
 
 // SUBTITLES OBSERVERS --------------------------------------------------------------------
-let subtitlesObserver: MutationObserver | null = null;
+let subtitlesLoadStartHandler: ((e: Event) => void) | null = null;
 
 function setupSubtitlesObserver() {
     cleanupSubtitlesObserver();
-    waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        subtitlesObserver = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    // Wait for movie_player before injecting script
-                    waitForElement('#movie_player').then(() => {
-                        handleSubtitlesTranslation();
-                    });
-                }
-            }
-        });
 
-        subtitlesObserver.observe(watchFlexy, {
-            attributes: true,
-            attributeFilter: ['video-id']
-        });
-    });
+    // Create handler function
+    subtitlesLoadStartHandler = function(e: Event) {
+        if (!(e.target instanceof HTMLVideoElement)) return;
+        if ((e.target as any).srcValue === e.target.src) return;
+        
+        subtitlesLog('Video source changed, reinitializing subtitles preferences...');
+        handleSubtitlesTranslation();
+    };
+
+    // Add event listener
+    document.addEventListener('loadstart', subtitlesLoadStartHandler, true);
 }
 
 function cleanupSubtitlesObserver() {
-    subtitlesObserver?.disconnect();
-    subtitlesObserver = null;
+    // Remove event listener if it exists
+    if (subtitlesLoadStartHandler) {
+        document.removeEventListener('loadstart', subtitlesLoadStartHandler, true);
+        subtitlesLoadStartHandler = null;
+    }
 }
 
 

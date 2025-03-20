@@ -63,14 +63,21 @@
     const subtitlesLog = createLogger(LOG_STYLES.SUBTITLES);
     const subtitlesErrorLog = createErrorLogger(LOG_STYLES.SUBTITLES);
 
+    let retryCount = 0;
+    const MAX_RETRIES = 5;
 
     function setPreferredSubtitles() {
-        const player = document.getElementById('movie_player');
+        // Try to get the specified player
+        let targetId = 'movie_player';
+        if (window.location.pathname.startsWith('/shorts')) {
+            targetId = 'shorts-player';
+        }
+        const player = document.getElementById(targetId);
         if (!player) return false;
 
         // Get language preference from localStorage
         const subtitlesLanguage = localStorage.getItem('subtitlesLanguage') || 'original';
-        subtitlesLog(`Using preferred language: ${subtitlesLanguage}`);
+        //subtitlesLog(`Using preferred language: ${subtitlesLanguage}`);
 
         try {
             // Get video response to access caption tracks
@@ -120,37 +127,25 @@
                 return true;
             }
         } catch (error) {
-            subtitlesErrorLog(`${error.name}: ${error.message}`);
+            //subtitlesErrorLog(`${error.name}: ${error.message}`);
+            // Implement fallback mechanism with progressive delay
+            if (retryCount < MAX_RETRIES) {
+                retryCount++;
+                const delay = 50 * retryCount;
+                //subtitlesLog(`Retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})...`);
+                
+                setTimeout(() => {
+                    setPreferredSubtitles();
+                }, delay);
+            } else {
+                //subtitlesErrorLog(`Failed after ${MAX_RETRIES} retries`);
+                retryCount = 0;
+            }
+            
             return false;
         }
     }
 
-    const player = document.getElementById('movie_player');
-    if (player) {
-        let processingVideoId = null;
-        let initialSetupDone = false;
-
-        player.addEventListener('onVideoDataChange', () => {
-            const videoId = new URLSearchParams(window.location.search).get('v');
-            if (videoId === processingVideoId) return;
-            
-            processingVideoId = videoId;
-            subtitlesLog('Video data changed, checking subtitles...');
-            
-            const success = setPreferredSubtitles();
-            if (success) {
-                processingVideoId = null;
-            } else if (!initialSetupDone) {
-                initialSetupDone = true;
-                setTimeout(() => {
-                    setPreferredSubtitles();
-                    processingVideoId = null;
-                }, 200);
-            }
-        });
-
-        // Initial setup
-        setPreferredSubtitles();
-        initialSetupDone = true;
-    }
+    // Execute immediately when script is injected
+    setPreferredSubtitles();
 })();
