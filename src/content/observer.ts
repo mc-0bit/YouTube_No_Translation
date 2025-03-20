@@ -284,65 +284,6 @@ function cleanupMainTitleObserver() {
     mainTitleObserver = null;
 }
 
-let shortMainTitleLoadStartHandler: ((e: Event) => void) | null = null;
-
-function setupShortsMainTitleObserver() {
-    cleanupShortsMainTitleObserver();
-
-
-    waitForElement('yt-shorts-video-title-view-model h2.ytShortsVideoTitleViewModelShortsVideoTitle span')
-            .then(() => {
-                // Initial refresh
-                refreshShortMainTitle();
-            });
-
-    // Create handler function
-    shortMainTitleLoadStartHandler = async function(e: Event) {
-        if (!(e.target instanceof HTMLVideoElement)) return;
-        if ((e.target as any).srcValue === e.target.src) return;
-        
-        // Track that we've handled this source
-        (e.target as any).srcValue = e.target.src;
-        
-        mainTitleLog('Video source changed, updating title...');
-        
-        // Wait for the shorts title element to be available
-        waitForElement('yt-shorts-video-title-view-model h2.ytShortsVideoTitleViewModelShortsVideoTitle span')
-            .then(() => {
-                // Initial refresh
-                refreshShortMainTitle();
-                
-                // Setup multiple refresh attempts with increasing delays
-                const delays = [50, 150, 300, 500];
-                
-                delays.forEach(delay => {
-                    setTimeout(() => {
-                        // Only refresh if we're still on the same video
-                        if (window.location.pathname.startsWith('/shorts')) {
-                            //mainTitleLog(`Refreshing shorts title after ${delay}ms delay`);
-                            refreshShortMainTitle();
-                        }
-                    }, delay);
-                });
-            })
-            .catch(error => {
-                mainTitleErrorLog('Failed to find shorts title element:', error);
-            });
-    };
-
-    // Add event listener
-    document.addEventListener('loadstart', shortMainTitleLoadStartHandler, true);
-}
-
-function cleanupShortsMainTitleObserver() {
-    // Remove event listener if it exists
-    if (shortMainTitleLoadStartHandler) {
-        document.removeEventListener('loadstart', shortMainTitleLoadStartHandler, true);
-        shortMainTitleLoadStartHandler = null;
-    }
-}
-
-
 // SUBTITLES OBSERVERS --------------------------------------------------------------------
 let subtitlesObserver: MutationObserver | null = null;
 
@@ -604,16 +545,19 @@ function handleUrlChange() {
         coreLog(`[URL] Detected channel page`);
         if (currentSettings?.titleTranslation) {
             pageVideosObserver();
-            refreshBrowsingTitles();
-            refreshShortsAlternativeFormat();
-        return;
+            waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
+                coreLog('Channel page container found');
+                refreshBrowsingTitles();
+                refreshShortsAlternativeFormat();
+            });      
         }
+        return;
     }
     const isShortsPage = window.location.pathname.startsWith('/shorts');
     if (isShortsPage) {
         coreLog(`[URL] Detected shorts page`);
         //currentSettings?.audioTranslation && handleAudioTranslation();
-        currentSettings?.titleTranslation && setupShortsMainTitleObserver();
+        currentSettings?.titleTranslation && checkShortsId();
         return;
     }
 
