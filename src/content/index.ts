@@ -55,6 +55,16 @@ async function initializeFeatures() {
 }
 
 // Initialize functions
+let loadStartHandlerInitialized = false;
+
+function initializeLoadStartHandler() {
+    if (!loadStartHandlerInitialized && 
+        (currentSettings?.audioTranslation || currentSettings?.subtitlesTranslation)) {
+        setupLoadStartHandler();
+        loadStartHandlerInitialized = true;
+    }
+}
+
 function initializeTitleTranslation() {
     titlesLog('Initializing title translation prevention');
     
@@ -73,7 +83,7 @@ function initializeAudioTranslation() {
     if (currentSettings?.audioTranslation) {
         handleAudioTranslation();
         
-        setupAudioObserver();
+        initializeLoadStartHandler();
     };
 };
 
@@ -89,7 +99,7 @@ function initializeSubtitlesTranslation() {
     if (currentSettings?.subtitlesTranslation) {
         handleSubtitlesTranslation();
         
-        setupSubtitlesObserver();
+        initializeLoadStartHandler();
     };
 };
 
@@ -99,8 +109,8 @@ browser.runtime.onMessage.addListener((message: unknown) => {
             case 'audio':
                 if (message.isEnabled) {
                     handleAudioTranslation();
-                    
-                    setupAudioObserver();
+
+                    setupLoadStartHandler();                    
                 }
                 break;
             case 'titles':
@@ -123,7 +133,7 @@ browser.runtime.onMessage.addListener((message: unknown) => {
                 if (message.isEnabled) {
                     handleSubtitlesTranslation();
 
-                    setupSubtitlesObserver();
+                    setupLoadStartHandler();
                 }
                 break;
         }

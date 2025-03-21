@@ -7,34 +7,34 @@
  * This program is distributed without any warranty; see the license for details.
  */
 
-// TODO: Current observer implementation could be refactored for better efficiency, some are not even used
+// TODO: Current observer implementation could be refactored for better efficiency / performances
 // Keeping current structure for stability, needs architectural review in future updates
 
 
-// AUDIO OBSERVERS --------------------------------------------------------------------
-let audioLoadStartHandler: ((e: Event) => void) | null = null;
+let loadStartHandler: ((e: Event) => void) | null = null;
 
-function setupAudioObserver() {
-    cleanupAudioObserver();
+function setupLoadStartHandler() {
+    cleanUpLoadStartHandler();
 
     // Create handler function
-    audioLoadStartHandler = function(e: Event) {
+    loadStartHandler = function(e: Event) {
         if (!(e.target instanceof HTMLVideoElement)) return;
         if ((e.target as any).srcValue === e.target.src) return;
         
-        audioLog('Video source changed, reinitializing audio preferences...');
-        handleAudioTranslation();
+        coreLog('Video source changed.');
+        currentSettings?.audioTranslation && handleAudioTranslation();
+        currentSettings?.subtitlesTranslation && handleSubtitlesTranslation();
     };
 
     // Add event listener
-    document.addEventListener('loadstart', audioLoadStartHandler, true);
+    document.addEventListener('loadstart', loadStartHandler, true);
 }
 
-function cleanupAudioObserver() {
+function cleanUpLoadStartHandler() {
     // Remove event listener if it exists
-    if (audioLoadStartHandler) {
-        document.removeEventListener('loadstart', audioLoadStartHandler, true);
-        audioLoadStartHandler = null;
+    if (loadStartHandler) {
+        document.removeEventListener('loadstart', loadStartHandler, true);
+        loadStartHandler = null;
     }
 }
 
@@ -301,32 +301,7 @@ function cleanupMainTitleObserver() {
     mainTitleObserver = null;
 }
 
-// SUBTITLES OBSERVERS --------------------------------------------------------------------
-let subtitlesLoadStartHandler: ((e: Event) => void) | null = null;
 
-function setupSubtitlesObserver() {
-    cleanupSubtitlesObserver();
-
-    // Create handler function
-    subtitlesLoadStartHandler = function(e: Event) {
-        if (!(e.target instanceof HTMLVideoElement)) return;
-        if ((e.target as any).srcValue === e.target.src) return;
-        
-        subtitlesLog('Video source changed, reinitializing subtitles preferences...');
-        handleSubtitlesTranslation();
-    };
-
-    // Add event listener
-    document.addEventListener('loadstart', subtitlesLoadStartHandler, true);
-}
-
-function cleanupSubtitlesObserver() {
-    // Remove event listener if it exists
-    if (subtitlesLoadStartHandler) {
-        document.removeEventListener('loadstart', subtitlesLoadStartHandler, true);
-        subtitlesLoadStartHandler = null;
-    }
-}
 
 
 // BROWSING TITLES OBSERVER -----------------------------------------------------------
@@ -340,7 +315,7 @@ let lastRecommendedRefresh = 0;
 let lastSearchRefresh = 0;
 let lastPlaylistRefresh = 0;
 
-const THROTTLE_DELAY = 500; // minimum of .5 seconds between refreshes
+const THROTTLE_DELAY = 1000; // minimum of X ms between refreshes between container mutations
 
 function pageVideosObserver() {
     cleanupPageVideosObserver();
@@ -348,6 +323,8 @@ function pageVideosObserver() {
     // --- Observer for home page | Channel page
     waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
         browsingTitlesLog('Setting up Home/Channel/Subscriptions page videos observer');
+        refreshBrowsingTitles();
+        refreshShortsAlternativeFormat();
         homeObserver = new MutationObserver(() => {
             const now = Date.now();
             if (now - lastHomeRefresh >= THROTTLE_DELAY) {
@@ -371,6 +348,7 @@ function recommandedVideosObserver() {
     // --- Observer for recommended videos
     waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then((contents) => {
         browsingTitlesLog('Setting up recommended videos observer');
+        refreshBrowsingTitles();
         recommendedObserver = new MutationObserver(() => {
             const now = Date.now();
             if (now - lastRecommendedRefresh >= THROTTLE_DELAY) {
@@ -394,6 +372,8 @@ function searchResultsObserver() {
     // --- Observer for search results
     waitForElement('ytd-section-list-renderer #contents').then((contents) => {
         browsingTitlesLog('Setting up search results observer');
+        refreshBrowsingTitles();
+        refreshShortsAlternativeFormat();
         searchObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'childList' && 
@@ -427,6 +407,7 @@ function playlistVideosObserver() {
     // --- Observer for playlist/queue videos
     waitForElement('#playlist ytd-playlist-panel-renderer #items').then((contents) => {
         browsingTitlesLog('Setting up playlist/queue videos observer');
+        refreshBrowsingTitles();
         playlistObserver = new MutationObserver(() => {
             const now = Date.now();
             if (now - lastPlaylistRefresh >= THROTTLE_DELAY) {
@@ -526,8 +507,8 @@ function setupUrlObserver() {
 }
 
 function handleUrlChange() {
-    coreLog(`${LOG_PREFIX}[URL] Current pathname:`, window.location.pathname);
-    coreLog(`${LOG_PREFIX}[URL] Full URL:`, window.location.href);
+    coreLog(`[URL] Current pathname:`, window.location.pathname);
+    coreLog(`[URL] Full URL:`, window.location.href);
     
     // --- Clean up existing observers
     cleanupMainTitleContentObserver();
@@ -539,7 +520,7 @@ function handleUrlChange() {
 
     cleanupDescriptionObservers();
     
-    coreLog('Observers cleaned up');
+    //coreLog('Observers cleaned up');
 
     
     if (currentSettings?.titleTranslation) {
@@ -547,8 +528,6 @@ function handleUrlChange() {
             refreshBrowsingTitles();
             refreshShortsAlternativeFormat();
         }, 1500);
-    }
-    if (currentSettings?.titleTranslation) {
         setTimeout(() => {
             refreshBrowsingTitles();
             refreshShortsAlternativeFormat();
@@ -562,86 +541,45 @@ function handleUrlChange() {
         coreLog(`[URL] Detected channel page`);
         if (currentSettings?.titleTranslation) {
             pageVideosObserver();
-            waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
-                coreLog('Channel page container found');
-                refreshBrowsingTitles();
-                refreshShortsAlternativeFormat();
-            });      
         }
         return;
     }
     const isShortsPage = window.location.pathname.startsWith('/shorts');
     if (isShortsPage) {
         coreLog(`[URL] Detected shorts page`);
-        //currentSettings?.audioTranslation && handleAudioTranslation();
         currentSettings?.titleTranslation && checkShortsId();
         return;
     }
-
+    
     switch(window.location.pathname) {
         case '/results': // --- Search page
             coreLog(`[URL] Detected search page`);
-            if (currentSettings?.titleTranslation) {
-                searchResultsObserver();
-                waitForElement('#contents.ytd-section-list-renderer').then(() => {
-                    browsingTitlesLog('Search results container found');
-                    refreshBrowsingTitles();
-                    refreshShortsAlternativeFormat();
-                });
-            }
-            
+            currentSettings?.titleTranslation && searchResultsObserver();
             break;
         case '/': // --- Home page
             coreLog(`[URL] Detected home page`);
-            if (currentSettings?.titleTranslation) {
-                pageVideosObserver();
-                waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
-                    browsingTitlesLog('Home page container found');
-                    refreshBrowsingTitles();
-                });      
-            }
+            currentSettings?.titleTranslation && pageVideosObserver();
             break;        
         case '/feed/subscriptions': // --- Subscriptions page
             coreLog(`[URL] Detected subscriptions page`);
-            if (currentSettings?.titleTranslation) {
-                pageVideosObserver();
-                waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
-                    browsingTitlesLog('Subscriptions page container found');
-                    refreshBrowsingTitles();
-                });
-            }
+            currentSettings?.titleTranslation && pageVideosObserver();
             break;
         case '/feed/trending':  // --- Trending page
             coreLog(`[URL] Detected trending page`);
-            if (currentSettings?.titleTranslation) {
-                pageVideosObserver();
-                waitForElement('#contents.ytd-rich-grid-renderer').then(() => {
-                    browsingTitlesLog('Trending page container found');
-                    refreshBrowsingTitles();
-                });
-            }
+            currentSettings?.titleTranslation && pageVideosObserver();
             break;
         case '/playlist':  // --- Playlist page
+            coreLog(`[URL] Detected playlist page`);
             currentSettings?.titleTranslation && playlistVideosObserver();
             break;
         case '/channel':  // --- Channel page (old format)
+            coreLog(`[URL] Detected channel page`);
             currentSettings?.titleTranslation && pageVideosObserver();
             break;
         case '/watch': // --- Video page
             coreLog(`[URL] Detected video page`);
-            //currentSettings?.audioTranslation && handleAudioTranslation();
             !descriptionObserver && currentSettings?.descriptionTranslation && setupDescriptionObserver();
-            if (currentSettings?.titleTranslation) {
-                recommandedVideosObserver();
-                waitForElement('#secondary-inner ytd-watch-next-secondary-results-renderer #items').then(() => {
-                    browsingTitlesLog('Recommended videos container found');
-                    refreshBrowsingTitles();
-                        // --- refresh titles 4 seconds after loading video page
-                        setTimeout(() => {
-                            refreshBrowsingTitles();
-                        }, 4000);
-                });
-            }
+            currentSettings?.titleTranslation && recommandedVideosObserver();
             break;
     }
 }

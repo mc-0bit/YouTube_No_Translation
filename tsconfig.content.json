@@ -21,7 +21,7 @@
     "src/types/types.ts",
     "src/types/global.d.ts",
     "src/config/constants.ts",
-    "src/content/logging.ts",
+    "src/content/loggings.ts",
     "src/content/utils.ts",
     "src/content/titles/index.ts",
     "src/content/titles/mainTitle.ts",
@@ -31,7 +31,7 @@
     "src/content/description/descriptionIndex.ts",
     "src/content/subtitles/subtitlesIndex.ts",
     "src/content/channelName/channelName.ts",
-    "src/content/observer.ts",
+    "src/content/observers.ts",
     "src/content/index.ts"
   ]
 }
