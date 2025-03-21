@@ -128,7 +128,7 @@ function updatePageTitle(mainTitle: string): void {
 async function refreshMainTitle(): Promise<void> {
     const mainTitle = document.querySelector('h1.ytd-watch-metadata > yt-formatted-string') as HTMLElement;
     if (mainTitle && window.location.pathname === '/watch' && !titleCache.hasElement(mainTitle)) {
-        mainTitleLog('Processing main title element');
+        //mainTitleLog('Processing main title element');
         const videoId = new URLSearchParams(window.location.search).get('v');
         if (videoId) {
             const currentTitle = mainTitle.textContent;
@@ -179,6 +179,7 @@ async function refreshMainTitle(): Promise<void> {
 
             // Skip if title is already correct
             if (normalizeText(currentTitle) === normalizeText(originalTitle)) {
+                mainTitleLog('Main title is already original');
                 return;
             }
 
@@ -199,7 +200,7 @@ async function refreshMainTitle(): Promise<void> {
 async function refreshEmbedTitle(): Promise<void> {
     const embedTitle = document.querySelector('.ytp-title-link') as HTMLElement;
     if (embedTitle && !titleCache.hasElement(embedTitle)) {
-        mainTitleLog('Processing embed title element');
+        //mainTitleLog('Processing embed title element');
         
         // Get video ID from pathname
         const videoId = window.location.pathname.split('/embed/')[1];

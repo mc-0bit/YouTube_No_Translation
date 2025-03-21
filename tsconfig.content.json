@@ -30,6 +30,7 @@
     "src/content/audio/audioIndex.ts",
     "src/content/description/descriptionIndex.ts",
     "src/content/subtitles/subtitlesIndex.ts",
+    "src/content/channelName/channelName.ts",
     "src/content/observer.ts",
     "src/content/index.ts"
   ]

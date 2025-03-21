@@ -273,7 +273,7 @@ function setupMainTitleObserver() {
                     
                     const newVideoId = (mutation.target as HTMLElement).getAttribute('video-id');
                     mainTitleLog('Video ID changed:', newVideoId);
-                    mainTitleLog('Cache cleared');
+                    //mainTitleLog('Cache cleared');
                     
                     // Wait for movie_player and title element
                     const [player, titleElement] = await Promise.all([
