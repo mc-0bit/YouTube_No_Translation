@@ -74,7 +74,7 @@ function updateChannelNameElement(element: HTMLElement, originalName: string): v
 
 async function refreshChannelName(): Promise<void> {
     // Find the channel name element
-    const channelNameElement = document.querySelector('ytd-channel-name yt-formatted-string#text') as HTMLElement;
+    const channelNameElement = document.querySelector('ytd-watch-metadata ytd-video-owner-renderer ytd-channel-name yt-formatted-string#text') as HTMLElement;
     
     if (!channelNameElement) {
         //channelNameLog('Channel name element not found');
@@ -114,8 +114,10 @@ async function refreshChannelName(): Promise<void> {
             return;
         }
         
-        // Skip if channel name is already correct
-        if (normalizeText(channelNameElement.textContent) === normalizeText(originalChannelName)) {
+        const normalizedCurrentName = normalizeText(channelNameElement.textContent);
+        const normalizedOriginalName = normalizeText(originalChannelName);
+
+        if (normalizedCurrentName === normalizedOriginalName) {
             channelNameLog('Channel name is already original');
             return;
         }

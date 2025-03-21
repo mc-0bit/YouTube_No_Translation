@@ -323,13 +323,23 @@ function pageVideosObserver() {
 
     // --- Observer for home page | Channel page
     waitForElement('#contents.ytd-rich-grid-renderer').then((contents) => {
-        browsingTitlesLog('Setting up Home/Channel/Subscriptions page videos observer');
+        let pageName = null;
+        if (window.location.pathname === '/') {
+            pageName = 'Home';
+        } else if (window.location.pathname === '/feed/subscriptions') {
+            pageName = 'Subscriptions';
+        } else if (window.location.pathname.includes('/@')) {
+            pageName = 'Channel';
+        } else if (window.location.pathname === '/feed/trending') {
+            pageName = 'Trending';
+        }
+        browsingTitlesLog(`Setting up ${pageName} page videos observer`);
         refreshBrowsingTitles();
         refreshShortsAlternativeFormat();
         homeObserver = new MutationObserver(() => {
             const now = Date.now();
             if (now - lastHomeRefresh >= THROTTLE_DELAY) {
-                browsingTitlesLog('Home/Channel/Subscriptions page mutation detected');
+                browsingTitlesLog(`${pageName} page mutation detected`);
                 refreshBrowsingTitles();
                 refreshShortsAlternativeFormat();
                 lastHomeRefresh = now;
@@ -372,7 +382,13 @@ function searchResultsObserver() {
 
     // --- Observer for search results
     waitForElement('ytd-section-list-renderer #contents').then((contents) => {
-        browsingTitlesLog('Setting up search results observer');
+        let pageName = null;
+        if (window.location.pathname === '/results') {
+            pageName = 'Search';
+        } else if (window.location.pathname === '/feed/history') {
+            pageName = 'History';
+        }
+        browsingTitlesLog(`Setting up ${pageName} results videos observer`);
         refreshBrowsingTitles();
         refreshShortsAlternativeFormat();
         searchObserver = new MutationObserver((mutations) => {
@@ -384,7 +400,7 @@ function searchResultsObserver() {
                     if (titles.length > 0) {
                         const now = Date.now();
                         if (now - lastSearchRefresh >= THROTTLE_DELAY) {
-                            browsingTitlesLog('Search results mutation detected');
+                            browsingTitlesLog(`${pageName} results mutation detected`);
                             refreshBrowsingTitles();
                             refreshShortsAlternativeFormat();
                             lastSearchRefresh = now;
@@ -508,13 +524,15 @@ function setupUrlObserver() {
 }
 
 function handleUrlChange() {
-    coreLog(`[URL] Current pathname:`, window.location.pathname);
+    //coreLog(`[URL] Current pathname:`, window.location.pathname);
     coreLog(`[URL] Full URL:`, window.location.href);
     
     // --- Clean up existing observers
     cleanupMainTitleContentObserver();
     cleanupIsEmptyObserver();
     cleanupPageTitleObserver();
+
+    cleanupChannelNameContentObserver();
     
     cleanupAllBrowsingTitlesObservers();
     cleanupAllBrowsingTitlesElementsObservers();
@@ -557,17 +575,21 @@ function handleUrlChange() {
             coreLog(`[URL] Detected search page`);
             currentSettings?.titleTranslation && searchResultsObserver();
             break;
-        case '/': // --- Home page
+            case '/': // --- Home page
             coreLog(`[URL] Detected home page`);
             currentSettings?.titleTranslation && pageVideosObserver();
             break;        
-        case '/feed/subscriptions': // --- Subscriptions page
+            case '/feed/subscriptions': // --- Subscriptions page
             coreLog(`[URL] Detected subscriptions page`);
             currentSettings?.titleTranslation && pageVideosObserver();
             break;
-        case '/feed/trending':  // --- Trending page
+            case '/feed/trending':  // --- Trending page
             coreLog(`[URL] Detected trending page`);
             currentSettings?.titleTranslation && pageVideosObserver();
+            break;
+            case '/feed/history':  // --- History page
+            coreLog(`[URL] Detected history page`);
+            currentSettings?.titleTranslation && searchResultsObserver();
             break;
         case '/playlist':  // --- Playlist page
             coreLog(`[URL] Detected playlist page`);
