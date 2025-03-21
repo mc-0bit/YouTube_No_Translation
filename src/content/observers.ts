@@ -284,6 +284,7 @@ function setupMainTitleObserver() {
                     // Only proceed if we're still on the same page
                     if (titleElement.textContent) {
                         await refreshMainTitle();
+                        await refreshChannelName();
                     }
                 }
             }
