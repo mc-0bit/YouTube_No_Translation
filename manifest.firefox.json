@@ -4,14 +4,14 @@
   "version": "2.2.11",
   "description": "Stop YouTube's automatic translations! This extension keeps titles, descriptions and video audio in their original language.",
   "icons": {
-    "48": "assets/icons/icon.svg",
-    "96": "assets/icons/icon.svg"
+    "48": "dist/assets/icons/icon.svg",
+    "96": "dist/assets/icons/icon.svg"
   },
 
   "action": {
     "default_icon": {
-      "48": "assets/icons/icon.svg",
-      "96": "assets/icons/icon.svg"
+      "48": "dist/assets/icons/icon.svg",
+      "96": "dist/assets/icons/icon.svg"
     },
     "default_popup": "dist/popup/popup.html",
     "default_title": "YNT"
@@ -50,10 +50,11 @@
   
   "web_accessible_resources": [{
       "resources": [
-          "dist/content/audio/audioScript.js",
-          "dist/content/description/descriptionScript.js",
-          "dist/content/subtitles/subtitlesScript.js",
-          "dist/content/titles/mainTitleScript.js"
+        "dist/content/scripts/audioScript.js",
+        "dist/content/scripts/descriptionScript.js",
+        "dist/content/scripts/subtitlesScript.js",
+        "dist/content/scripts/mainTitleScript.js",
+        "dist/content/scripts/channelNameScript.js"
       ],
       "matches": [
         "*://*.youtube.com/*",

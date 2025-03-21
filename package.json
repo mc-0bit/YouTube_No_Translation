@@ -8,7 +8,7 @@
     "build": "npm run build:firefox && npm run build:chrome",
     "build:firefox": "npm run clean && npm run create-dirs && npm run pre:web-ext:firefox && npm run build:common && npm run copy:assets",
     "build:chrome": "npm run clean && npm run create-dirs && npm run pre:web-ext:chrome && npm run build:common && npm run copy:assets",
-    "build:common": "npm run build:polyfill && npm run build:content && npm run build:popup && npm run build:background && npm run build:css && npm run build:html && npm run copy:scripts",
+    "build:common": "npm run build:polyfill && npm run build:content && npm run build:popup && npm run build:background && npm run build:css && npm run build:html && npm run copy:scripts && npm run post:build",
     "build:content": "tsc -p tsconfig.content.json",
     "build:popup": "tsc -p tsconfig.popup.json",
     "build:background": "tsc -p tsconfig.background.json",
@@ -18,8 +18,8 @@
     "watch": "concurrently \"npm run watch:ts\" \"npm run watch:css\"",
     "watch:ts": "tsc --watch",
     "watch:css": "tailwindcss -i ./src/styles/main.css -o ./dist/styles/main.css --watch",
-    "copy:assets": "cp -r assets/* dist/assets/",
-    "copy:scripts": "mkdir -p dist/content/audio dist/content/description dist/content/subtitles dist/content/titles && cp src/content/audio/audioScript.js dist/content/audio/ && cp src/content/description/descriptionScript.js dist/content/description/ && cp src/content/subtitles/subtitlesScript.js dist/content/subtitles/ && cp src/content/titles/mainTitleScript.js dist/content/titles/",
+    "copy:assets": "cp -r assets/icons dist/assets/",
+    "copy:scripts": "mkdir -p dist/content/scripts && cp src/content/audio/audioScript.js dist/content/scripts/ && cp src/content/description/descriptionScript.js dist/content/scripts/ && cp src/content/subtitles/subtitlesScript.js dist/content/scripts/ && cp src/content/titles/mainTitleScript.js dist/content/scripts/",
     "pre:web-ext:firefox": "cp manifest.firefox.json manifest.json",
     "pre:web-ext:chrome": "cp manifest.chrome.json manifest.json",
     "web-ext:firefox": "web-ext build --overwrite-dest -a web-ext-artifacts/firefox",
@@ -27,7 +27,8 @@
     "post:web-ext": "rm manifest.json",
     "package": "npm run package:firefox && npm run package:chrome && npm run post:web-ext",
     "package:firefox": "npm run build:firefox && npm run web-ext:firefox",
-    "package:chrome": "npm run build:chrome && npm run web-ext:chrome"
+    "package:chrome": "npm run build:chrome && npm run web-ext:chrome",
+    "post:build": "rimraf dist/config dist/types"
   },
   "repository": {
     "type": "git",

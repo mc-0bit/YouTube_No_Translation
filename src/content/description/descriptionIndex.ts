@@ -16,7 +16,7 @@ async function fetchOriginalDescription(): Promise<string | null> {
         };
         window.addEventListener('ynt-description-data', handleDescription as EventListener);
         const script = document.createElement('script');
-        script.src = browser.runtime.getURL('dist/content/description/descriptionScript.js');
+        script.src = browser.runtime.getURL('dist/content/scripts/descriptionScript.js');
         document.documentElement.appendChild(script);
     });
 }

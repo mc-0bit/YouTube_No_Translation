@@ -24,7 +24,7 @@ async function syncAudioLanguagePreference() {
 async function handleAudioTranslation() {   
     await syncAudioLanguagePreference();
     const script = document.createElement('script');
-    script.src = browser.runtime.getURL('dist/content/audio/audioScript.js');
+    script.src = browser.runtime.getURL('dist/content/scripts/audioScript.js');
     document.documentElement.appendChild(script);
 }
 
