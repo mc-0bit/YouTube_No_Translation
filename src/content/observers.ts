@@ -10,14 +10,15 @@
 // TODO: Current observer implementation could be refactored for better efficiency / performances
 // Keeping current structure for stability, needs architectural review in future updates
 
+// MAIN OBSERVERS -----------------------------------------------------------
+let loadStartListener: ((e: Event) => void) | null = null;
 
-let loadStartHandler: ((e: Event) => void) | null = null;
+function setupLoadStartListener() {
+    cleanUpLoadStartListener();
 
-function setupLoadStartHandler() {
-    cleanUpLoadStartHandler();
+    coreLog('Setting up loadstart listener');
 
-    // Create handler function
-    loadStartHandler = function(e: Event) {
+    loadStartListener = function(e: Event) {
         if (!(e.target instanceof HTMLVideoElement)) return;
         if ((e.target as any).srcValue === e.target.src) return;
         
@@ -26,84 +27,109 @@ function setupLoadStartHandler() {
         currentSettings?.subtitlesTranslation && handleSubtitlesTranslation();
     };
 
-    // Add event listener
-    document.addEventListener('loadstart', loadStartHandler, true);
+    document.addEventListener('loadstart', loadStartListener, true);
 }
 
-function cleanUpLoadStartHandler() {
-    // Remove event listener if it exists
-    if (loadStartHandler) {
-        document.removeEventListener('loadstart', loadStartHandler, true);
-        loadStartHandler = null;
+function cleanUpLoadStartListener() {
+    if (loadStartListener) {
+        document.removeEventListener('loadstart', loadStartListener, true);
+        loadStartListener = null;
     }
 }
 
-// DESCRIPTION OBSERVERS ------------------------------------------------------------
-let descriptionObserver: MutationObserver | null = null;
-let descriptionExpansionObserver: MutationObserver | null = null;
-let descriptionContentObserver: MutationObserver | null = null;
+let mainVideoObserver: MutationObserver | null = null;
 
 
-function setupDescriptionObserver() {
-    cleanupAllDescriptionObservers();
+function setupMainVideoObserver() {
+    cleanupMainVideoObserver();
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        descriptionLog('Setting up video-id observer');
-        descriptionObserver = new MutationObserver(async (mutations) => {
+        coreLog('Setting up video-id observer');
+        mainVideoObserver = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    descriptionLog('Video ID changed!');
-                    descriptionCache.clearCurrentDescription();  // Clear cache on video change
-                    // Process the video ID change
-                    processDescriptionForVideoId();
+                    titleCache.clear();
+                    descriptionCache.clearCurrentDescription()
+                    
+                    const newVideoId = (mutation.target as HTMLElement).getAttribute('video-id');
+                    coreLog('Video ID changed:', newVideoId);
+                    
+                    if (currentSettings?.titleTranslation) {
+                        // Wait for movie_player and title element
+                        const [player, titleElement] = await Promise.all([
+                            waitForElement('#movie_player'),
+                            waitForElement('ytd-watch-metadata yt-formatted-string.style-scope.ytd-watch-metadata')
+                        ]);
+    
+                        // Only proceed if we're still on the same page
+                        if (titleElement.textContent) {
+                            await refreshMainTitle();
+                            await refreshChannelName();
+                        }
+                    }
+
+                    currentSettings?.descriptionTranslation && processDescriptionForVideoId();
                 }
             }
         });
 
-        descriptionObserver.observe(watchFlexy, {
+        if (currentSettings?.descriptionTranslation) {
+            // Manually trigger for the initial video when setting up the observer
+            // This handles the case where we navigate to a video page via SPA
+            const currentVideoId = watchFlexy.getAttribute('video-id');
+            if (currentVideoId) {
+                descriptionLog('Manually triggering for initial video-id:', currentVideoId);
+                descriptionCache.clearCurrentDescription();
+                // Process the initial video ID
+                processDescriptionForVideoId();
+            }
+        }
+
+        mainVideoObserver.observe(watchFlexy, {
             attributes: true,
             attributeFilter: ['video-id']
         });
-        
-        // Manually trigger for the initial video when setting up the observer
-        // This handles the case where we navigate to a video page via SPA
-        const currentVideoId = watchFlexy.getAttribute('video-id');
-        if (currentVideoId) {
-            descriptionLog('Manually triggering for initial video-id:', currentVideoId);
-            descriptionCache.clearCurrentDescription();
-            // Process the initial video ID
-            processDescriptionForVideoId();
-        }
     });
-    
-    // Helper function to process description for current video ID
-    function processDescriptionForVideoId() {
-        const descriptionElement = document.querySelector('#description-inline-expander');
-        if (descriptionElement) {
-            waitForElement('#movie_player').then(() => {
-                // Instead of calling refreshDescription directly
-                // Call compareDescription first
-                
-                compareDescription(descriptionElement as HTMLElement).then(isOriginal => {
-                    if (!isOriginal) {
-                        // Only refresh if not original                                 
-                        refreshDescription().then(() => {
-                            descriptionExpandObserver();
-                            setupDescriptionContentObserver();
-                        });
-                    } else {
-                        cleanupDescriptionObservers();
-                    }
-                });
+}
+
+function cleanupMainVideoObserver() {
+    mainVideoObserver?.disconnect();
+    mainVideoObserver = null;
+}
+
+// DESCRIPTION OBSERVERS ------------------------------------------------------------
+let descriptionExpansionObserver: MutationObserver | null = null;
+let descriptionContentObserver: MutationObserver | null = null;
+
+
+// Helper function to process description for current video ID
+function processDescriptionForVideoId() {
+    const descriptionElement = document.querySelector('#description-inline-expander');
+    if (descriptionElement) {
+        waitForElement('#movie_player').then(() => {
+            // Instead of calling refreshDescription directly
+            // Call compareDescription first
+            
+            compareDescription(descriptionElement as HTMLElement).then(isOriginal => {
+                if (!isOriginal) {
+                    // Only refresh if not original                                 
+                    refreshDescription().then(() => {
+                        descriptionExpandObserver();
+                        setupDescriptionContentObserver();
+                    });
+                } else {
+                    cleanupDescriptionObservers();
+                }
             });
-        } else {
-            // If not found, wait for it
-            waitForElement('#description-inline-expander').then(() => {
-                refreshDescription();
-                descriptionExpandObserver();
-            });
-        }
+        });
+    } else {
+        // If not found, wait for it
+        waitForElement('#description-inline-expander').then(() => {
+            refreshDescription();
+            descriptionExpandObserver();
+        });
     }
 }
+
 
 function descriptionExpandObserver() {
     // Observer for description expansion/collapse
@@ -246,62 +272,6 @@ function cleanupDescriptionObservers(): void {
 
     cleanupDescriptionContentObserver();
 }
-
-function cleanupAllDescriptionObservers(): void {
-    // Clean up main description observer
-    descriptionObserver?.disconnect();
-    descriptionObserver = null;
-    
-    cleanupDescriptionObservers();
-    cleanupDescriptionContentObserver();
-}
-
-
-
-// MAIN TITLE OBSERVERS ---------------------------------------------
-let mainTitleObserver: MutationObserver | null = null;
-
-
-function setupMainTitleObserver() {
-    cleanupMainTitleObserver();
-    waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        mainTitleLog('Setting up video-id observer');
-        mainTitleObserver = new MutationObserver(async (mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
-                    titleCache.clear();
-                    
-                    const newVideoId = (mutation.target as HTMLElement).getAttribute('video-id');
-                    mainTitleLog('Video ID changed:', newVideoId);
-                    //mainTitleLog('Cache cleared');
-                    
-                    // Wait for movie_player and title element
-                    const [player, titleElement] = await Promise.all([
-                        waitForElement('#movie_player'),
-                        waitForElement('ytd-watch-metadata yt-formatted-string.style-scope.ytd-watch-metadata')
-                    ]);
-
-                    // Only proceed if we're still on the same page
-                    if (titleElement.textContent) {
-                        await refreshMainTitle();
-                        await refreshChannelName();
-                    }
-                }
-            }
-        });
-
-        mainTitleObserver.observe(watchFlexy, {
-            attributes: true,
-            attributeFilter: ['video-id']
-        });
-    });
-}
-
-function cleanupMainTitleObserver() {
-    mainTitleObserver?.disconnect();
-    mainTitleObserver = null;
-}
-
 
 
 
@@ -601,7 +571,7 @@ function handleUrlChange() {
             break;
         case '/watch': // --- Video page
             coreLog(`[URL] Detected video page`);
-            !descriptionObserver && currentSettings?.descriptionTranslation && setupDescriptionObserver();
+            !mainVideoObserver && currentSettings?.descriptionTranslation && setupMainVideoObserver();
             currentSettings?.titleTranslation && recommandedVideosObserver();
             break;
     }

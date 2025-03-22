@@ -40,67 +40,54 @@ async function initializeFeatures() {
     
     setupUrlObserver();
     
-    if (currentSettings?.titleTranslation) {
-        initializeTitleTranslation();
-    }
-    if (currentSettings?.audioTranslation) {
-        initializeAudioTranslation();
-    }
-    if (currentSettings?.descriptionTranslation) {
-        initializeDescriptionTranslation();
-    }
-    if (currentSettings?.subtitlesTranslation) {
-        initializeSubtitlesTranslation();
-    }
+    currentSettings?.titleTranslation && initializeTitleTranslation();
+    currentSettings?.audioTranslation && initializeAudioTranslation();
+    currentSettings?.descriptionTranslation && initializeDescriptionTranslation();
+    currentSettings?.subtitlesTranslation && initializeSubtitlesTranslation();
 }
 
 // Initialize functions
-let loadStartHandlerInitialized = false;
+let loadStartListenerInitialized = false;
 
-function initializeLoadStartHandler() {
-    if (!loadStartHandlerInitialized && 
+function initializeLoadStartListener() {
+    if (!loadStartListenerInitialized && 
         (currentSettings?.audioTranslation || currentSettings?.subtitlesTranslation)) {
-        setupLoadStartHandler();
-        loadStartHandlerInitialized = true;
+            setupLoadStartListener();
+        loadStartListenerInitialized = true;
+    }
+}
+
+let mainVideoObserverInitialized = false;
+
+function initializeMainVideoObserver() {
+    if (!mainVideoObserverInitialized && (currentSettings?.titleTranslation || currentSettings?.descriptionTranslation)) {
+        setupMainVideoObserver();
+        mainVideoObserverInitialized = true;
     }
 }
 
 function initializeTitleTranslation() {
     titlesLog('Initializing title translation prevention');
     
-    if (currentSettings?.titleTranslation) {
-        refreshMainTitle();
-        refreshBrowsingTitles();
-        
-        setupMainTitleObserver();
-    }
+    initializeMainVideoObserver();
 }
 
 function initializeAudioTranslation() {
     audioLog('Initializing audio translation prevention');
     
-    // Initial setup
-    if (currentSettings?.audioTranslation) {
-        handleAudioTranslation();
-        
-        initializeLoadStartHandler();
-    };
+    initializeLoadStartListener();
 };
 
 function initializeDescriptionTranslation() {
     descriptionLog('Initializing description translation prevention');
     
-    //Everything is already called when needed in observer file
+    initializeMainVideoObserver();
 };
 
 function initializeSubtitlesTranslation() {
     subtitlesLog('Initializing subtitles translation prevention');
     
-    if (currentSettings?.subtitlesTranslation) {
-        handleSubtitlesTranslation();
-        
-        initializeLoadStartHandler();
-    };
+    initializeLoadStartListener();
 };
 
 browser.runtime.onMessage.addListener((message: unknown) => {
@@ -110,7 +97,7 @@ browser.runtime.onMessage.addListener((message: unknown) => {
                 if (message.isEnabled) {
                     handleAudioTranslation();
 
-                    setupLoadStartHandler();                    
+                    initializeLoadStartListener();                    
                 }
                 break;
             case 'titles':
@@ -119,21 +106,21 @@ browser.runtime.onMessage.addListener((message: unknown) => {
                     refreshBrowsingTitles();
                     refreshShortsAlternativeFormat();
                     
-                    setupMainTitleObserver();
+                    initializeMainVideoObserver();
                 }
                 break;
             case 'description':
                 if (message.isEnabled) {
                     refreshDescription();
 
-                    setupDescriptionObserver();
+                    initializeMainVideoObserver();
                 }
                 break;
             case 'subtitles':
                 if (message.isEnabled) {
                     handleSubtitlesTranslation();
 
-                    setupLoadStartHandler();
+                    initializeLoadStartListener();
                 }
                 break;
         }
