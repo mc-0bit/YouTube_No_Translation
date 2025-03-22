@@ -37,7 +37,7 @@
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                                 </svg>
                                 <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded-md whitespace-normal max-w-[250px] opacity-0 pointer-events-none invisible group-hover:opacity-100 group-hover:visible transition-opacity">
-                                    Display original titles. Main video title, recommended videos, search results, etc..
+                                    Display original titles : Main video title, Channel Title, recommended videos, search results, etc..
                                 </span>
                             </div>
                         </div>
@@ -100,7 +100,7 @@
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                                 </svg>
                                 <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded-md whitespace-normal max-w-[250px] opacity-0 pointer-events-none invisible group-hover:opacity-100 group-hover:visible transition-opacity">
-                                    Replace the description with the original one. (you may need to display full description to see it, because some times YT switch it back to translated)
+                                    Replace the description with the original one.
                                 </span>
                             </div>
                         </div>
@@ -120,7 +120,7 @@
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                                 </svg>
                                 <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded-md whitespace-normal max-w-[250px] opacity-0 pointer-events-none invisible group-hover:opacity-100 group-hover:visible transition-opacity">
-                                    Display subtitles in your preferred language. If not available, subtitles will be disabled.
+                                    Display subtitles in your preferred language if available. If not, subtitles will be disabled. Auto generated subtitles are ignored.
                                 </span>
                             </div>
                         </div>
@@ -133,6 +133,7 @@
                     <div class="mt-2 subtitles-language-container" id="subtitlesLanguageContainer">
                         <select id="subtitlesLanguage" class="w-full bg-gray-800 text-white text-sm rounded-lg px-2 py-1 border border-gray-600 focus:ring-blue-500 focus:border-blue-500">
                             <option value="original">Original</option>
+                            <option value="disabled">Always Disabled</option>
                             <option value="en">English</option>
                             <option value="fr">French</option>
                             <option value="es">Spanish</option>

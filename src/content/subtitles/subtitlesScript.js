@@ -79,6 +79,13 @@
         const subtitlesLanguage = localStorage.getItem('subtitlesLanguage') || 'original';
         //subtitlesLog(`Using preferred language: ${subtitlesLanguage}`);
 
+        // Check if subtitles are disabled
+        if (subtitlesLanguage === 'disabled') {
+            subtitlesLog('Subtitles are disabled, disabling subtitles');
+            player.setOption('captions', 'track', {});
+            return true;
+        }
+
         try {
             // Get video response to access caption tracks
             const response = player.getPlayerResponse();
