@@ -23,11 +23,20 @@ function setupLoadStartListener() {
         if ((e.target as any).srcValue === e.target.src) return;
         
         coreLog('Video source changed.');
+
         currentSettings?.audioTranslation && handleAudioTranslation();
+        
         currentSettings?.subtitlesTranslation && handleSubtitlesTranslation();
+        
+        if (currentSettings?.titleTranslation && isEmbedVideo()) {
+            setTimeout(() => {
+                refreshEmbedTitle();                       
+            }, 1000);
+        }
     };
 
     document.addEventListener('loadstart', loadStartListener, true);
+
 }
 
 function cleanUpLoadStartListener() {
@@ -574,90 +583,8 @@ function handleUrlChange() {
             !mainVideoObserver && currentSettings?.descriptionTranslation && setupMainVideoObserver();
             currentSettings?.titleTranslation && recommandedVideosObserver();
             break;
+        case '/embed': // --- Embed video page
+            coreLog(`[URL] Detected embed video page`);
+            break;
     }
-}
-
-
-// YOUTUBE-NOCOOKIE OBSERVER -----------------------------------------------------------
-
-function setupEmbedVideoObserver() {
-    coreLog('Setting up embed video observer');
-    
-    // Create a flag to track if we've already set up the play event listener
-    let playEventSetup = false;
-    let videoObserver: MutationObserver | null = null;
-    
-    // Function to set up the play event listener on video element
-    const setupPlayEventListener = (videoElement: HTMLVideoElement) => {
-        // Avoid setting up the listener multiple times
-        if (playEventSetup || videoElement.dataset.yntListenerSetup === 'true') return;
-        
-        videoElement.dataset.yntListenerSetup = 'true';
-        playEventSetup = true;
-        
-        // Set up one-time play event listener
-        videoElement.addEventListener('play', () => {
-            coreLog('Video play detected on youtube-nocookie, initializing features');
-            
-            // Short timeout to ensure player API is fully ready after play starts
-            setTimeout(() => {
-                if (currentSettings?.titleTranslation) {
-                    setTimeout(() => {
-                        refreshEmbedTitle();                       
-                    }, 1000);
-                }
-
-                if (currentSettings?.audioTranslation) {
-                    handleAudioTranslation();
-                }
-                
-                if (currentSettings?.subtitlesTranslation) {
-                    handleSubtitlesTranslation();
-                }
-                
-                // Clean up the observer since we no longer need it
-                if (videoObserver) {
-                    videoObserver.disconnect();
-                    videoObserver = null;
-                }
-            }, 50);
-        }, { once: true }); // Only trigger once
-    };
-    
-    // Check if video element already exists
-    const existingVideo = document.querySelector('video');
-    if (existingVideo) {
-        setupPlayEventListener(existingVideo as HTMLVideoElement);
-        return; // No need for observer if video already exists
-    }
-    
-    // Create mutation observer to watch for video element being added to the DOM
-    videoObserver = new MutationObserver((mutations) => {
-        for (const mutation of mutations) {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                // Look for video element in added nodes and their children
-                for (const node of mutation.addedNodes) {
-                    if (node instanceof HTMLElement) {
-                        // Check if node is video or contains video
-                        if (node.tagName === 'VIDEO') {
-                            setupPlayEventListener(node as HTMLVideoElement);
-                            return;
-                        } else {
-                            const videoElement = node.querySelector('video');
-                            if (videoElement) {
-                                setupPlayEventListener(videoElement);
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    });
-    
-    // Observe the entire document for video element
-    videoObserver.observe(document.documentElement, {
-        childList: true,
-        subtree: true
-    });
 }

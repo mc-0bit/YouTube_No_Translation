@@ -28,22 +28,22 @@ function isEmbedVideo(): boolean {
 // Initialize features based on settings
 async function initializeFeatures() {
     await fetchSettings();
-
-    // Special handling for youtube-nocookie.com
-    if (isEmbedVideo()) {
-        coreLog('Detected embed video, using special initialization');
-        
-        setupEmbedVideoObserver();
-        
-        return;
-    }
     
     setupUrlObserver();
     
+    if (isEmbedVideo()) {
+        coreLog('Embed video detected;');
+    }
+
     currentSettings?.titleTranslation && initializeTitleTranslation();
+
     currentSettings?.audioTranslation && initializeAudioTranslation();
+
     currentSettings?.descriptionTranslation && initializeDescriptionTranslation();
-    currentSettings?.subtitlesTranslation && initializeSubtitlesTranslation();
+
+    if (currentSettings?.subtitlesTranslation && !isEmbedVideo()) {
+    initializeSubtitlesTranslation();
+    }
 }
 
 // Initialize functions
@@ -68,6 +68,11 @@ function initializeMainVideoObserver() {
 
 function initializeTitleTranslation() {
     titlesLog('Initializing title translation prevention');
+    
+    if (isEmbedVideo()) {
+        initializeLoadStartListener();
+        return;
+    }
     
     initializeMainVideoObserver();
 }
