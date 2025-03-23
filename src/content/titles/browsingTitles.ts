@@ -45,7 +45,7 @@ function updateBrowsingTitleElement(element: HTMLElement, title: string, videoId
     
     browsingTitlesLog(
         `Updated title from : %c${normalizeText(element.textContent)}%c to : %c${normalizeText(title)}%c (video id : %c${videoId}%c)`,
-        'color: white',    // --- currentTitle style
+        'color: grey',    // --- currentTitle style
         'color: #fca5a5',      // --- reset color
         'color: white',    // --- originalTitle style
         'color: #fca5a5',      // --- reset color
@@ -170,7 +170,7 @@ async function refreshBrowsingTitles(): Promise<void> {
                     const originalTitle = await titleCache.getOriginalTitle(apiUrl);
                     try {
                         if (!originalTitle) {
-                            browsingTitlesLog(`Failed to get original title from API: ${videoId}, keeping current title : ${normalizeText(currentTitle)}`);
+                            browsingTitlesErrorLog(`Failed to get original title from API: ${videoId}, keeping current title : ${normalizeText(currentTitle)}`);
                             titleElement.removeAttribute('ynt');
                             titleElement.setAttribute('ynt-fail', videoId);
                             currentTitle && titleElement.setAttribute('title', currentTitle);

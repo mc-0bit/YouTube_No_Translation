@@ -45,7 +45,7 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
     
     mainTitleLog(
         `Updated title from : %c${normalizeText(element.textContent)}%c to : %c${normalizeText(title)}%c (video id : %c${videoId}%c)`,
-        'color: white',    
+        'color: grey',    
         'color: #fcd34d',      
         'color: white',    
         'color: #fcd34d',      
@@ -103,8 +103,13 @@ function updatePageTitle(mainTitle: string): void {
     cleanupPageTitleObserver();
     
     const expectedTitle = `${mainTitle} - YouTube`;
+    mainTitleLog(
+        `Updated title from : %c${normalizeText(document.title)}%c to : %c${normalizeText(expectedTitle)}`,
+        'color: grey',    
+        'color: #fcd34d',      
+        'color: white'
+    );
     document.title = expectedTitle;
-    mainTitleLog('Updated page title:', expectedTitle);
     
     const titleElement = document.querySelector('title');
     if (titleElement) {

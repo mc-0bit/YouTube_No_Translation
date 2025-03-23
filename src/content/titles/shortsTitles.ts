@@ -207,7 +207,7 @@ async function refreshShortsAlternativeFormat(): Promise<void> {
             // Update the title
             browsingTitlesLog(
                 `Updated shorts title from: %c${normalizeText(currentTitle)}%c to: %c${normalizeText(originalTitle)}%c (short id: %c${videoId}%c)`,
-                'color: white',
+                'color: grey',
                 'color: #fca5a5',
                 'color: white',
                 'color: #fca5a5',
