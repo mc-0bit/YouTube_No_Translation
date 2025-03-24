@@ -76,8 +76,6 @@ class DescriptionCache {
 const descriptionCache = new DescriptionCache();
 
 function updateDescriptionElement(element: HTMLElement, description: string): void {
-    //descriptionLog('Updating element with description');
-    
     // Find the text containers
     const attributedString = element.querySelector('yt-attributed-string');
     const snippetAttributedString = element.querySelector('#attributed-snippet-text');
@@ -94,6 +92,8 @@ function updateDescriptionElement(element: HTMLElement, description: string): vo
     
     // URL regex pattern
     const urlPattern = /(https?:\/\/[^\s]+)/g;
+    // Timestamp pattern - matches common YouTube timestamp formats like 1:23 or 1:23:45
+    const timestampPattern = /\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b/g;
     
     const lines = description.split('\n');
     lines.forEach((line, index) => {
@@ -110,8 +110,75 @@ function updateDescriptionElement(element: HTMLElement, description: string): vo
                 link.style.color = 'rgb(62, 166, 255)';
                 span.appendChild(link);
             } else if (part) {
-                // This is regular text
-                span.appendChild(document.createTextNode(part));
+                // Process regular text for timestamps
+                let textContent = part;
+                let lastIndex = 0;
+                let timestampMatch;
+                
+                // Create a temporary document fragment to hold the processed content
+                const fragment = document.createDocumentFragment();
+                
+                // Reset regex index
+                timestampPattern.lastIndex = 0;
+                
+                // Check if we have timestamps in this part
+                while ((timestampMatch = timestampPattern.exec(textContent)) !== null) {
+                    // Add text before the timestamp
+                    if (timestampMatch.index > lastIndex) {
+                        fragment.appendChild(document.createTextNode(
+                            textContent.substring(lastIndex, timestampMatch.index)
+                        ));
+                    }
+                    
+                    // Get timestamp text and calculate seconds
+                    const timestamp = timestampMatch[0];
+                    let seconds = 0;
+                    
+                    // Calculate seconds based on format (MM:SS or HH:MM:SS)
+                    if (timestampMatch[3]) { // HH:MM:SS format
+                        seconds = parseInt(timestampMatch[1]) * 3600 + 
+                                 parseInt(timestampMatch[2]) * 60 + 
+                                 parseInt(timestampMatch[3]);
+                    } else { // MM:SS format
+                        seconds = parseInt(timestampMatch[1]) * 60 + 
+                                 parseInt(timestampMatch[2]);
+                    }
+                    
+                    // Create outer container span
+                    const outerSpan = document.createElement('span');
+                    outerSpan.className = 'yt-core-attributed-string--link-inherit-color';
+                    outerSpan.dir = 'auto';
+                    outerSpan.style.color = 'rgb(62, 166, 255)';
+                    
+                    // Create timestamp link
+                    const timestampLink = document.createElement('a');
+                    timestampLink.textContent = timestamp;
+                    timestampLink.className = 'yt-core-attributed-string__link yt-core-attributed-string__link--call-to-action-color';
+                    timestampLink.style.cursor = 'pointer';
+                    timestampLink.tabIndex = 0;
+                    timestampLink.setAttribute('ynt-timestamp', seconds.toString());
+                    
+                    outerSpan.appendChild(timestampLink);
+                    fragment.appendChild(outerSpan);
+                    
+                    // Update last index to continue after this timestamp
+                    lastIndex = timestampMatch.index + timestampMatch[0].length;
+                }
+                
+                // Add any remaining text after the last timestamp
+                if (lastIndex < textContent.length) {
+                    fragment.appendChild(document.createTextNode(
+                        textContent.substring(lastIndex)
+                    ));
+                }
+                
+                // If we found timestamps, add the fragment with processed timestamps
+                // Otherwise just add the original text
+                if (lastIndex > 0) {
+                    span.appendChild(fragment);
+                } else {
+                    span.appendChild(document.createTextNode(part));
+                }
             }
         });
 
@@ -195,5 +262,3 @@ function compareDescription(element: HTMLElement): Promise<boolean> {
         resolve(isOriginal);
     });
 }
-
-

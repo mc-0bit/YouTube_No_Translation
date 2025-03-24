@@ -7,14 +7,10 @@
  * This program is distributed without any warranty; see the license for details.
  */
 
-
 /**
- * NOTE ON SCRIPT INJECTION:
- * We use script injection to access YouTube's player API directly from the page context.
- * This is necessary because the player API is not accessible from the content script context.
- * As you can see below, the injected code only uses YouTube's official player API methods.
+ * This script is injected when a timestamp is clicked in the description.
+ * It accesses the player directly to navigate to the specific timestamp.
  */
-
 (() => {
     const LOG_PREFIX = '[YNT]';
     const LOG_STYLES = {
@@ -47,29 +43,29 @@
 
     const descriptionLog = createLogger(LOG_STYLES.DESCRIPTION);
     const descriptionErrorLog = createErrorLogger(LOG_STYLES.DESCRIPTION);
-    
-    // Get player and video response
-    const player = document.getElementById('movie_player');
-    if (!player) {
-        descriptionErrorLog('Player not found');
-        window.dispatchEvent(new CustomEvent('ynt-description-data', {
-            detail: { description: null }
-        }));
+
+    // Get timestamp from custom event
+    const timestampEvent = document.currentScript.getAttribute('ynt-timestamp-event');
+    if (!timestampEvent) {
+        descriptionErrorLog('No timestamp event found');
         return;
     }
 
-    const response = player.getPlayerResponse();
-    const description = response?.videoDetails?.shortDescription;
-    
-    if (description) {
-        //descriptionLog('Found description from player response');
-        window.dispatchEvent(new CustomEvent('ynt-description-data', {
-            detail: { description }
-        }));
-    } else {
-        descriptionErrorLog('No description found in player response');
-        window.dispatchEvent(new CustomEvent('ynt-description-data', {
-            detail: { description: null }
-        }));
+    const timestampData = JSON.parse(timestampEvent);
+    const seconds = parseInt(timestampData.seconds, 10);
+
+    // Get player
+    const player = document.getElementById('movie_player');
+    if (!player) {
+        descriptionErrorLog('Player element not found');
+        return;
+    }
+
+    // Navigate to timestamp
+    try {
+        player.seekTo(seconds, true);
+        descriptionLog(`Navigated to timestamp: ${seconds}s`);
+    } catch (error) {
+        descriptionErrorLog(`Failed to navigate to timestamp: ${error}`);
     }
 })();

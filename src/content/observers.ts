@@ -283,6 +283,66 @@ function cleanupDescriptionObservers(): void {
 }
 
 
+let timestampClickHandler: ((event: MouseEvent) => void) | null = null;
+
+function setupTimestampClickObserver(): void {
+    // Clean up existing handler first
+    cleanupTimestampClickObserver();
+    
+    // Create new handler
+    timestampClickHandler = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        
+        // Check if the clicked element is a timestamp link or a child of it
+        const timestampLink = target.closest('a[ynt-timestamp]');
+        
+        if (timestampLink instanceof HTMLElement) {
+            // Prevent default navigation
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Get timestamp seconds from attribute
+            const seconds = timestampLink.getAttribute('ynt-timestamp');
+            
+            // Scroll to the top of the page for better user experience
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            
+            // Create timestamp data object
+            const timestampData = {
+                seconds: seconds
+            };
+            
+            // Create and inject script with timestamp data
+            const script = document.createElement('script');
+            script.src = browser.runtime.getURL('dist/content/scripts/timestampScript.js');
+            script.setAttribute('ynt-timestamp-event', JSON.stringify(timestampData));
+            document.documentElement.appendChild(script);
+            
+            // Remove script after execution
+            setTimeout(() => {
+                if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+            }, 100);
+        }
+    };
+    
+    // Add the event listener
+    document.addEventListener('click', timestampClickHandler);
+    
+    //descriptionLog('Timestamp click observer setup completed');
+}
+
+function cleanupTimestampClickObserver(): void {
+    if (timestampClickHandler) {
+        document.removeEventListener('click', timestampClickHandler);
+        timestampClickHandler = null;
+    }
+}
+
 
 // BROWSING TITLES OBSERVER -----------------------------------------------------------
 let homeObserver: MutationObserver | null = null;
@@ -517,6 +577,7 @@ function handleUrlChange() {
     cleanupAllBrowsingTitlesElementsObservers();
 
     cleanupDescriptionObservers();
+    cleanupTimestampClickObserver();
     
     //coreLog('Observers cleaned up');
 
@@ -582,6 +643,7 @@ function handleUrlChange() {
             coreLog(`[URL] Detected video page`);
             !mainVideoObserver && currentSettings?.descriptionTranslation && setupMainVideoObserver();
             currentSettings?.titleTranslation && recommandedVideosObserver();
+            currentSettings?.descriptionTranslation && setupTimestampClickObserver();
             break;
         case '/embed': // --- Embed video page
             coreLog(`[URL] Detected embed video page`);
