@@ -40,18 +40,16 @@ async function initializeFeatures() {
     currentSettings?.audioTranslation && initializeAudioTranslation();
 
     currentSettings?.descriptionTranslation && initializeDescriptionTranslation();
+    
+    currentSettings?.subtitlesTranslation && initializeSubtitlesTranslation();
 
-    if (currentSettings?.subtitlesTranslation && !isEmbedVideo()) {
-    initializeSubtitlesTranslation();
-    }
 }
 
 // Initialize functions
 let loadStartListenerInitialized = false;
 
 function initializeLoadStartListener() {
-    if (!loadStartListenerInitialized && 
-        (currentSettings?.audioTranslation || currentSettings?.subtitlesTranslation)) {
+    if (!loadStartListenerInitialized && (currentSettings?.audioTranslation || currentSettings?.subtitlesTranslation)) {
             setupLoadStartListener();
         loadStartListenerInitialized = true;
     }
@@ -81,11 +79,13 @@ function initializeAudioTranslation() {
     audioLog('Initializing audio translation prevention');
     
     initializeLoadStartListener();
-
-    handleAudioTranslation(); //needed when user opens a video directly
 };
 
 function initializeDescriptionTranslation() {
+    if (isEmbedVideo()) {
+        return;
+    }
+
     descriptionLog('Initializing description translation prevention');
     
     initializeMainVideoObserver();
@@ -95,8 +95,6 @@ function initializeSubtitlesTranslation() {
     subtitlesLog('Initializing subtitles translation prevention');
     
     initializeLoadStartListener();
-
-    handleSubtitlesTranslation(); //needed when user opens a video directly
 };
 
 browser.runtime.onMessage.addListener((message: unknown) => {
