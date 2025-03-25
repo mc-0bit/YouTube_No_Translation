@@ -82,6 +82,13 @@
             //audioLog(`Using preferred language: ${audioLanguage}`);
 
             const tracks = player.getAvailableAudioTracks();
+            
+            // Skip processing if there's only one audio track available
+            if (tracks.length <= 1) {
+                audioLog('Only one audio track available, no change needed');
+                return true;
+            }
+            
             const currentTrack = player.getAudioTrack();
 
             // First check if current track is already what we want

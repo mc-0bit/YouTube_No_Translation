@@ -81,6 +81,8 @@ function initializeAudioTranslation() {
     audioLog('Initializing audio translation prevention');
     
     initializeLoadStartListener();
+
+    handleAudioTranslation(); //needed when user opens a video directly
 };
 
 function initializeDescriptionTranslation() {
@@ -93,6 +95,8 @@ function initializeSubtitlesTranslation() {
     subtitlesLog('Initializing subtitles translation prevention');
     
     initializeLoadStartListener();
+
+    handleSubtitlesTranslation(); //needed when user opens a video directly
 };
 
 browser.runtime.onMessage.addListener((message: unknown) => {
