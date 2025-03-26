@@ -78,6 +78,8 @@ function initializeTitleTranslation() {
 function initializeAudioTranslation() {
     audioLog('Initializing audio translation prevention');
     
+    handleAudioTranslation();
+
     initializeLoadStartListener();
 };
 
@@ -85,7 +87,7 @@ function initializeDescriptionTranslation() {
     if (isEmbedVideo()) {
         return;
     }
-
+    
     descriptionLog('Initializing description translation prevention');
     
     //initializeMainVideoObserver();
@@ -93,6 +95,8 @@ function initializeDescriptionTranslation() {
 
 function initializeSubtitlesTranslation() {
     subtitlesLog('Initializing subtitles translation prevention');
+    
+    handleSubtitlesTranslation();
     
     initializeLoadStartListener();
 };
