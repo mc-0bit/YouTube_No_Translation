@@ -649,7 +649,9 @@ function handleUrlChange() {
             break;
         case '/watch': // --- Video page
             coreLog(`[URL] Detected video page`);
-            setupMainVideoObserver();
+            if (currentSettings?.titleTranslation || currentSettings?.descriptionTranslation) {
+                setupMainVideoObserver();
+            };
             currentSettings?.titleTranslation && recommandedVideosObserver();
             currentSettings?.descriptionTranslation && setupTimestampClickObserver();
             break;
