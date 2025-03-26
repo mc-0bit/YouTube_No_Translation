@@ -44,7 +44,7 @@ function updateMainTitleElement(element: HTMLElement, title: string, videoId: st
     cleanupIsEmptyObserver();
     
     mainTitleLog(
-        `Updated title from : %c${normalizeText(element.textContent)}%c to : %c${normalizeText(title)}%c (video id : %c${videoId}%c)`,
+        `Updated main title from : %c${normalizeText(element.textContent)}%c to : %c${normalizeText(title)}%c (video id : %c${videoId}%c)`,
         'color: grey',    
         'color: #fcd34d',      
         'color: white',    
@@ -104,7 +104,7 @@ function updatePageTitle(mainTitle: string): void {
     
     const expectedTitle = `${mainTitle} - YouTube`;
     mainTitleLog(
-        `Updated title from : %c${normalizeText(document.title)}%c to : %c${normalizeText(expectedTitle)}`,
+        `Updated page title from : %c${normalizeText(document.title)}%c to : %c${normalizeText(expectedTitle)}`,
         'color: grey',    
         'color: #fcd34d',      
         'color: white'
@@ -182,8 +182,8 @@ async function refreshMainTitle(): Promise<void> {
                 return;
             }
 
-            // Skip if title is already correct
-            if (normalizeText(currentTitle) === normalizeText(originalTitle)) {
+            // Skip if title is already correct and doesn't have is-empty attribute
+            if (normalizeText(currentTitle) === normalizeText(originalTitle) && !mainTitle.hasAttribute('is-empty')) {
                 mainTitleLog('Main title is already original');
                 return;
             }

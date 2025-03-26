@@ -46,13 +46,13 @@ function cleanUpLoadStartListener() {
     }
 }
 
-let mainVideoObserver: MutationObserver | null = null;
+//let mainVideoObserver: MutationObserver | null = null;
 
 
 function setupMainVideoObserver() {
-    cleanupMainVideoObserver();
+    //cleanupMainVideoObserver();
     waitForElement('ytd-watch-flexy').then((watchFlexy) => {
-        coreLog('Setting up video-id observer');
+        /*coreLog('Setting up video-id observer');
         mainVideoObserver = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'video-id') {
@@ -79,31 +79,39 @@ function setupMainVideoObserver() {
                     currentSettings?.descriptionTranslation && processDescriptionForVideoId();
                 }
             }
-        });
+        });*/
 
         if (currentSettings?.descriptionTranslation) {
             // Manually trigger for the initial video when setting up the observer
             // This handles the case where we navigate to a video page via SPA
             const currentVideoId = watchFlexy.getAttribute('video-id');
             if (currentVideoId) {
-                descriptionLog('Manually triggering for initial video-id:', currentVideoId);
+                //descriptionLog('Manually triggering for initial video-id:', currentVideoId);
                 descriptionCache.clearCurrentDescription();
                 // Process the initial video ID
                 processDescriptionForVideoId();
             }
         }
 
-        mainVideoObserver.observe(watchFlexy, {
+        if (currentSettings?.titleTranslation) {
+            const currentVideoId = watchFlexy.getAttribute('video-id');
+            if (currentVideoId) {
+                refreshMainTitle();
+                refreshChannelName();
+            }
+        }
+
+        /*mainVideoObserver.observe(watchFlexy, {
             attributes: true,
             attributeFilter: ['video-id']
-        });
+        });*/
     });
 }
 
-function cleanupMainVideoObserver() {
+/*function cleanupMainVideoObserver() {
     mainVideoObserver?.disconnect();
     mainVideoObserver = null;
-}
+}*/
 
 // DESCRIPTION OBSERVERS ------------------------------------------------------------
 let descriptionExpansionObserver: MutationObserver | null = null;
@@ -641,7 +649,7 @@ function handleUrlChange() {
             break;
         case '/watch': // --- Video page
             coreLog(`[URL] Detected video page`);
-            !mainVideoObserver && currentSettings?.descriptionTranslation && setupMainVideoObserver();
+            setupMainVideoObserver();
             currentSettings?.titleTranslation && recommandedVideosObserver();
             currentSettings?.descriptionTranslation && setupTimestampClickObserver();
             break;

@@ -72,7 +72,7 @@ function initializeTitleTranslation() {
         return;
     }
     
-    initializeMainVideoObserver();
+    //initializeMainVideoObserver();
 }
 
 function initializeAudioTranslation() {
@@ -88,7 +88,7 @@ function initializeDescriptionTranslation() {
 
     descriptionLog('Initializing description translation prevention');
     
-    initializeMainVideoObserver();
+    //initializeMainVideoObserver();
 };
 
 function initializeSubtitlesTranslation() {
